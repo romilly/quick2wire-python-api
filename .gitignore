@@ -25,3 +25,12 @@ pip-log.txt
 
 #Mr Developer
 .mr.developer.cfg
+
+# Backup files
+*~
+
+# Temporary output
+output
+
+# Virtual environment
+python?.?-*/
