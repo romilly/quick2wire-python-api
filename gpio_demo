@@ -1,0 +1,24 @@
+#!/usr/bin/python3
+
+import sys
+from time import sleep
+from quick2wire.gpio import Pin
+
+if len(sys.argv) > 2:
+    pin_id = int(sys.argv[1])
+else:
+    pin_id = 22
+
+pin = Pin(pin_id)
+
+pin.export()
+pin.direction = Pin.Out
+
+while True:
+    pin.value = 1
+    print("on")
+    sleep(1)
+    pin.value = 0
+    print("off")
+    sleep(1)
+

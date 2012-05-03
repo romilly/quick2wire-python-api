@@ -1,8 +1,21 @@
+"""A convenient API to access the GPIO pins of the Raspberry Pi.
+
+"""
 
 import os
 import subprocess
 
-#TODO - support multiple platforms
+# Maps header pin numbers to SOC GPIO numbers
+# See http://elinux.org/RPi_Low-level_peripherals
+#
+# Note: - header pins are numbered from 1, SOC GPIO from zero 
+#       - the Pi documentation identifies some header pins as GPIO0,
+#         GPIO1, etc., but these are not the same as the SOC GPIO
+#         numbers.
+#
+# Todo - different factory functions for creating Pins by SOC id,
+#        header id and Pi GPIO id.
+#
 RaspberryPi_HeaderToSOC = {
     3:  0, 
     5:  1, 
@@ -14,13 +27,13 @@ RaspberryPi_HeaderToSOC = {
     13: 21, 
     15: 22, 
     16: 23, 
-    17: 24, 
-    18: 10, 
-    20: 9, 
-    21: 25, 
-    22: 11, 
-    23: 8, 
-    25: 7
+    18: 24, 
+    19: 10, 
+    21: 9, 
+    22: 25, 
+    23: 11, 
+    25: 7,
+    26: 8
 }
 
 def header_to_soc(header_pin_number):
