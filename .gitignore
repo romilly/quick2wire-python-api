@@ -12,6 +12,7 @@ var
 sdist
 develop-eggs
 .installed.cfg
+MANIFEST
 
 # Installer logs
 pip-log.txt
@@ -34,3 +35,4 @@ output
 
 # Virtual environment
 python?.?-*/
+distribute-*.tar.gz

@@ -7,6 +7,8 @@ endif
 ARCHITECTURE:=$(shell uname -m)
 
 PYTHON_ENV=$(PWD)/python$(python)-$(ARCHITECTURE)
+PYTHON_EXE=$(PYTHON_ENV)/bin/python
+PIP=$(PYTHON_ENV)/bin/pip
 PYTHON_BUILDDIR=$(PYTHON_ENV)/build
 PYTHON_LIBDIR=$(PYTHON_ENV)/lib/python$(python)/site-packages
 
@@ -14,7 +16,7 @@ PYTHON_LIBDIR=$(PYTHON_ENV)/lib/python$(python)/site-packages
 export PYTHONPATH=$(PYTHON_LIBDIR)
 
 PROJECT=quick2wire-python-api
-PROJECT_VER:=0.0.1.0
+VERSION:=$(shell $(PYTHON_EXE) setup.py --version)
 
 all: check
 .PHONY: all
@@ -23,11 +25,11 @@ env: env-base env-libs
 .PHONY: env
 
 env-libs:
-	$(PYTHON_ENV)/bin/pip install pytest
+	$(PIP) install pytest
 .PHONY: env-libs
 
 env-base:
-	lib-src/virtualenv --python=python$(python) $(PYTHON_ENV)
+	tools/virtualenv --python=python$(python) $(PYTHON_ENV)
 .PHONY: env-base
 
 env-clean:
@@ -41,7 +43,12 @@ check:
 	PYTHONPATH=src:$(PYTHON_LIBDIR) $(PYTHON_ENV)/bin/py.test test
 .PHONY: check
 
-SCANNED_FILES=src tests Makefile setup.py bin
+
+dist/$(PROJECT)-$(VERSION).tar.gz: setup.py Makefile
+	$(PYTHON_EXE) setup.py sdist
+
+dist: dist/$(PROJECT)-$(VERSION).tar.gz
+.PHONY: dist
 
 clean:
 	rm -rf output/

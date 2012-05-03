@@ -1,0 +1,5 @@
+include GPL.txt
+include LGPL.txt
+include LICENSE.md
+include MIT_LICENSE.txt
+include README.rst
