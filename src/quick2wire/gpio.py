@@ -46,7 +46,7 @@ def gpio_admin(subcommand, pin):
     subprocess.check_call(["gpio-admin", subcommand, str(pin)])
 
 
-def pin_file(name, parser):
+def pin_file(name, parser, doc):
     def _read(self):
         with open(self._pin_file(name), "r") as f:
             return parser(f.read())
@@ -55,16 +55,38 @@ def pin_file(name, parser):
         with open(self._pin_file(name), "w") as f:
             f.write(str(value))
     
-    return property(_read, _write)
+    return property(_read, _write, doc=doc)
     
 
 class Pin(object):
+    """Controls a GPIO pin."""
+    
     Out = "out"
     In = "in"
     
-    def __init__(self, header_pin_id):
-        self.header_pin_id = header_pin_id
-        self.pin_id = header_to_soc(header_pin_id)
+    def __init__(self, header_pin_number, direction=None):
+        """Creates a pin, given a header pin number.
+        
+        If the direction is specified, the pin is exported if
+        necessary and its direction is set.  If the direction is not
+        specified, the pin is not exported and you must call export()
+        before you start using it.
+        
+        Parameters:
+            
+            header_pin_id - the pin on the header to control.
+            
+            direction (optional) - the direction of the pin, either In
+            or Out.
+           
+        """
+        
+        self.header_pin_id = header_pin_number
+        self.pin_id = header_to_soc(header_pin_number)
+        if direction:
+            if not self.is_exported:
+                self.export()
+            self.direction = direction
     
     def __repr__(self):
         return self.__module__ + "." + str(self)
@@ -74,16 +96,30 @@ class Pin(object):
     
     @property
     def is_exported(self):
+        """Has the pin been exported to user space?"""
         return os.path.exists(self._pin_file())
     
     def export(self):
+        """Export the pin to user space, making its control files visible in the filesystem."""
         gpio_admin("export", self.pin_id)
     
     def unexport(self):
+        """Unexport the pin, removing its control files from the filesystem."""
         gpio_admin("unexport", self.pin_id)
     
-    value = pin_file("value", int)
-    direction = pin_file("direction", str.strip)
+    value = pin_file("value", int,
+        """The current value of the pin: 1 if the pin is high or 0 if
+        the pin is low.
+        
+        The value can only be set if the pin's direction is Out
+        
+        """)
+    direction = pin_file("direction", str.strip,
+        """The direction of the pin: either In or Out.
+        
+        The value of the pin can only be set if its direction is Out.
+        
+        """)
     
     def _pin_file(self, filename=""):
         return "/sys/devices/virtual/gpio/gpio%i/%s" % (self.pin_id, filename)

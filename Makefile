@@ -30,6 +30,7 @@ env-libs:
 
 env-base:
 	tools/virtualenv --python=python$(python) $(PYTHON_ENV)
+	rm -f distribute-*.tar.gz
 .PHONY: env-base
 
 env-clean:

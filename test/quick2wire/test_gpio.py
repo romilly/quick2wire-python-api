@@ -44,3 +44,9 @@ class TestPin:
         self.pin.value = 0
         assert self.pin.value == 0
         
+    def test_can_export_pin_and_set_direction_on_construction(self):
+        p = Pin(5, Pin.Out)
+        
+        assert p.is_exported
+        assert p.direction == Pin.Out
+        
