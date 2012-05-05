@@ -18,7 +18,7 @@ export PYTHONPATH=$(PYTHON_LIBDIR)
 PROJECT=quick2wire-python-api
 VERSION:=$(shell $(PYTHON_EXE) setup.py --version)
 
-all: check
+all: check dist
 .PHONY: all
 
 env: env-base env-libs
@@ -52,9 +52,9 @@ dist: dist/$(PROJECT)-$(VERSION).tar.gz
 .PHONY: dist
 
 clean:
-	rm -rf output/
-	find . -name '*.pyc' | xargs rm
-	find . -name '*~' | xargs rm
+	rm -rf output/ dist/ build/
+	find . -name '*.pyc' | xargs -r rm
+	find . -name '*~' | xargs -r rm
 .PHONY: clean
 
 again: clean all
