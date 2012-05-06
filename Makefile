@@ -55,9 +55,8 @@ dist: dist/$(PROJECT)-$(VERSION).tar.gz
 .PHONY: dist
 
 clean:
-	rm -rf output/ dist/ build/
-	find . -name '*.pyc' | xargs -r rm
-	find . -name '*~' | xargs -r rm
+	rm -rf output/ dist/ build/ MANIFEST README.rst
+	find . -name '*.pyc' -o -name '*~' | xargs -r rm
 .PHONY: clean
 
 again: clean all
