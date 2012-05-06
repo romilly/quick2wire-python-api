@@ -3,14 +3,17 @@
 import os
 from distutils.core import setup
 
-def read(fname):
-    return open(os.path.join(os.path.dirname(__file__), fname)).read()
+def contents_of(fname):
+    try:
+        return open(os.path.join(os.path.dirname(__file__), fname)).read()
+    except IOError:
+        return 'Quick2Wire API'
 
 
 setup(name='Quick2Wire',
       version='1.1.0.0-a',
       description='Quick2Wire API',
-      long_description="API for physical computing with the Raspberry Pi",
+      long_description=contents_of('README.rst'),
       author='Quick2Wire Ltd.',
       author_email='info@quick2wire.com',
       url='http://quick2wire.com',

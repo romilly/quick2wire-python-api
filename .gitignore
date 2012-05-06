@@ -13,6 +13,7 @@ sdist
 develop-eggs
 .installed.cfg
 MANIFEST
+README.rst
 
 # Installer logs
 pip-log.txt
