@@ -4,13 +4,11 @@ import sys
 from time import sleep
 from quick2wire.gpio import Pin
 
-pin = Pin(int(sys.argv[1]) if len(sys.argv) > 2 else 22, Pin.Out)
+pin = Pin(int(sys.argv[1]) if len(sys.argv) > 2 else 12, Pin.Out)
 
-while True:
-    print("on")
-    pin.value = 1
-    sleep(1)
-    
-    print("off")
-    pin.value = 0
-    sleep(1)
+try:
+    while True:
+        pin.value = 1 - pin.value
+        sleep(1)
+except KeyboardInterrupt:
+    pin.unexport()
