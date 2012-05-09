@@ -15,17 +15,17 @@ def teardown_module():
             pin.unexport()
 
 @pytest.mark.gpio_loopback
-def test_gpio_loopback(self):
-    assert_outputs_seen_at_corresponding_inputs(self.pins[:4], self.pins[4:])
-    assert_outputs_seen_at_corresponding_inputs(self.pins[4:], self.pins[:4])
+def test_gpio_loopback():
+    assert_outputs_seen_at_corresponding_inputs(Pins[:4], Pins[4:])
+    assert_outputs_seen_at_corresponding_inputs(Pins[4:], Pins[:4])
 
 
-def assert_outputs_seen_at_corresponding_inputs(self, outputs, inputs):
+def assert_outputs_seen_at_corresponding_inputs(outputs, inputs):
     for (op, ip) in zip(outputs, inputs):
         assert_output_seen_at_input(op, ip)
 
 
-def assert_output_seen_at_input(self, output_pin, input_pin):
+def assert_output_seen_at_input(output_pin, input_pin):
     output_pin.direction = Pin.Out
     input_pin.direction = Pin.In
     
