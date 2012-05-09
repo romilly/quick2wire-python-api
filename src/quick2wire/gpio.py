@@ -74,12 +74,11 @@ class Pin(object):
         before you start using it.
         
         Parameters:
-            
-            header_pin_id - the pin on the header to control.
-            
-            direction (optional) - the direction of the pin, either In
-            or Out.
-           
+        header_pin_id -- the pin on the header to control.
+        direction     -- (optional) the direction of the pin, either In or Out.
+        
+        Raises:
+        IOError       -- could not export the pin (if direction is given)
         """
         
         self.header_pin_id = header_pin_number
@@ -101,18 +100,32 @@ class Pin(object):
         return os.path.exists(self._pin_file())
     
     def export(self):
-        """Export the pin to user space, making its control files visible in the filesystem."""
+        """Export the pin to user space, making its control files visible in the filesystem.
+        
+        Raises:
+        IOError -- could not export the pin.
+
+        
+        """
         gpio_admin("export", self.pin_id)
     
     def unexport(self):
-        """Unexport the pin, removing its control files from the filesystem."""
+        """Unexport the pin, removing its control files from the filesystem.
+        
+        Raises:
+        IOError -- could not unexport the pin.
+        
+        """
         gpio_admin("unexport", self.pin_id)
     
     value = pin_file("value", int,
         """The current value of the pin: 1 if the pin is high or 0 if
         the pin is low.
         
-        The value can only be set if the pin's direction is Out
+        The value can only be set if the pin's direction is Out.
+        
+        Raises: 
+        IOError -- could not read or write the pin's value.
         
         """)
     
@@ -120,6 +133,8 @@ class Pin(object):
         """The direction of the pin: either In or Out.
         
         The value of the pin can only be set if its direction is Out.
+        
+        IOError -- could not read or set the pin's direction.
         
         """)
     
@@ -129,6 +144,16 @@ class Pin(object):
 
 @contextmanager
 def exported(pin):
+    """A context manager that automatically exports a pin if necessary
+    and exports it at the end of the block.
+    
+    Example::
+    
+        with exported(Pin(15)) as pin:
+            print(pin.value)
+    
+    """
+    
     if not pin.is_exported:
         pin.export()
     try:
