@@ -4,7 +4,7 @@ import unittest
 
 class LoopbackTest(unittest.TestCase):
     def setUp(self):
-        self.pins = list([Pin(headerPinNumber) for headerPinNumber in [11, 12, 13, 15, 16, 18, 22, 7]])
+        self.pins = list([Pin(header_pin_number) for header_pin_number in [11, 12, 13, 15, 16, 18, 22, 7]])
         for pin in self.pins:
             pin.export()
         
@@ -14,16 +14,16 @@ class LoopbackTest(unittest.TestCase):
                 pin.unexport()
 		
     def test_GPIO(self):
-        self.checkOutputsSeenAtCorrespondingInputs(self.pins[:4], self.pins[4:])
-        self.checkOutputsSeenAtCorrespondingInputs(self.pins[4:], self.pins[:4])
+        self.check_outputs_seen_at_corresponding_inputs(self.pins[:4], self.pins[4:])
+        self.check_outputs_seen_at_corresponding_inputs(self.pins[4:], self.pins[:4])
         
-    def checkOutputsSeenAtCorrespondingInputs(self, outputs, inputs):
+    def check_outputs_seen_at_corresponding_inputs(self, outputs, inputs):
         for (op, ip) in zip(outputs, inputs):
-            op.direction = Pin.Out
-            ip.direction = Pin.In
-            self.checkOutputSeenAtInput(op, ip)
+            self.check_output_seen_at_input(op, ip)
         
-    def checkOutputSeenAtInput(self, op, ip):
+    def check_output_seen_at_input(self, op, ip):
+        op.direction = Pin.Out
+        ip.direction = Pin.In
         for value in [0, 1]:
             op.value = value
             self.assertEqual(ip.value, value, 'input %d was not %d' % (ip.header_pin_id, value))
