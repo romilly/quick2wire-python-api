@@ -4,6 +4,7 @@
 
 import os
 import subprocess
+from contextlib import contextmanager
 
 # Maps header pin numbers to SOC GPIO numbers
 # See http://elinux.org/RPi_Low-level_peripherals
@@ -114,6 +115,7 @@ class Pin(object):
         The value can only be set if the pin's direction is Out
         
         """)
+    
     direction = pin_file("direction", str.strip,
         """The direction of the pin: either In or Out.
         
@@ -124,3 +126,12 @@ class Pin(object):
     def _pin_file(self, filename=""):
         return "/sys/devices/virtual/gpio/gpio%i/%s" % (self.pin_id, filename)
 
+
+@contextmanager
+def exported(pin):
+    if not pin.is_exported:
+        pin.export()
+    try:
+        yield pin
+    finally:
+        pin.unexport()

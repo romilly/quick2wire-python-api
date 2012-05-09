@@ -1,5 +1,5 @@
 
-from quick2wire.gpio import Pin
+from quick2wire.gpio import Pin, exported
 import pytest
 
 
@@ -49,4 +49,25 @@ class TestPin:
         
         assert p.is_exported
         assert p.direction == Pin.Out
+
+
+
+class TestExportedContextManager:
+    def test_can_automatically_unexport_pin_with_context_manager(self):
+        with exported(Pin(5)) as p:
+            assert p.is_exported
+        
+        p = Pin(5)
+        assert not p.is_exported
+    
+    def test_can_use_context_manager_with_pin_exported_by_constructor(self):
+        with exported(Pin(5, Pin.Out)) as p:
+            assert p.is_exported
+        
+        p = Pin(5)
+        assert not p.is_exported
+    
+    def test_can_use_context_manager_with_pin_already_exported(self):
+        Pin(5).export()
+        self.test_can_automatically_unexport_pin_with_context_manager()
         

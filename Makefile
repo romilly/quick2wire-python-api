@@ -24,14 +24,15 @@ all: check dist
 env: env-base env-libs
 .PHONY: env
 
-env-libs:
-	$(PIP) install pytest
-.PHONY: env-libs
-
 env-base:
+	mkdir -p $(dir $(PYTHON_ENV))
 	tools/virtualenv --python=python$(python) $(PYTHON_ENV)
 	rm -f distribute-*.tar.gz
 .PHONY: env-base
+
+env-libs:
+	$(PIP) install pytest
+.PHONY: env-libs
 
 env-clean:
 	rm -rf $(PYTHON_ENV)/
@@ -44,6 +45,15 @@ check:
 	PYTHONPATH=src:$(PYTHON_LIBDIR) $(PYTHON_ENV)/bin/py.test test
 .PHONY: check
 
+check-install:
+	$(MAKE) PYTHON_ENV=build/test-$(python)-$(ARCHITECTURE) env-again
+	build/test-$(python)-$(ARCHITECTURE)/bin/python$(python) setup.py install
+	$(MAKE) PYTHON_ENV=build/test-$(python)-$(ARCHITECTURE) check
+.PHONY: check-install
+
+build/test-$(python)-$(ARCHITECTURE):
+	mkdir -p $(dir $@)
+	cp -R $(PYTHON_ENV) $@
 
 dist/$(PROJECT)-$(VERSION).tar.gz: setup.py Makefile README.rst
 	$(PYTHON_EXE) setup.py sdist
