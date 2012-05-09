@@ -88,7 +88,7 @@ unexporting the pin when the user quits the program with Control-C.
     from time import sleep
     from quick2wire.gpio import Pin
     
-    pin = Pin(12)
+    pin = Pin(12, Pin.Out)
     
     try:
         while True:
