@@ -3,38 +3,30 @@ from time import sleep
 import unittest
 
 class LoopbackTest(unittest.TestCase):
+    def setUp(self):
+        self.pins = list([Pin(headerPinNumber) for headerPinNumber in [11, 12, 13, 15, 16, 18, 22, 7]])
+        for pin in self.pins:
+            pin.export()
 		
-    def testGPIO(self):
-        pin_0 = Pin(11, Pin.Out)
-        pin_1 = Pin(12, Pin.Out)
-        pin_2 = Pin(13, Pin.Out)
-        pin_3 = Pin(15, Pin.Out)
-        pin_4 = Pin(16, Pin.In)
-        pin_5 = Pin(18, Pin.In)
-        pin_6 = Pin(22, Pin.In)
-        pin_7 = Pin(7,  Pin.In)
-        self.check(pin_0, pin_4)
-        self.check(pin_1, pin_5)
-        self.check(pin_2, pin_6)
-        self.check(pin_3, pin_7)
-        pin_0 = Pin(11, Pin.In)
-        pin_1 = Pin(12, Pin.In)
-        pin_2 = Pin(13, Pin.In)
-        pin_3 = Pin(15, Pin.In)
-        pin_4 = Pin(16, Pin.Out)
-        pin_5 = Pin(18, Pin.Out)
-        pin_6 = Pin(22, Pin.Out)
-        pin_7 = Pin(7,  Pin.Out)
-        self.check(pin_4, pin_0)
-        self.check(pin_5, pin_1)
-        self.check(pin_6, pin_2)
-        self.check(pin_7, pin_3)
+    def tearDown(self):
+        for pin in self.pins:
+            if pin.is_exported:
+                pin.unexport()
+		
+    def test_GPIO(self):
+        for i in range(0, 4):
+            self.pins[i].direction = Pin.Out
+            self.pins[i+4].direction = Pin.In
+            self.checkOutputSeeenAtInput(self.pins[i], self.pins[i+4])
+        for i in range(0, 4):
+            self.pins[i].direction = Pin.In
+            self.pins[i+4].direction = Pin.Out
+            self.checkOutputSeeenAtInput(self.pins[i+4], self.pins[i])
         
-
-    def check(self, op, ip):
+    def checkOutputSeeenAtInput(self, op, ip):
         for value in [0, 1]:
             op.value = value
-            self.assertEqual(ip.value,value, 'input was not %d' % value)
+            self.assertEqual(ip.value, value, 'input %d was not %d' % (ip.header_pin_id, value))
         op.value = 0
 
 if __name__ == '__main__':
