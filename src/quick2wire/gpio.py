@@ -6,15 +6,15 @@ import os
 import subprocess
 from contextlib import contextmanager
 
-# Maps header pin numbers to SOC GPIO numbers
+# Maps header pin numbers to SoC GPIO numbers
 # See http://elinux.org/RPi_Low-level_peripherals
 #
-# Note: - header pins are numbered from 1, SOC GPIO from zero 
+# Note: - header pins are numbered from 1, SoC GPIO from zero 
 #       - the Pi documentation identifies some header pins as GPIO0,
-#         GPIO1, etc., but these are not the same as the SOC GPIO
+#         GPIO1, etc., but these are not the same as the SoC GPIO
 #         numbers.
 #
-# Todo - different factory functions for creating Pins by SOC id,
+# Todo - different factory functions for creating Pins by SoC id,
 #        header id and Pi GPIO id.
 #
 RaspberryPi_HeaderToSOC = {
