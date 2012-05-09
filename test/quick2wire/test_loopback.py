@@ -31,7 +31,7 @@ def assert_output_seen_at_input(output_pin, input_pin):
     
     for value in [0, 1]:
         output_pin.value = value
-        assert input_pin.value == value, "value of " + str(input_pin)
+        assert input_pin.value == value
         
     output_pin.value = 0
 
