@@ -11,4 +11,5 @@ try:
         pin.value = 1 - pin.value
         sleep(1)
 except KeyboardInterrupt:
+    pin.value = 0
     pin.unexport()
