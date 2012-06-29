@@ -42,11 +42,11 @@ env-again: env-clean env
 .PHONY: env-again
 
 check:
-	PYTHONPATH=src:$(PYTHON_LIBDIR) $(PYTHON_ENV)/bin/py.test test -m "not gpio_loopback"
+	PYTHONPATH=src:$(PYTHON_LIBDIR) $(PYTHON_ENV)/bin/py.test test -m "not loopback"
 .PHONY: check
 
 check-loopback:
-	PYTHONPATH=src:$(PYTHON_LIBDIR) $(PYTHON_ENV)/bin/py.test test -m gpio_loopback
+	PYTHONPATH=src:$(PYTHON_LIBDIR) $(PYTHON_ENV)/bin/py.test test -m loopback
 .PHONY: check-loopback
 
 check-install:

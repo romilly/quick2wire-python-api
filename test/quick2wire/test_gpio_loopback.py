@@ -14,7 +14,7 @@ def teardown_module():
         if pin.is_exported:
             pin.unexport()
 
-@pytest.mark.gpio_loopback
+@pytest.mark.loopback
 def test_gpio_loopback():
     assert_outputs_seen_at_corresponding_inputs(Pins[:4], Pins[4:])
     assert_outputs_seen_at_corresponding_inputs(Pins[4:], Pins[:4])

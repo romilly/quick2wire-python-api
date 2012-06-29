@@ -1,0 +1,11 @@
+
+import sys
+from time import sleep
+from quick2wire.gpio import Pin
+
+led = Pin(11, Pin.Out)
+switch = Pin(12, Pin.In)
+
+while True:
+      led.value = switch.value
+      sleep(0.1)
