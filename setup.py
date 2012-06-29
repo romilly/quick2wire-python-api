@@ -32,7 +32,7 @@ setup(name='Quick2Wire',
       ],
       platforms=['Linux'],
       
-      provides=['quick2wire.gpio'],
+      provides=['quick2wire.gpio', 'quick2wire.i2c'],
       packages=['quick2wire'],
       package_dir = {'': 'src'},
       scripts=[],
