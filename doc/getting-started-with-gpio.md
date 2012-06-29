@@ -1,5 +1,22 @@
 Getting Started With GPIO
--------------------------
+=========================
+
+
+Before You Start Coding...
+--------------------------
+
+Ensure you have installed gpio-admin and are in the gpio group.  
+
+You can add yourself to the gpio group with the command:
+
+    sudo adduser $USER gpio
+
+You must then log out and in again for Linux to apply the change in
+group membership.
+
+
+Now Let's Write Some Code!
+--------------------------
 
 The GPIO pins are controlled by Pin objects. Python program must
 import the Pin class from the quick2wire.gpio module:

@@ -45,4 +45,4 @@ Getting Started
 ---------------
 
  * [Getting Started with GPIO](doc/getting-started-with-gpio.md)
- * Getting Started with I2C (coming soon...)
+ * [Getting Started with I2C](doc/getting-started-with-i2c.md)
