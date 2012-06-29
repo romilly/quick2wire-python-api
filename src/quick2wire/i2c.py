@@ -12,7 +12,7 @@ def read(addr, n_bytes):
 
 def read_into(addr, buf):
     """An I2C I/O message that reads into an existing ctypes string buffer."""
-    return new_i2c_msg(addr, I2C_M_RD, buf)
+    return _new_i2c_msg(addr, I2C_M_RD, buf)
 
 def write_bytes(addr, *bytes):
     """An I2C I/O message that writes one or more bytes of data. 
