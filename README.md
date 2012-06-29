@@ -44,5 +44,5 @@ To install into a virtualenv, make the virtualenv active and run:
 Getting Started
 ---------------
 
- * [Getting Started with GPIO](tree/master/doc/getting-started-with-gpio.md)
- * [Getting Started with I2C](tree/master/doc/getting-started-with-i2c.md)
+ * [Getting Started with GPIO](blob/master/doc/getting-started-with-gpio.md)
+ * [Getting Started with I2C](blob/master/doc/getting-started-with-i2c.md)
