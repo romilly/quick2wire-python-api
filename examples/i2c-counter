@@ -1,0 +1,42 @@
+#!/usr/bin/env python3
+
+import quick2wire.i2c as i2c
+import time
+
+address = 0x20
+iodir_register=0x00
+gpio_register=0x09
+
+
+input_pins = 0x80
+output_pins = (~input_pins & 0xFF)
+
+with i2c.I2CBus() as bus:
+    def write_register(reg, b):
+        bus.transaction(
+            i2c.write_bytes(address, reg, b))
+    
+    def read_register(reg):
+        return bus.transaction(
+            i2c.write_bytes(address, reg),
+            i2c.read(address, 1))[0][0]
+    
+    write_register(iodir_register, 0x80)
+    write_register(gpio_register, 0x00)
+    
+    print("ready")
+
+    button_down = False
+    count = 0
+    
+    while True:
+        gpio_state = read_register(gpio_register)
+        
+        button_was_down = button_down
+        button_down = bool(gpio_state & 0x80)
+        
+        if button_down and not button_was_down:
+            count = min(count + 1, 127)
+            write_register(gpio_register, (gpio_state & 0x80)|count)
+        
+        time.sleep(0.05)
