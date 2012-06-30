@@ -8,9 +8,6 @@ iodir_register=0x00
 gpio_register=0x09
 
 
-input_pins = 0x80
-output_pins = (~input_pins & 0xFF)
-
 with i2c.I2CBus() as bus:
     def write_register(reg, b):
         bus.transaction(
@@ -21,11 +18,12 @@ with i2c.I2CBus() as bus:
             i2c.write_bytes(address, reg),
             i2c.read(address, 1))[0][0]
     
+    # Reset the chip
     write_register(iodir_register, 0x80)
     write_register(gpio_register, 0x00)
     
     print("ready")
-
+    
     button_down = False
     count = 0
     
@@ -37,6 +35,6 @@ with i2c.I2CBus() as bus:
         
         if button_down and not button_was_down:
             count = min(count + 1, 127)
-            write_register(gpio_register, (gpio_state & 0x80)|count)
+            write_register(gpio_register, count)
         
         time.sleep(0.05)
