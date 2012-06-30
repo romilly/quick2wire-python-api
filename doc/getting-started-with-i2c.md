@@ -42,10 +42,10 @@ the `i2cdetect` command:
     70: -- -- -- -- -- -- -- --                         
 
 
-The default address is 0x20, but it can be changed (read the chip's
-data sheet for information about that).  If the chip appears at a
-different address, change the value of the address variable in the
-code below.
+The default address of the MCP23008 is 0x20, but it can be changed
+(read the chip's data sheet for information about that).  If the chip
+appears at a different address, change the value of the address
+variable in the code below.
 
 Now Let's Write Some Code!
 --------------------------
@@ -67,8 +67,8 @@ quits our program by pressing Control-C.
 To help us write the communication, we'll define some attributes of the MCP23008 chip:
 
     address = 0x20
-    iodir_register=0x00
-    gpio_register=0x09
+    iodir_register = 0x00
+    gpio_register = 0x09
 
 And define some helper functions inside the `with` statement to write to and read from registers of the chip:
 

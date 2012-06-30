@@ -4,8 +4,8 @@ import quick2wire.i2c as i2c
 import time
 
 address = 0x20
-iodir_register=0x00
-gpio_register=0x09
+iodir_register = 0x00
+gpio_register = 0x09
 
 def write_register(bus, reg, b):
     bus.transaction(
