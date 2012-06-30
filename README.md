@@ -36,7 +36,7 @@ variable.  For example:
     export QUICK2WIRE_API_HOME=[the directory cloned from Git or unpacked from the source archive]
     export PYTHONPATH=$PYTHONPATH:$QUICK2WIRE_API_HOME/src
 
-To install into a virtualenv, make the virtualenv active and run:
+To install into a [virtualenv](http://www.virtualenv.org/en/latest/index.html), make the virtualenv active and run:
 
     python setup.py install
 
@@ -44,5 +44,5 @@ To install into a virtualenv, make the virtualenv active and run:
 Getting Started
 ---------------
 
- * [Getting Started with GPIO](doc/getting-started-with-gpio.md)
- * [Getting Started with I2C](doc/getting-started-with-i2c.md)
+ * [Getting Started with GPIO](http://github.com/quick2wire/quick2wire-python-api/blob/master/doc/getting-started-with-gpio.md)
+ * [Getting Started with I2C](http://github.com/quick2wire/quick2wire-python-api/blob/master/doc/getting-started-with-i2c.md)
