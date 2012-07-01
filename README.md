@@ -7,9 +7,15 @@ Raspberry Pi's header pins, without running as the root user.
 Dependencies
 ------------
 
-The library depends on Python 3.1. To install Python 3.1 run the command:
+The library depends on Python 3.1. To install Python 3.1 run this command from an administrator account, such as `pi`:
 
     sudo apt-get install python3
+
+You'll also find the python tools [virtualenv](http://www.virtualenv.org/en/latest/index.html) and [pip](http://www.pip-installer.org/en/latest/index.html) useful:
+
+    sudo apt-get install python-pip
+    sudo apt-get install python-virtualenv
+
 
 The GPIO API depends on Quick2Wire GPIO Admin.  To install Quick2Wire
 GPIO Admin, follow the instructions at
@@ -36,9 +42,13 @@ variable.  For example:
     export QUICK2WIRE_API_HOME=[the directory cloned from Git or unpacked from the source archive]
     export PYTHONPATH=$PYTHONPATH:$QUICK2WIRE_API_HOME/src
 
-To install into a [virtualenv](http://www.virtualenv.org/en/latest/index.html), make the virtualenv active and run:
+To install into a virtualenv, make the virtualenv active and run:
 
     python setup.py install
+
+If you don't have virtualenv setup yet, you can create one in the project directory by running:
+
+    make env
 
 
 Getting Started
