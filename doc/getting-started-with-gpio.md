@@ -68,8 +68,8 @@ with Python [context managers](http://docs.python.org/reference/datamodel.html#c
         out_pin.value = 1
     	print(in_pin.value)
 
-This will ensure that the pins will be unexported, even if the user kills the program or a bad piece of 
-code throws an exception.
+This will unexport the pins when the program leaves the `with` statement, even 
+if the user kills the program or a bad piece of code throws an exception.
 
 Here's a slightly more complicated example that blinks an LED attached to header pin 12. This will 
 loop forever until the user stops it with a Control-C.
