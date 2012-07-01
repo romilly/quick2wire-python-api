@@ -30,23 +30,23 @@ Installation
 ------------
 
 The library is currently under active development, so we do not
-recommend installing it into the system-wide Python
-libraries. Instead, you can either use it with no installation or use
-virtualenv, to do all your development within an isolated Python
-environment, and install into that.
+recommend installing it into the system-wide Python libraries. 
+Instead, you can either use it without installation or 
+install it into an isolated Python development environment created with `virtualenv`.
 
-To use the library without any installation, add the full path of the
-`src` subdirectory of the source tree to the PYTHONPATH environment
-variable.  For example:
+To use the library without installation, add the full path of the
+`src` subdirectory of the source tree to the `PYTHONPATH` environment
+variable. For example:
 
     export QUICK2WIRE_API_HOME=[the directory cloned from Git or unpacked from the source archive]
     export PYTHONPATH=$PYTHONPATH:$QUICK2WIRE_API_HOME/src
 
-To install into a virtualenv, make the virtualenv active and run:
+To install into a virtualenv, [make the virtualenv active](http://www.virtualenv.org/en/latest/index.html#activate-script) 
+and run:
 
     python setup.py install
 
-If you don't have virtualenv setup yet, you can create one in the project directory by running:
+If you don't have virtualenv set up yet, you can create a local environment by running this in the project directory:
 
     make env
 
