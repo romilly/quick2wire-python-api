@@ -58,9 +58,9 @@ Putting it all together into a single program:
     out_pin.unexport()
     in_pin.unexport()
 
-To make sure you always unexport any pins you've exported, you can wrap up the Pin objects
-with Python [context managers](http://docs.python.org/reference/datamodel.html#context-managers) in a 
-[with](http://docs.python.org/reference/compound_stmts.html#with) statement:
+To make sure you always unexport any pins you've exported, you can wrap the Pin objects
+with `exported()`, a Python [context manager](http://docs.python.org/reference/datamodel.html#context-managers),
+within a [with](http://docs.python.org/reference/compound_stmts.html#with) statement:
 
     from quick2wire.gpio import Pin, exported
 
