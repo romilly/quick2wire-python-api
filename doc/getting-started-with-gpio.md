@@ -77,7 +77,7 @@ loop forever until the user stops it with a Control-C.
     from time import sleep
     from quick2wire.gpio import Pin, exported
     
-    with exported(Pin(12, Pin.Out)) as pin:
+    with exported(Pin(8, Pin.Out)) as pin:
         while True:
             pin.value = 1 - pin.value
             sleep(1)
@@ -91,4 +91,7 @@ just specify the physical pin on the device. [This page](http://elinux.org/Rpi_L
 currently seems to be the best summary of the pins and the I/O roles they fulfill. The library
 will allow you to allocate only those pins which support GPIO. Lower numbered
 pins are at the top end of the Pi with the SD Card and power connector. Pins 1 and 2 (at the top of 
-the columns) are the 3.3 and 5 volt outputs.
+the columns) are the 3.3 and 5 volt outputs. Here's the wiring for the blink program above.
+
+<img src="http://github.com/quick2wire/quick2wire-python-api/blob/master/doc/getting-started-with-gpio-setup.png"
+     alt="wiring diagram"/>

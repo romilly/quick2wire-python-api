@@ -37,3 +37,4 @@ output
 # Virtual environment
 python?.?-*/
 distribute-*.tar.gz
+.DS_Store
