@@ -81,3 +81,14 @@ loop forever until the user stops it with a Control-C.
         while True:
             pin.value = 1 - pin.value
             sleep(1)
+
+Connecting Pins
+---------------
+
+To make this blink program work, you'll need to know which physical pins to connect. The 
+`quick2wire.gpio` library sorts out the confusion of pin numbering schemes so that you can
+just specify the physical pin on the device. [This page](http://elinux.org/Rpi_Low-level_peripherals) 
+currently seems to be the best summary of the pins and the I/O roles they fulfill. The library
+will allow you to allocate only those pins which support GPIO. To be clear, the lower numbered
+pins are at the top end of the Pi with the SD Card and power connector. Pins 1 and 2 (at the top of 
+each column) are the 3.3 and 5 volt outputs.
