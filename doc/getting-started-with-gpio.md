@@ -89,6 +89,6 @@ To make this blink program work, you'll need to know which physical pins to conn
 `quick2wire.gpio` library sorts out the confusion of pin numbering schemes so that you can
 just specify the physical pin on the device. [This page](http://elinux.org/Rpi_Low-level_peripherals) 
 currently seems to be the best summary of the pins and the I/O roles they fulfill. The library
-will allow you to allocate only those pins which support GPIO. The lower numbered
+will allow you to allocate only those pins which support GPIO. Lower numbered
 pins are at the top end of the Pi with the SD Card and power connector. Pins 1 and 2 (at the top of 
 the columns) are the 3.3 and 5 volt outputs.
