@@ -5,7 +5,11 @@ Getting Started With GPIO
 Before You Start Coding...
 --------------------------
 
-Ensure you have installed gpio-admin and are in the gpio group.  
+Ensure you have installed gpio-admin and are in the gpio group.  Run
+the `groups` command to list your group membership. For example:
+
+    $ groups
+    nat fuse i2c gpio
 
 You can add yourself to the gpio group with the command:
 
