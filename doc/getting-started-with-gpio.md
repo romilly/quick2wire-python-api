@@ -58,7 +58,7 @@ Putting it all together into a single program:
     out_pin.unexport()
     in_pin.unexport()
 
-To make sure we always unexport any pins we've exported, we can wrap up the Pin objects
+To make sure you always unexport any pins you've exported, you can wrap up the Pin objects
 with Python [context managers](http://docs.python.org/reference/datamodel.html#context-managers) in a 
 [with](http://docs.python.org/reference/compound_stmts.html#with) statement:
 
