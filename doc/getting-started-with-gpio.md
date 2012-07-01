@@ -58,10 +58,21 @@ Putting it all together into a single program:
     out_pin.unexport()
     in_pin.unexport()
 
+To make sure we always unexport any pins we've exported, we can wrap up the Pin objects
+with Python [context managers](http://docs.python.org/reference/datamodel.html#context-managers) in a 
+[with](http://docs.python.org/reference/compound_stmts.html#with) statement:
 
-Another example, blinking an LED attached to header pin 12 and
-using a context manager to unexport the pin when the user quits 
-the program with Control-C.
+    from quick2wire.gpio import Pin, exported
+
+    with exported(Pin(12, Pin.Out)) as out_pin, exported(Pin(16, Pin.In)) as in_pin:
+        out_pin.value = 1
+    	print(in_pin.value)
+
+This will ensure that the pins will be unexported, even if the user kills the program or a bad piece of 
+code throws an exception.
+
+Here's a slightly more complicated example that blinks an LED attached to header pin 12. This will 
+loop forever until the user stops it with a Control-C.
 
     from time import sleep
     from quick2wire.gpio import Pin, exported
