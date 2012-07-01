@@ -41,15 +41,15 @@ variable. For example:
     export QUICK2WIRE_API_HOME=[the directory cloned from Git or unpacked from the source archive]
     export PYTHONPATH=$PYTHONPATH:$QUICK2WIRE_API_HOME/src
 
-To install into a virtualenv, [make the virtualenv active](http://www.virtualenv.org/en/latest/index.html#activate-script) 
-and run:
-
-    python setup.py install
-
-If you don't have virtualenv set up yet, you can create a local environment by running this in the project directory:
+To install into a virtualenv, from the project directory:
+* if you don't have virtualenv set up yet, you can create a local development environment by running:
 
     make env
 
+* [make the virtualenv active](http://www.virtualenv.org/en/latest/index.html#activate-script) 
+* then run:
+
+    python setup.py install
 
 Getting Started
 ---------------
