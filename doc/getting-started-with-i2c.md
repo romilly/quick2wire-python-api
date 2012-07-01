@@ -64,14 +64,13 @@ quits our program by pressing Control-C.
     with i2c.I2CBus() as bus:
         ...
 
-To help us write the communication, we'll define some attributes of the MCP23008 chip:
+To help us write the communication code, we'll define some attributes of the MCP23008 chip:
 
     address = 0x20
     iodir_register = 0x00
     gpio_register = 0x09
 
-And define some helper functions inside the `with` statement to write to and read from registers of the chip:
-
+And define some helper functions to write to and read from registers of the chip. This is where we perform I2C transactions. 
     def write_register(bus, reg, b):
         bus.transaction(
             i2c.write_bytes(address, reg, b))
