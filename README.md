@@ -32,7 +32,7 @@ Installation
 The library is currently under active development, so we do not
 recommend installing it into the system-wide Python libraries. 
 Instead, you can either use it without installation or 
-install it into an isolated Python development environment created with `virtualenv`.
+install it into an isolated Python development environment created with [`virtualenv`](http://www.virtualenv.org/).
 
 To use the library without installation, add the full path of the
 `src` subdirectory of the source tree to the `PYTHONPATH` environment
@@ -41,11 +41,7 @@ variable. For example:
     export QUICK2WIRE_API_HOME=[the directory cloned from Git or unpacked from the source archive]
     export PYTHONPATH=$PYTHONPATH:$QUICK2WIRE_API_HOME/src
 
-To install into a virtualenv, first change to  the project directory. If you don't have a virtualenv set up, you can create a local development environment by running:
-
-    make env
-
-Make the virtualenv [active](http://www.virtualenv.org/en/latest/index.html#activate-script), and then run:
+If you're using virtualenv, make your virtualenv [active](http://www.virtualenv.org/en/latest/index.html#activate-script), and then run:
 
     python3 setup.py install
 
