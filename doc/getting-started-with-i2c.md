@@ -1,10 +1,9 @@
 Getting Started With I2C
 ========================
 
-We're going to write a program that counts the number of times a
-button has been clicked and displays the count in binary on a LEDs.
-We'll connect the button and LEDs to an MCP23008 port expander and
-communicate to the MCP23008 by I2C.
+In this example, we're going to write a program that reads the state
+of the GPIO pins of an MCP23008 port expander connected to the
+Raspberry Pi's I2C bus.
 
 Before You Start Coding...
 --------------------------
@@ -41,7 +40,6 @@ the `i2cdetect` command:
     60: -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- 
     70: -- -- -- -- -- -- -- --                         
 
-
 The default address of the MCP23008 is 0x20, but it can be changed
 (read the chip's data sheet for information about that).  If the chip
 appears at a different address, change the value of the address
@@ -55,6 +53,11 @@ module.  We'll import it with a shorter name for convenience:
 
     import quick2wire.i2c as i2c
 
+Let's define variables to represent attributes of the MCP23008:
+
+    address = 0x20
+    iodir_register = 0x00
+    gpio_register = 0x09
 
 To communicate with the chip we need to create an I2CBus object.  The
 I2CBus class supports the context manager protocol, meaning we can use
@@ -64,90 +67,55 @@ quits our program by pressing Control-C.
     with i2c.I2CBus() as bus:
         ...
 
-To help us write the communication code, we'll define some attributes of the MCP23008 chip:
+Now we can communicate with the chip.  First we'll set all the GPIO
+pins be inputs by writing to the chip's IODIR register. Setting a bit
+in the register to 1 switches the corresponding pin to be an input, so
+setting the byte to 255 (or 0xFF in hex) switches all pins to input.
+To write to the register we perform an I2C transaction containing a
+single write operation that writes two bytes: the register to
+write to and the value of the register.
 
-    address = 0x20
-    iodir_register = 0x00
-    gpio_register = 0x09
-
-And define some helper functions to write to and read from registers of the chip. This is where we perform I2C transactions. 
-    def write_register(bus, reg, b):
         bus.transaction(
-            i2c.write_bytes(address, reg, b))
-    
-    def read_register(bus, reg):
-        return bus.transaction(
-            i2c.write_bytes(address, reg),
-            i2c.read(address, 1))[0][0]
+            i2c.write_bytes(address, iodir_register, 0xFF))
 
-Now we can communicate with the chip.  First we'll reset it so that
-GPIO pin 7 is an input pin and pins 0-6 are output pins, and clear the
-outputs to zero.
+Then we'll read the value of the chip's GPIO register by performing a
+transaction containing two operations: a write operation that tells
+the chip which register we want to read, and a read operation that
+reads a single byte from that register.
 
-    write_register(bus, iodir_register, 0x80)
-    write_register(bus, gpio_register, 0x00)
+        read_results = bus.transaction(
+            i2c.write_bytes(address, gpio_register),
+            i2c.read(address, 1))
 
-Then we'll loop.  On each iteration we'll read the GPIO register and
-test the state of the input pin to see if the button has been clicked.
-If it has, we'll increment the count to a maximum of 127, and write
-the new count to the GPIO register to set the value of the output pins
-connected to the LEDs.  Finally, we'll sleep a bit to let other
-processes use the CPU.
-    
-    button_down = False
-    count = 0
-    
-    while True:
-        gpio_state = read_register(bus, gpio_register)
-        
-        button_was_down = button_down
-        button_down = bool(gpio_state & 0x80)
-        
-        if button_down and not button_was_down:
-            count = min(count + 1, 127)
-            write_register(bus, gpio_register, count)
-        
-        time.sleep(0.05)
+The I2CBus' transaction method returns a list of byte sequences, one
+for each read operation performed.  Each result is an array of bytes
+read from the device.  So the state of the GPIO pins is the first and
+only byte of the first and only byte sequence returned.
 
+        gpio_state = read_results[0][0]
 
+We finally print that in hexadecimal:
+
+        print("%02x"%gpio_state)
 
 Putting it all together:
 
     #!/usr/bin/env python3
-
+    
     import quick2wire.i2c as i2c
-    import time
-
+    
     address = 0x20
-    iodir_register=0x00
-    gpio_register=0x09
-
-    def write_register(bus, reg, b):
+    iodir_register = 0x00
+    gpio_register = 0x09
+    
+    with i2c.I2CBus() as bus:    
         bus.transaction(
-            i2c.write_bytes(address, reg, b))
-
-    def read_register(bus, reg):
-        return bus.transaction(
-            i2c.write_bytes(address, reg),
-            i2c.read(address, 1))[0][0]
-
-    with i2c.I2CBus() as bus:
-        write_register(bus, iodir_register, 0x80)
-        write_register(bus, gpio_register, 0x00)
-
-        print("ready")
-
-        button_down = False
-        count = 0
-
-        while True:
-            gpio_state = read_register(bus, gpio_register)
-
-            button_was_down = button_down
-            button_down = bool(gpio_state & 0x80)
-
-            if button_down and not button_was_down:
-                count = min(count + 1, 127)
-                write_register(bus, gpio_register, count)
-
-            time.sleep(0.05)
+            i2c.write_bytes(address, iodir_register, 0xFF))
+        
+        read_results = bus.transaction(
+            i2c.write_bytes(address, gpio_register),
+            i2c.read(address, 1))
+        
+        gpio_state = read_results[0][0]
+        
+        print("%02x"%gpio_state)
