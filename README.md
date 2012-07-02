@@ -47,7 +47,7 @@ To install into a virtualenv, first change to  the project directory. If you don
 
 Make the virtualenv [active](http://www.virtualenv.org/en/latest/index.html#activate-script), and then run:
 
-    python setup.py install
+    python3 setup.py install
 
 Getting Started
 ---------------
