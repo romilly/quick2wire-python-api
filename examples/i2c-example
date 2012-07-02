@@ -16,4 +16,4 @@ with i2c.I2CBus() as bus:
     
     gpio_state = read_results[0][0]
     
-    print("%02x"%gpio_state)
+    print("%02x" % gpio_state)

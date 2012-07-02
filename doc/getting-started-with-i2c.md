@@ -96,7 +96,7 @@ only byte of the first and only byte sequence returned.
 
 We finally print that in hexadecimal:
 
-        print("%02x"%gpio_state)
+        print("%02x" % gpio_state)
 
 Putting it all together:
 
@@ -118,4 +118,4 @@ Putting it all together:
         
         gpio_state = read_results[0][0]
         
-        print("%02x"%gpio_state)
+        print("%02x" % gpio_state)
