@@ -98,8 +98,6 @@ def test_mcp23008_multibyte_writes():
         bus.transaction(
             i2c.write_bytes(address, IODIR, 0xFF, 0xAA))
         
-        # Read two bytes, the IODIR register and, thanks to sequential
-        # addressing mode, the next register, which is IOPOL
         iodir_state = read_register(bus, IODIR)
         iopol_state = read_register(bus, IOPOL)
         
