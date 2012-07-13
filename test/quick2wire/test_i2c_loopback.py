@@ -19,6 +19,8 @@ address = 0x20
 
 # Registers
 IODIR=0x00
+IOPOL=0x01
+IOCON = 0x05
 GPIO=0x09
 
 
@@ -64,3 +66,41 @@ def test_mcp23008_loopback_via_i2c_bus_api():
         for bitpattern in bitpatterns:
             set_high_bits(bus, bitpattern)
             check_low_bits(bus, bitpattern)
+
+
+@pytest.mark.loopback
+def test_mcp23008_multibyte_reads():
+    with i2c.I2CBus() as bus:
+        # Ensure sequential addressing mode is on
+        write_register(bus, IOCON, 0x00)
+        
+        write_register(bus, IODIR, 0xFF)
+        write_register(bus, IOPOL, 0xAA)
+        
+        # Read two bytes, the IODIR register and, thanks to sequential
+        # addressing mode, the next register, IOPOL
+        iodir_state, iopol_state = bus.transaction(
+            i2c.write_bytes(address, IODIR),
+            i2c.read(address, 2))[0]
+    
+        assert iodir_state == 0xFF
+        assert iopol_state == 0xAA
+
+
+@pytest.mark.loopback
+def test_mcp23008_multibyte_writes():
+    with i2c.I2CBus() as bus:
+        # Ensure sequential addressing mode is on
+        write_register(bus, IOCON, 0x00)
+        
+        # Write two bytes, the IODIR register and, thanks to
+        # sequential addressing mode, the next register, IOPOL
+        bus.transaction(
+            i2c.write_bytes(address, IODIR, 0xFF, 0xAA))
+        
+        iodir_state = read_register(bus, IODIR)
+        iopol_state = read_register(bus, IOPOL)
+        
+        assert iodir_state == 0xFF
+        assert iopol_state == 0xAA
+

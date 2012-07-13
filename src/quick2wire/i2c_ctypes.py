@@ -1,26 +1,23 @@
+# Warning: not part of the published Quick2Wire API.
+#
 # Converted from i2c.h and i2c-dev.h
 # I2C only, no SMB definitions
 
 from ctypes import c_int, c_ushort, c_short, c_ubyte, c_char, POINTER, Structure
 
-__u16 = c_ushort # /usr/include/asm-generic/int-ll64.h: 23
-
 # /usr/include/linux/i2c-dev.h: 38
 class i2c_msg(Structure):
     """<linux/i2c-dev.h> struct i2c_msg"""
+    
+    _fields_ = [
+        ('addr', c_uint16),
+        ('flags', c_ushort),
+        ('len', c_short),
+        ('buf', POINTER(c_char))]
+    
+    __slots__ = [name for name,type in _fields_]
 
-i2c_msg.__slots__ = [
-    'addr',
-    'flags',
-    'len',
-    'buf',
-]
-i2c_msg._fields_ = [
-    ('addr', __u16),
-    ('flags', c_ushort),
-    ('len', c_short),
-    ('buf', POINTER(c_char)),
-]
+
 
 # i2c_msg flags
 I2C_M_TEN		= 0x0010	# this is a ten bit chip address
@@ -35,15 +32,11 @@ I2C_M_RECV_LEN		= 0x0400	# length will be first received byte
 # /usr/include/linux/i2c-dev.h: 155
 class i2c_rdwr_ioctl_data(Structure):
     """<linux/i2c-dev.h> struct i2c_rdwr_ioctl_data"""
+    _fields_ = [
+        ('msgs', POINTER(i2c_msg)),
+        ('nmsgs', c_int)]
 
-i2c_rdwr_ioctl_data.__slots__ = [
-    'msgs',
-    'nmsgs',
-]
-i2c_rdwr_ioctl_data._fields_ = [
-    ('msgs', POINTER(i2c_msg)),
-    ('nmsgs', c_int),
-]
+    __slots__ = [name for name,type in _fields_]
 
 I2C_FUNC_I2C			= 0x00000001
 I2C_FUNC_10BIT_ADDR		= 0x00000002

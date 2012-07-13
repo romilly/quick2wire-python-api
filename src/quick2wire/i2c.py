@@ -3,7 +3,7 @@ from contextlib import closing
 import posix
 from fcntl import ioctl
 from quick2wire.i2c_ctypes import *
-from ctypes import create_string_buffer, sizeof, c_int, byref, pointer, addressof
+from ctypes import create_string_buffer, sizeof, c_int, byref, pointer, addressof, string_at
 
 
 def read(addr, n_bytes):
@@ -32,7 +32,6 @@ def write(addr, byte_seq):
 
 def _new_i2c_msg(addr, flags, buf):
     return i2c_msg(addr=addr, flags=flags, len=sizeof(buf), buf=buf)
-
 
 
 class I2CBus:
@@ -96,5 +95,9 @@ class I2CBus:
         
         ioctl(self.fd, I2C_RDWR, addressof(ioctl_arg))
         
-        return [bytes(m.buf.contents) for m in msgs if (m.flags & I2C_M_RD)]
+        return [i2c_msg_to_bytes(m) for m in msgs if (m.flags & I2C_M_RD)]
+
+
+def i2c_msg_to_bytes(m):
+    return string_at(m.buf, m.len)
 

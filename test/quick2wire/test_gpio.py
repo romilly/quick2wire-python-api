@@ -5,7 +5,7 @@ import pytest
 
 class TestPin:
     def setup_method(self, method):
-        self.pin = Pin(5)
+        self.pin = Pin(25)
     
     def teardown_method(self, method):
         if self.pin.is_exported:
@@ -45,7 +45,7 @@ class TestPin:
         assert self.pin.value == 0
         
     def test_can_export_pin_and_set_direction_on_construction(self):
-        p = Pin(5, Pin.Out)
+        p = Pin(25, Pin.Out)
         
         assert p.is_exported
         assert p.direction == Pin.Out
@@ -54,20 +54,20 @@ class TestPin:
 
 class TestExportedContextManager:
     def test_can_automatically_unexport_pin_with_context_manager(self):
-        with exported(Pin(5)) as p:
+        with exported(Pin(25)) as p:
             assert p.is_exported
         
-        p = Pin(5)
+        p = Pin(25)
         assert not p.is_exported
     
     def test_can_use_context_manager_with_pin_exported_by_constructor(self):
-        with exported(Pin(5, Pin.Out)) as p:
+        with exported(Pin(25, Pin.Out)) as p:
             assert p.is_exported
         
-        p = Pin(5)
+        p = Pin(25)
         assert not p.is_exported
     
     def test_can_use_context_manager_with_pin_already_exported(self):
-        Pin(5).export()
+        Pin(25).export()
         self.test_can_automatically_unexport_pin_with_context_manager()
         
