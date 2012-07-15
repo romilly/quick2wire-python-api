@@ -94,4 +94,5 @@ will allow you to allocate only those pins which support GPIO. Lower numbered
 pins are at the top end of the Pi with the SD Card and power connector. Pins 1 and 2 (at the top of 
 the columns) are the 3.3 and 5 volt outputs. 
 
-Here's a Pi wired up for the blink program !["gpio wiring example"](https://github.com/quick2wire/quick2wire-python-api/raw/master/doc/getting-started-with-gpio-setup.png)
+Here's a Pi wired up for the blink program 
+<img src="http://github.com/quick2wire/quick2wire-python-api/raw/master/doc/getting-started-with-gpio-setup.png" alt="GPIO wiring example" width="250"/>
