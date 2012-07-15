@@ -71,7 +71,7 @@ as part of a [with](http://docs.python.org/reference/compound_stmts.html#with) s
 This will unexport the pins when the program leaves the `with` statement, even 
 if the user kills the program or a bad piece of code throws an exception.
 
-Here's a slightly more complicated example that blinks an LED attached to header pin 12. This will 
+Here's a slightly more complicated example that blinks an LED attached to pin 8. This will 
 loop forever until the user stops it with a Control-C.
 
     from time import sleep
@@ -81,6 +81,7 @@ loop forever until the user stops it with a Control-C.
         while True:
             pin.value = 1 - pin.value
             sleep(1)
+
 
 Connecting Pins
 ---------------
@@ -93,3 +94,4 @@ will allow you to allocate only those pins which support GPIO. Lower numbered
 pins are at the top end of the Pi with the SD Card and power connector. Pins 1 and 2 (at the top of 
 the columns) are the 3.3 and 5 volt outputs. 
 
+Here's a Pi wired up for the blink program !["gpio wiring example"](https://github.com/quick2wire/quick2wire-python-api/raw/master/doc/getting-started-with-gpio-setup.png)
