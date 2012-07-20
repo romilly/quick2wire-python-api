@@ -2,7 +2,7 @@ Quick2Wire Python API
 =====================
 
 A Python library for controlling the hardware attached to the
-Raspberry Pi's header pins, without running as the root user.
+Raspberry Pi's header pins, [without running as the root user](http://quick2wire.com/articles/working-safely-with-your-pi/).
 
 Dependencies
 ------------
