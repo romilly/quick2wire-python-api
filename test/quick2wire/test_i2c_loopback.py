@@ -1,5 +1,5 @@
 """
-This is a loopback test which uses the MCP23008 to test the quick2wire.i2c.I2CBus class.
+This is a loopback test which uses the MCP23008 to test the quick2wire.i2c.I2CMaster class.
 The MCP23008 has eight GPIO pins called GP0 to GP7
 for details, see the datasheet at http://ww1.microchip.com/downloads/en/DeviceDoc/21919d.pdf
 Connect the GPIO pins in pairs as follows:
@@ -56,7 +56,7 @@ def check_high_bits(bus, bitpattern):
 def test_mcp23008_loopback_via_i2c_bus_api():
     bitpatterns = [(1 << i) for i in range(0,4)]
     
-    with i2c.I2CBus() as bus:
+    with i2c.I2CMaster() as bus:
         set_low_bits_as_output(bus)
         for bitpattern in bitpatterns:
             set_low_bits(bus, bitpattern)
@@ -70,7 +70,7 @@ def test_mcp23008_loopback_via_i2c_bus_api():
 
 @pytest.mark.loopback
 def test_mcp23008_multibyte_reads():
-    with i2c.I2CBus() as bus:
+    with i2c.I2CMaster() as bus:
         # Ensure sequential addressing mode is on
         write_register(bus, IOCON, 0x00)
         
@@ -89,7 +89,7 @@ def test_mcp23008_multibyte_reads():
 
 @pytest.mark.loopback
 def test_mcp23008_multibyte_writes():
-    with i2c.I2CBus() as bus:
+    with i2c.I2CMaster() as bus:
         # Ensure sequential addressing mode is on
         write_register(bus, IOCON, 0x00)
         

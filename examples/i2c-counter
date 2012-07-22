@@ -16,7 +16,7 @@ def read_register(bus, reg):
         i2c.write_bytes(address, reg),
         i2c.read(address, 1))[0][0]
 
-with i2c.I2CBus() as bus:    
+with i2c.I2CMaster() as bus:    
     write_register(bus, iodir_register, 0x80)
     write_register(bus, gpio_register, 0x00)
     

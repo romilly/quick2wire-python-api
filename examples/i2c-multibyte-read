@@ -8,7 +8,7 @@ iopol_register = 0x01
 iocon_register = 0x05
 gpio_register = 0x09
 
-with i2c.I2CBus() as bus:
+with i2c.I2CMaster() as bus:
     # Ensure sequential addressing mode is on
     bus.transaction(
         i2c.write_bytes(address, iocon_register, 0b00000000))

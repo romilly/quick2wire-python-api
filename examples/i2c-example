@@ -6,7 +6,7 @@ address = 0x20
 iodir_register = 0x00
 gpio_register = 0x09
 
-with i2c.I2CBus() as bus:    
+with i2c.I2CMaster() as bus:    
     bus.transaction(
         i2c.write_bytes(address, iodir_register, 0xFF))
     

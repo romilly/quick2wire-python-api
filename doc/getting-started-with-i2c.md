@@ -59,12 +59,12 @@ Let's define variables to represent attributes of the MCP23008:
     iodir_register = 0x00
     gpio_register = 0x09
 
-To communicate with the chip we need to create an I2CBus object.  The
-I2CBus class supports the context manager protocol, meaning we can use
+To communicate with the chip we need to create an I2CMaster object.  The
+I2CMaster class supports the context manager protocol, meaning we can use
 the `with` statement to automatically close the bus when the user
 quits our program by pressing Control-C.
 
-    with i2c.I2CBus() as bus:
+    with i2c.I2CMaster() as bus:
         ...
 
 Now we can communicate with the chip.  First we'll set all the GPIO
@@ -87,7 +87,7 @@ reads a single byte from that register.
             i2c.write_bytes(address, gpio_register),
             i2c.read(address, 1))
 
-The I2CBus' transaction method returns a list of byte sequences, one
+The I2CMaster' transaction method returns a list of byte sequences, one
 for each read operation performed.  Each result is an array of bytes
 read from the device.  So the state of the GPIO pins is the first and
 only byte of the first and only byte sequence returned.
@@ -108,7 +108,7 @@ Putting it all together:
     iodir_register = 0x00
     gpio_register = 0x09
     
-    with i2c.I2CBus() as bus:    
+    with i2c.I2CMaster() as bus:    
         bus.transaction(
             i2c.write_bytes(address, iodir_register, 0xFF))
         
