@@ -3,7 +3,7 @@
 # Converted from i2c.h and i2c-dev.h
 # I2C only, no SMB definitions
 
-from ctypes import c_int, c_ushort, c_short, c_ubyte, c_char, POINTER, Structure
+from ctypes import c_int, c_uint16, c_ushort, c_short, c_ubyte, c_char, POINTER, Structure
 
 # /usr/include/linux/i2c-dev.h: 38
 class i2c_msg(Structure):
