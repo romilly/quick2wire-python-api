@@ -1,0 +1,14 @@
+from quick2wire.spi import *
+import time
+
+mcp23s17 = SPIDevice(0, 0)
+while(True):
+    try:
+        response = mcp23s17.transaction(write_bytes(0x41, 0x13), read(1))
+        print ("output = %i" % ord(response[0]))
+        time.sleep(1)
+    except KeyboardInterrupt:
+        break
+
+
+
