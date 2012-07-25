@@ -11,26 +11,26 @@ gpio_register = 0x09
 with i2c.I2CMaster() as bus:
     # Ensure sequential addressing mode is on
     bus.transaction(
-        i2c.write_bytes(address, iocon_register, 0b00000000))
+        i2c.writing_bytes(address, iocon_register, 0b00000000))
     
     # Turn all pins to read mode
     bus.transaction(
-        i2c.write_bytes(address, iodir_register, 0b11111111))
+        i2c.writing_bytes(address, iodir_register, 0b11111111))
     
     # Alternate pin polarity
     bus.transaction(
-        i2c.write_bytes(address, iopol_register, 0b10101010))
+        i2c.writing_bytes(address, iopol_register, 0b10101010))
     
     # Read a single byte (the GPIO register)
     gpio_state = bus.transaction(
-        i2c.write_bytes(address, gpio_register),
-        i2c.read(address, 1))[0][0]
+        i2c.writing_bytes(address, gpio_register),
+        i2c.reading(address, 1))[0][0]
     
     # Read two bytes, the IODIR register and, thanks to sequential
     # addressing mode, the next register, which is IOPOL
     iodir_state, iopol_state = bus.transaction(
-        i2c.write_bytes(address, iodir_register),
-        i2c.read(address, 2))[0]
+        i2c.writing_bytes(address, iodir_register),
+        i2c.reading(address, 2))[0]
     
     print("GPIO: ", bin(gpio_state)[2:])
     print("IODIR:", bin(iodir_state)[2:])

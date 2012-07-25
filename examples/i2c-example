@@ -8,11 +8,11 @@ gpio_register = 0x09
 
 with i2c.I2CMaster() as bus:    
     bus.transaction(
-        i2c.write_bytes(address, iodir_register, 0xFF))
+        i2c.writing_bytes(address, iodir_register, 0xFF))
     
     read_results = bus.transaction(
-        i2c.write_bytes(address, gpio_register),
-        i2c.read(address, 1))
+        i2c.writing_bytes(address, gpio_register),
+        i2c.reading(address, 1))
     
     gpio_state = read_results[0][0]
     

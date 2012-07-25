@@ -77,12 +77,12 @@ def duplex(write_byte_sequence):
 def duplex_bytes(*write_bytes):
     return duplex(write_bytes)
 
-def read(byte_count):
+def reading(byte_count):
     return _SPITransfer(read_byte_count=byte_count)
 
-def write(byte_sequence):
+def writing(byte_sequence):
     return _SPITransfer(write_byte_seq=byte_sequence)
 
-def write_bytes(*byte_values):
+def writing_bytes(*byte_values):
     return write(byte_values)
 

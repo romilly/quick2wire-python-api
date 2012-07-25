@@ -24,64 +24,64 @@ IOCON = 0x05
 GPIO=0x09
 
 
-def write_register(bus, reg, b):
-    bus.transaction(
-        i2c.write_bytes(address, reg, b))
+def write_register(master, reg, b):
+    master.transaction(
+        i2c.writing_bytes(address, reg, b))
     
-def read_register(bus, reg):
-    return bus.transaction(
-        i2c.write_bytes(address, reg),
-        i2c.read(address, 1))[0][0]
+def read_register(master, reg):
+    return master.transaction(
+        i2c.writing_bytes(address, reg),
+        i2c.reading(address, 1))[0][0]
 
-def set_low_bits_as_output(bus):
-    write_register(bus, IODIR, 0xF0)
+def set_low_bits_as_output(master):
+    write_register(master, IODIR, 0xF0)
     
-def set_high_bits_as_output(bus):
-    write_register(bus, IODIR, 0x0F)
+def set_high_bits_as_output(master):
+    write_register(master, IODIR, 0x0F)
 
-def set_low_bits(bus, bitpattern):
-    write_register(bus, GPIO, bitpattern & 0x0F)
+def set_low_bits(master, bitpattern):
+    write_register(master, GPIO, bitpattern & 0x0F)
     
-def set_high_bits(bus, bitpattern):
-    write_register(bus, GPIO, (bitpattern << 4) & 0xF0)
+def set_high_bits(master, bitpattern):
+    write_register(master, GPIO, (bitpattern << 4) & 0xF0)
 
-def check_low_bits(bus, bitpattern):
-    assert bitpattern == (read_register(bus, GPIO) & 0x0F)
+def check_low_bits(master, bitpattern):
+    assert bitpattern == (read_register(master, GPIO) & 0x0F)
 
-def check_high_bits(bus, bitpattern):
-    assert bitpattern << 4 == (read_register(bus, GPIO) & 0xF0)
+def check_high_bits(master, bitpattern):
+    assert bitpattern << 4 == (read_register(master, GPIO) & 0xF0)
 
 
 @pytest.mark.loopback
-def test_mcp23008_loopback_via_i2c_bus_api():
+def test_mcp23008_loopback_via_i2c_master_api():
     bitpatterns = [(1 << i) for i in range(0,4)]
     
-    with i2c.I2CMaster() as bus:
-        set_low_bits_as_output(bus)
+    with i2c.I2CMaster() as master:
+        set_low_bits_as_output(master)
         for bitpattern in bitpatterns:
-            set_low_bits(bus, bitpattern)
-            check_high_bits(bus, bitpattern)
+            set_low_bits(master, bitpattern)
+            check_high_bits(master, bitpattern)
         
-        set_high_bits_as_output(bus)
+        set_high_bits_as_output(master)
         for bitpattern in bitpatterns:
-            set_high_bits(bus, bitpattern)
-            check_low_bits(bus, bitpattern)
+            set_high_bits(master, bitpattern)
+            check_low_bits(master, bitpattern)
 
 
 @pytest.mark.loopback
 def test_mcp23008_multibyte_reads():
-    with i2c.I2CMaster() as bus:
+    with i2c.I2CMaster() as master:
         # Ensure sequential addressing mode is on
-        write_register(bus, IOCON, 0x00)
+        write_register(master, IOCON, 0x00)
         
-        write_register(bus, IODIR, 0xFF)
-        write_register(bus, IOPOL, 0xAA)
+        write_register(master, IODIR, 0xFF)
+        write_register(master, IOPOL, 0xAA)
         
         # Read two bytes, the IODIR register and, thanks to sequential
         # addressing mode, the next register, IOPOL
-        iodir_state, iopol_state = bus.transaction(
-            i2c.write_bytes(address, IODIR),
-            i2c.read(address, 2))[0]
+        iodir_state, iopol_state = master.transaction(
+            i2c.writing_bytes(address, IODIR),
+            i2c.reading(address, 2))[0]
     
         assert iodir_state == 0xFF
         assert iopol_state == 0xAA
@@ -89,17 +89,17 @@ def test_mcp23008_multibyte_reads():
 
 @pytest.mark.loopback
 def test_mcp23008_multibyte_writes():
-    with i2c.I2CMaster() as bus:
+    with i2c.I2CMaster() as master:
         # Ensure sequential addressing mode is on
-        write_register(bus, IOCON, 0x00)
+        write_register(master, IOCON, 0x00)
         
         # Write two bytes, the IODIR register and, thanks to
         # sequential addressing mode, the next register, IOPOL
-        bus.transaction(
-            i2c.write_bytes(address, IODIR, 0xFF, 0xAA))
+        master.transaction(
+            i2c.writing_bytes(address, IODIR, 0xFF, 0xAA))
         
-        iodir_state = read_register(bus, IODIR)
-        iopol_state = read_register(bus, IOPOL)
+        iodir_state = read_register(master, IODIR)
+        iopol_state = read_register(master, IOPOL)
         
         assert iodir_state == 0xFF
         assert iopol_state == 0xAA

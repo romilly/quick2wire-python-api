@@ -2,10 +2,10 @@
 from quick2wire.spi import *
 
 mcp23s17 = SPIDevice(0, 0)
-mcp23s17.transaction(write_bytes(0x40, 0x00, 0x00))
+mcp23s17.transaction(writing_bytes(0x40, 0x00, 0x00))
 try:
     for i in cycle(range(255)):
-        mcp23s17.transaction(write_bytes(0x40, 0x12, i))
+        mcp23s17.transaction(writing_bytes(0x40, 0x12, i))
         time.sleep(0.1)
 except KeyboardInterrupt:
-    mcp23s17.transaction(write_bytes(0x40, 0x12, 0x00))
+    mcp23s17.transaction(writing_bytes(0x40, 0x12, 0x00))

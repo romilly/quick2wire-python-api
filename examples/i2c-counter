@@ -9,12 +9,12 @@ gpio_register = 0x09
 
 def write_register(bus, reg, b):
     bus.transaction(
-        i2c.write_bytes(address, reg, b))
+        i2c.writing_bytes(address, reg, b))
     
 def read_register(bus, reg):
     return bus.transaction(
-        i2c.write_bytes(address, reg),
-        i2c.read(address, 1))[0][0]
+        i2c.writing_bytes(address, reg),
+        i2c.reading(address, 1))[0][0]
 
 with i2c.I2CMaster() as bus:    
     write_register(bus, iodir_register, 0x80)

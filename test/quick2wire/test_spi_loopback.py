@@ -65,7 +65,7 @@ def set_io_direction_b(mcp23s17, b):
     write_register(mcp23s17, IODIRB, b)
 
 def write_register(mcp23s17, reg, b):
-    device.transaction(write_bytes(address, reg, b))
+    mcp23s17.transaction(writing_bytes(address, reg, b))
 
 def read_register(mcp23s17, reg):
-    return ord(mcp23s17.transaction(write_bytes(address+1, reg), read(1))[0])
+    return ord(mcp23s17.transaction(writing_bytes(address+1, reg), reading(1))[0])

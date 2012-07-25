@@ -11,7 +11,7 @@ class I2CMaster:
     
     Transactions are performed by passing one or more I2C I/O messages
     to the transaction method of the bus.  I2C I/O messages are created
-    with the read, read_into, write and write_bytes functions defined in
+    with the reading, reading_into, writing and writing_bytes functions defined in
     the quick2wire.i2c module.
     
     An I2CMaster acts as a context manager, allowing it to be used in a
@@ -23,7 +23,7 @@ class I2CMaster:
         
         with i2c.I2CMaster() as bus:
             bus.transaction(
-                i2c.write(0x20, bytes([0x01, 0xFF])))
+                i2c.writing(0x20, bytes([0x01, 0xFF])))
     
     """
     
@@ -57,8 +57,8 @@ class I2CMaster:
         Perform an I2C I/O transaction.
 
         Arguments:
-        *msgs - I2C messages created by one of the read, read_into,
-                write or write_bytes functions.
+        *msgs - I2C messages created by one of the reading, reading_into,
+                writing or writing_bytes functions.
         """
         
         msg_count = len(msgs)
@@ -71,22 +71,22 @@ class I2CMaster:
 
 
 
-def read(addr, n_bytes):
+def reading(addr, n_bytes):
     """An I2C I/O message that reads n_bytes bytes of data"""
-    return read_into(addr, create_string_buffer(n_bytes))
+    return reading_into(addr, create_string_buffer(n_bytes))
 
-def read_into(addr, buf):
+def reading_into(addr, buf):
     """An I2C I/O message that reads into an existing ctypes string buffer."""
     return _new_i2c_msg(addr, I2C_M_RD, buf)
 
-def write_bytes(addr, *bytes):
+def writing_bytes(addr, *bytes):
     """An I2C I/O message that writes one or more bytes of data. 
     
     Each byte is passed as an argument to this function.
     """
-    return write(addr, bytes)
+    return writing(addr, bytes)
 
-def write(addr, byte_seq):
+def writing(addr, byte_seq):
     """An I2C I/O message that writes one or more bytes of data.
     
     The bytes are passed to this function as a sequence.
