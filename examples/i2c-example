@@ -1,19 +1,23 @@
 #!/usr/bin/env python3
 
-import quick2wire.i2c as i2c
+from quick2wire.i2c import I2CMaster, writing_bytes, reading
+import time
 
 address = 0x20
 iodir_register = 0x00
 gpio_register = 0x09
 
-with i2c.I2CMaster() as bus:    
-    bus.transaction(
-        i2c.writing_bytes(address, iodir_register, 0xFF))
-    
-    read_results = bus.transaction(
-        i2c.writing_bytes(address, gpio_register),
-        i2c.reading(address, 1))
-    
-    gpio_state = read_results[0][0]
-    
-    print("%02x" % gpio_state)
+with I2CMaster() as master:    
+    master.transaction(
+        writing_bytes(address, iodir_register, 0xFF))
+	
+    while True:    
+        read_results = master.transaction(
+            writing_bytes(address, gpio_register),
+            reading(address, 1))
+        
+        gpio_state = read_results[0][0]
+        
+        print("%02x" % gpio_state)
+        
+        time.sleep(1)
