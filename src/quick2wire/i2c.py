@@ -61,7 +61,8 @@ class I2CMaster:
         *msgs -- I2C messages created by one of the reading, reading_into,
                  writing or writing_bytes functions.
         
-        Returns: a list of byte sequences, one for each read operation performed.
+        Returns: a list of byte sequences, one for each read operation 
+                 performed.
         """
         
         msg_count = len(msgs)

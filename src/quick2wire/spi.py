@@ -31,11 +31,10 @@ class SPIDevice:
         """Opens the SPI device.
         
         Arguments:
-        chip_select      -- the SPI chip select line to use. The Raspberry Pi
-                            only has two SPI chip select lines, numbered 0 and 1.
-        bus              -- the number of the bus (default 0,
-                            the only bus on the Raspberry Pi accessible
-                            via the header pins).
+        chip_select -- the SPI chip select line to use. The Raspberry Pi
+                       only has two chip select lines, numbered 0 and 1.
+        bus         -- the number of the bus (default 0, the only SPI bus
+                       on the Raspberry Pi).
         """
         self.fd = posix.open("/dev/spidev%i.%i"%(bus,chip_select), posix.O_RDWR)
 
@@ -44,8 +43,9 @@ class SPIDevice:
         Perform an SPI I/O transaction.
         
         Arguments:
-        *transfers -- SPI transfer requests messages created by one of the reading,
-                      writing, writing_bytes, duplex or duplex_bytes functions.
+        *transfers -- SPI transfer requests created by one of the reading,
+                      writing, writing_bytes, duplex or duplex_bytes 
+                      functions.
 
         Returns: a list of byte sequences, one for each read or duplex
                  operation performed.
