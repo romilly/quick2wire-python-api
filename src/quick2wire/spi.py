@@ -84,5 +84,5 @@ def writing(byte_sequence):
     return _SPITransfer(write_byte_seq=byte_sequence)
 
 def writing_bytes(*byte_values):
-    return write(byte_values)
+    return writing(byte_values)
 

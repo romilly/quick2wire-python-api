@@ -38,3 +38,6 @@ output
 python?.?-*/
 distribute-*.tar.gz
 .DS_Store
+
+# idea
+.idea/
