@@ -10,21 +10,22 @@ class I2CMaster:
     """Performs I2C I/O transactions on an I2C bus.
     
     Transactions are performed by passing one or more I2C I/O messages
-    to the transaction method of the bus.  I2C I/O messages are created
-    with the reading, reading_into, writing and writing_bytes functions defined in
-    the quick2wire.i2c module.
+    to the transaction method of the I2CMaster.  I2C I/O messages are
+    created with the reading, reading_into, writing and writing_bytes
+    functions defined in the quick2wire.i2c module.
     
     An I2CMaster acts as a context manager, allowing it to be used in a
-    with statement.  The bus is closed at the end of the with statement.
+    with statement.  The I2CMaster's file descriptor is closed at
+    the end of the with statement and the instance cannot be used for
+    further I/O.
     
     For example:
     
-        import quick2wire.i2c as i2c
+        from quick2wire.i2c import I2CMaster, writing
         
-        with i2c.I2CMaster() as bus:
-            bus.transaction(
-                i2c.writing(0x20, bytes([0x01, 0xFF])))
-    
+        with I2CMaster() as i2c:
+            i2c.transaction(
+                writing(0x20, bytes([0x01, 0xFF])))
     """
     
     def __init__(self, n=0, extra_open_flags=0):
@@ -57,8 +58,10 @@ class I2CMaster:
         Perform an I2C I/O transaction.
 
         Arguments:
-        *msgs - I2C messages created by one of the reading, reading_into,
-                writing or writing_bytes functions.
+        *msgs -- I2C messages created by one of the reading, reading_into,
+                 writing or writing_bytes functions.
+        
+        Returns: a list of byte sequences, one for each read operation performed.
         """
         
         msg_count = len(msgs)
