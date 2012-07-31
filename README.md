@@ -7,7 +7,7 @@ Raspberry Pi's header pins, [without running as the root user](http://quick2wire
 Dependencies
 ------------
 
-The library depends on Python 3.1. To install Python 3.1 run this command from an administrator account, such as `pi`:
+The library depends on Python 3. To install Python 3 run this command from an administrator account, such as `pi`:
 
     sudo apt-get install python3
 
