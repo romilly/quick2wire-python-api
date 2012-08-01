@@ -57,6 +57,8 @@ def test_mcp23008_loopback_via_i2c_master_api():
     bitpatterns = [(1 << i) for i in range(0,4)]
     
     with i2c.I2CMaster() as master:
+        # ensure IOPOL is set to default
+        write_register(master, IOPOL, 0x00)
         set_low_bits_as_output(master)
         for bitpattern in bitpatterns:
             set_low_bits(master, bitpattern)
