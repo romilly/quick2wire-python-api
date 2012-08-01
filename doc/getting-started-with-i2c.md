@@ -76,7 +76,7 @@ single write operation that writes two bytes: the register to
 write to and the value of the register.
 
         bus.transaction(
-            i2c.write_bytes(address, iodir_register, 0xFF))
+            i2c.writing_bytes(address, iodir_register, 0xFF))
 
 Then we'll read the value of the chip's GPIO register by performing a
 transaction containing two operations: a write operation that tells
@@ -84,8 +84,8 @@ the chip which register we want to read, and a read operation that
 reads a single byte from that register.
 
         read_results = bus.transaction(
-            i2c.write_bytes(address, gpio_register),
-            i2c.read(address, 1))
+            i2c.writing_bytes(address, gpio_register),
+            i2c.reading(address, 1))
 
 The I2CMaster' transaction method returns a list of byte sequences, one
 for each read operation performed.  Each result is an array of bytes
@@ -110,11 +110,11 @@ Putting it all together:
     
     with i2c.I2CMaster() as bus:    
         bus.transaction(
-            i2c.write_bytes(address, iodir_register, 0xFF))
+            i2c.writing_bytes(address, iodir_register, 0xFF))
         
         read_results = bus.transaction(
-            i2c.write_bytes(address, gpio_register),
-            i2c.read(address, 1))
+            i2c.writing_bytes(address, gpio_register),
+            i2c.reading(address, 1))
         
         gpio_state = read_results[0][0]
         
