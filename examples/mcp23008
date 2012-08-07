@@ -1,0 +1,81 @@
+#!/usr/bin/env python3
+
+from contextlib import closing
+import quick2wire.i2c as i2c
+from time import sleep
+from itertools import cycle
+"""
+The beginning of a library for the mcp23008.
+
+We're building on the lower-level I2CMaster class in our I2C library to create a class that represents
+the MCP230088-bit port expander.
+
+To start with, we'll give the class methods that allow us to read and write byte values on its GPIO pins,
+and set which pins are inpouts and which are outputs.
+
+The outputs cycle from GP0 to GP7. YOu can see a basic demo at http://youtu.be/yzk1gezTHSg
+"""
+
+# Can add from 0 to 7 to this
+MCP23008_BASE_ADDRESS = 0x20
+
+# Registers
+IODIR=0x00
+IPOL=0x01
+GPINTEN=0x02
+DEFVAL=0x03
+INTCON=0x04
+IOCON=0x05
+GPPU=0x06
+INTF=0x07
+INTCAP=0x08
+GPIO=0x09
+OLAT=0x0A
+
+
+class MCP23008:
+    def __init__(self, master, address=MCP23008_BASE_ADDRESS):
+        self.master = master
+        self.address = address
+
+    def reset(self):
+        self._write_register(IODIR, 0xFF)
+        for reg in [IPOL, GPINTEN, DEFVAL, INTCON, IOCON, GPU, INTF, INTCAP, GPIO, OLAT]:
+            self._write_register(reg, 0)
+
+    def _write_register(self, reg, b):
+            self.master.transaction(
+                i2c.writing_bytes(self.address, reg, b))
+    
+    def _read_register(self, reg):
+            return self.master.transaction(
+                i2c.writing_bytes(self.address, reg),
+                i2c.reading(self.address, 1))[0][0]
+    
+    def set_io_direction(self, b):
+        # bit <n> of <b> is 1 <-> MCP23008 GP<n> is configured as an Input
+        self._write_register(IODIR, b)
+    
+    def io_direction(self):
+        return self._read_register(IODIR)
+    
+    def set_gpio(self, b):
+        self._write_register(GPIO, b)
+    
+    def gpio(self):
+        return self._read_register(GPIO)
+
+if __name__ == '__main__':
+    with closing(i2c.I2CMaster(0)) as master:
+        mcp = MCP23008(master)
+        cycling_bits = [1 << n for n in range(0,8)]
+        mcp.set_io_direction(0)
+        try:
+            for bit_pattern in cycle(cycling_bits):
+                mcp.set_gpio(bit_pattern)
+                sleep(0.1)
+
+        except KeyboardInterrupt:
+            mcp.set_gpio(0x00)
+
+
