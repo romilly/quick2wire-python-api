@@ -1,7 +1,7 @@
 
 # Which version of python are we using?
 ifndef python
-python=3.1
+python=3.2
 endif
 
 ARCHITECTURE:=$(shell uname -m)

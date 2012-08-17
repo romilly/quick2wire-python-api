@@ -51,10 +51,24 @@ def pin_file(name, parser, doc):
     def _read(self):
         with open(self._pin_file(name), "r") as f:
             return parser(f.read())
-    
+
     def _write(self, value):
         with open(self._pin_file(name), "w") as f:
             f.write(str(value))
+
+    return property(_read, _write, doc=doc)
+
+def pin_value_file(name, doc):
+    def _read(self):
+        f = self._lazyopen()
+        f.seek(0)
+        v = f.read()
+        return int(v) if v else 0
+
+    def _write(self, value):
+        f = self._lazyopen()
+        f.seek(0)
+        f.write(str(value))
     
     return property(_read, _write, doc=doc)
     
@@ -83,6 +97,7 @@ class Pin(object):
         
         self.header_pin_id = header_pin_number
         self.pin_id = header_to_soc(header_pin_number)
+        self._file = None
         if direction:
             if not self.is_exported:
                 self.export()
@@ -116,9 +131,10 @@ class Pin(object):
         IOError -- could not unexport the pin.
         
         """
+        self._maybe_close()
         gpio_admin("unexport", self.pin_id)
     
-    value = pin_file("value", int,
+    value = pin_value_file("value", 
         """The current value of the pin: 1 if the pin is high or 0 if
         the pin is low.
         
@@ -140,6 +156,15 @@ class Pin(object):
     
     def _pin_file(self, filename=""):
         return "/sys/devices/virtual/gpio/gpio%i/%s" % (self.pin_id, filename)
+
+    def _lazyopen(self):
+        if self._file == None:
+            self._file = open(self._pin_file("value"), "r+")
+        return self._file
+
+    def _maybe_close(self):
+        if self._file != None:
+            self._file.close()
 
 
 @contextmanager
