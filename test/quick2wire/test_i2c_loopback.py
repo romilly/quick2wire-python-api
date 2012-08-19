@@ -19,10 +19,16 @@ address = 0x20
 
 # Registers
 IODIR=0x00
-IOPOL=0x01
-IOCON = 0x05
+IPOL=0x01
+GPINTEN=0x02
+DEFVAL=0x03
+INTCON=0x04
+IOCON=0x05
+GPPU=0x06
+INTF=0x07
+INTCAP=0x08
 GPIO=0x09
-
+OLAT=0x0A
 
 def write_register(master, reg, b):
     master.transaction(
@@ -33,9 +39,14 @@ def read_register(master, reg):
         i2c.writing_bytes(address, reg),
         i2c.reading(address, 1))[0][0]
 
+def reset(master):
+    write_register(master, IODIR, 0xFF) # default setting
+    for register in [IPOL, GPINTEN, DEFVAL, INTCON, IOCON, GPPU, INTF, INTCAP, GPIO, OLAT]:
+        write_register(master, register, 0) # all the other registers default sttings are 0
+
 def set_low_bits_as_output(master):
     write_register(master, IODIR, 0xF0)
-    
+
 def set_high_bits_as_output(master):
     write_register(master, IODIR, 0x0F)
 
@@ -57,6 +68,7 @@ def test_mcp23008_loopback_via_i2c_master_api():
     bitpatterns = [(1 << i) for i in range(0,4)]
     
     with i2c.I2CMaster() as master:
+        reset(master)
         set_low_bits_as_output(master)
         for bitpattern in bitpatterns:
             set_low_bits(master, bitpattern)
@@ -71,11 +83,12 @@ def test_mcp23008_loopback_via_i2c_master_api():
 @pytest.mark.loopback
 def test_mcp23008_multibyte_reads():
     with i2c.I2CMaster() as master:
+        reset(master)
         # Ensure sequential addressing mode is on
         write_register(master, IOCON, 0x00)
         
         write_register(master, IODIR, 0xFF)
-        write_register(master, IOPOL, 0xAA)
+        write_register(master, IPOL, 0xAA)
         
         # Read two bytes, the IODIR register and, thanks to sequential
         # addressing mode, the next register, IOPOL
@@ -90,6 +103,7 @@ def test_mcp23008_multibyte_reads():
 @pytest.mark.loopback
 def test_mcp23008_multibyte_writes():
     with i2c.I2CMaster() as master:
+        reset(master)
         # Ensure sequential addressing mode is on
         write_register(master, IOCON, 0x00)
         
@@ -99,7 +113,7 @@ def test_mcp23008_multibyte_writes():
             i2c.writing_bytes(address, IODIR, 0xFF, 0xAA))
         
         iodir_state = read_register(master, IODIR)
-        iopol_state = read_register(master, IOPOL)
+        iopol_state = read_register(master, IPOL)
         
         assert iodir_state == 0xFF
         assert iopol_state == 0xAA
