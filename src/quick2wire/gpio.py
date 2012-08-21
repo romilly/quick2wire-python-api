@@ -78,8 +78,12 @@ class Pin(object):
     
     Out = "out"
     In = "in"
+
+    Rising = "rising"
+    Falling = "falling"
+    Both = "both"
     
-    def __init__(self, header_pin_number, direction=None):
+    def __init__(self, header_pin_number, direction=None, edge=None):
         """Creates a pin, given a header pin number.
         
         If the direction is specified, the pin is exported if
@@ -102,6 +106,9 @@ class Pin(object):
             if not self.is_exported:
                 self.export()
             self.direction = direction
+        if edge:
+            self.edge = edge
+
     
     def __repr__(self):
         return self.__module__ + "." + str(self)
@@ -150,9 +157,27 @@ class Pin(object):
         
         The value of the pin can only be set if its direction is Out.
         
+        Raises:
         IOError -- could not read or set the pin's direction.
         
         """)
+
+    edge = pin_file("edge", str.strip,
+            """The edge property specifies what event (if any) will
+            trigger an interrupt.
+
+            Raises:
+            IOError -- could not read or set the pin's direction
+
+            """)
+
+    def fileno(self):
+        """
+        Return the underlying fileno. Useful for calling select
+       
+        """
+        self._lazyopen()
+        return self._file.fileno()
     
     def _pin_file(self, filename=""):
         return "/sys/devices/virtual/gpio/gpio%i/%s" % (self.pin_id, filename)
