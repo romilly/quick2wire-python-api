@@ -1,20 +1,26 @@
 
 from quick2wire.i2c import writing_bytes, reading
-from quick2wire.parts.mcp23x17 import *
+import quick2wire.parts.mcp23x17 as mcp23x17
 
 
-class Chip(MCP23x17):
-    """Raw access to the MCP23017 chip"""
+class Registers(mcp23x17.Registers):
+    """Low level access to the MCP23017 registers"""
     
-    def __init__(self, master, address=0x20):
+    def __init__(self, master, address):
         self.master = master
         self.address = address
         
     def write_register(self, reg, byte):
         self.master.transaction(
-            writing_bytes(reg, byte))
+            writing_bytes(address, reg, byte))
     
     def read_register(self, reg):
         return self.master.transaction(
-            reading(reg))[0][0]
-    
+            writing(address, reg),
+            reading(address, 1))[0][0]
+
+
+class MCP23017(mcp23x17.PinBanks):
+    def __init__(self, master, address=0x20):
+        super().__init__(self, Registers(master, address))
+

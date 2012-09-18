@@ -3,6 +3,8 @@ from quick2wire.gpio import Pin, exported
 import pytest
 
 
+@pytest.mark.gpio
+@pytest.mark.hardware
 class TestPin:
     def setup_method(self, method):
         self.pin = Pin(25)
@@ -52,6 +54,8 @@ class TestPin:
 
 
 
+@pytest.mark.gpio
+@pytest.mark.hardware
 class TestExportedContextManager:
     def test_can_automatically_unexport_pin_with_context_manager(self):
         with exported(Pin(25)) as p:

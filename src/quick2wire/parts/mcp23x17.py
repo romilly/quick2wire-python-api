@@ -5,6 +5,9 @@
 # The MCP23x17 has two register addressing modes, depending on the value of bit7 of IOCON
 # we assume bank=0 addressing (which is the POR default value)
 
+from abc import ABCMeta, abstractmethod
+import contextlib
+
 IODIR=0
 IPOL=1
 GPINTEN=2
@@ -25,8 +28,8 @@ def _banked_register(bank, reg):
 
 IODIRA = _banked_register(_BankA, IODIR)
 IODIRB = _banked_register(_BankB, IODIR)
-IPOLA = _banked_register(_BankA, IOPOL)
-IPOLB = _banked_register(_BankB, IOPOL)
+IPOLA = _banked_register(_BankA, IPOL)
+IPOLB = _banked_register(_BankB, IPOL)
 GPINTENA=_banked_register(_BankA, GPINTEN)
 GPINTENB = _banked_register(_BankB, GPINTEN)
 DEFVALA = _banked_register(_BankA, DEFVAL)
@@ -48,11 +51,14 @@ OLATB = _banked_register(_BankB, OLAT)
 
 
 _initial_register_values = (
-    ((IOCON), 0x00),
-    ((IODIR), 0xFF),
+    ((IOCON,), 0x00),
+    ((IODIR,), 0xFF),
     ((IPOL, GPINTEN, DEFVAL, INTCON, GPPU, INTF, INTCAP, GPIO, OLAT), 0x00))
 
-class MCP23x17:
+
+class Registers(metaclass=ABCMeta):
+    """Abstract interface to MCP23x17 registers"""
+    
     def reset(self):
         """Reset to power-on state"""
         for regs, value in _initial_register_values:
@@ -62,5 +68,62 @@ class MCP23x17:
                     # Avoid unnecessary communication
                     self.write_banked_register(_BankB, reg, value)
     
-    def write_banked_register(bank, reg, value):
+    def write_banked_register(self, bank, reg, value):
         self.write_register(_banked_register(bank, reg), value)
+
+    @abstractmethod
+    def write_register(self, reg, value):
+        pass
+
+    @abstractmethod
+    def read_register(self, reg):
+        pass
+
+
+
+class PinBanks:
+    def __init__(self, registers):
+        self.registers = registers
+        self.bank_a = PinBank(self, 0)
+        self.bank_b = PinBank(self, 1)
+        self.banks = (self.bank_a, self.bank_b)
+    
+    def reset(self):
+        self.registers.reset()
+        for bank in self.banks:
+            bank.reset()
+
+
+class PinBank:
+    def __init__(self, chip, bank_id):
+        self.chip = chip
+        self._bank_id = bank_id
+        self._pins = tuple([Pin(self, i) for i in range(8)])
+    
+    def __len__(self):
+        return len(self._pins)
+    
+    @contextlib.contextmanager
+    def __getitem__(self, n):
+        pin = self._pins[n]
+        try:
+            pin._open()
+            yield pin
+        finally:
+            pin.close()
+
+
+class Pin:
+    def __init__(self, bank, index):
+        self.bank = bank
+        self.index = index
+        self._is_claimed = False
+    
+    def _open(self):
+        if self._is_claimed:
+            raise ValueError("pin already in use")
+        self._is_claimed = True
+    
+    def close(self):
+        self._is_claimed = False
+

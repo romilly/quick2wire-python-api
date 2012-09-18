@@ -49,6 +49,10 @@ check-loopback:
 	PYTHONPATH=src:$(PYTHON_LIBDIR) $(PYTHON_ENV)/bin/py.test test -m loopback
 .PHONY: check-loopback
 
+check-unit:
+	PYTHONPATH=src:$(PYTHON_LIBDIR) $(PYTHON_ENV)/bin/py.test test -m "not hardware and not loopback"
+.PHONY: check-unit
+
 check-install:
 	$(MAKE) PYTHON_ENV=build/test-$(python)-$(ARCHITECTURE) env-again
 	build/test-$(python)-$(ARCHITECTURE)/bin/python$(python) setup.py install
