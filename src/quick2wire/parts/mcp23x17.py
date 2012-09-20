@@ -8,6 +8,10 @@
 from abc import ABCMeta, abstractmethod
 import contextlib
 
+# TODO - import from GPIO or common definitions module
+In = "in"
+Out = "out"
+
 IODIR=0
 IPOL=1
 GPINTEN=2
@@ -103,14 +107,10 @@ class PinBank:
     def __len__(self):
         return len(self._pins)
     
-    @contextlib.contextmanager
     def __getitem__(self, n):
         pin = self._pins[n]
-        try:
-            pin._open()
-            yield pin
-        finally:
-            pin.close()
+        pin._open()
+        return pin;
 
 
 class Pin:
@@ -118,6 +118,7 @@ class Pin:
         self.bank = bank
         self.index = index
         self._is_claimed = False
+        self.direction = In
     
     def _open(self):
         if self._is_claimed:
@@ -126,4 +127,10 @@ class Pin:
     
     def close(self):
         self._is_claimed = False
+    
+    def __enter__(self):
+        return self
+    
+    def __exit__(self, exc_type, exc_value, traceback):
+        self.close()
 

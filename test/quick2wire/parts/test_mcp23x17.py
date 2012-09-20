@@ -1,6 +1,6 @@
 
 
-from quick2wire.parts.mcp23x17 import Registers, PinBanks
+from quick2wire.parts.mcp23x17 import Registers, PinBanks, In, Out
 
 class FakeRegisters(Registers):
     def __init__(self):
@@ -46,3 +46,14 @@ class TestPinBanks:
         
         with self.chip.banks[0][1] as pin_again:
             pass
+    
+    def test_after_reset_or_poweron_all_pins_are_input_pins(self):
+        for p in all_pins(self.chip):
+            assert p.direction == In
+    
+
+def all_pins(chip):
+    for bank in 0,1:
+        for pin in range(8):
+            with chip.banks[bank][pin] as p:
+                yield p
