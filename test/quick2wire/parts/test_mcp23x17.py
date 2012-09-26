@@ -1,13 +1,15 @@
 
 
-from quick2wire.parts.mcp23x17 import Registers, PinBanks, In, Out
+from quick2wire.parts.mcp23x17 import Registers, PinBanks, In, Out, IOCONA, IOCONB
 
 class FakeRegisters(Registers):
     def __init__(self):
         self.registers = {}
+        self.writes = []
         self.reset()
     
     def write_register(self, reg, value):
+        self.writes.append((reg, value))
         self.registers[reg] = value
     
     def read_register(self, reg):
@@ -48,9 +50,17 @@ class TestPinBanks:
             pass
     
     def test_after_reset_or_poweron_all_pins_are_input_pins(self):
+        # Chip is reset in setup
         for p in all_pins(self.chip):
             assert p.direction == In
     
+    def test_resets_iocon_before_other_registers(self):
+        # Chip is reset in setup
+        assert self.chip.registers.writes[0] == (IOCONA, 0)
+        
+    def test_only_resets_iocon_once_because_same_register_has_two_addresses(self):
+        # Chip is reset in setup
+        assert IOCONB not in [reg for (reg, value) in self.chip.registers.writes]
 
 def all_pins(chip):
     for bank in 0,1:
