@@ -74,6 +74,9 @@ class Registers(metaclass=ABCMeta):
     
     def write_banked_register(self, bank, reg, value):
         self.write_register(_banked_register(bank, reg), value)
+        
+    def read_banked_register(self, bank, reg, value):
+        self.read_register(_banked_register(bank, reg))
 
     @abstractmethod
     def write_register(self, reg, value):
