@@ -10,14 +10,14 @@ class Registers(mcp23x17.Registers):
         self.master = master
         self.address = address
         
-    def write_register(self, reg, byte):
+    def write_register(self, register_id, byte):
         self.master.transaction(
-            writing_bytes(address, reg, byte))
+            writing_bytes(self.address, register_id, byte))
     
-    def read_register(self, reg):
+    def read_register(self, register_id):
         return self.master.transaction(
-            writing(address, reg),
-            reading(address, 1))[0][0]
+            writing_bytes(self.address, register_id),
+            reading(self.address, 1))[0][0]
 
 
 class MCP23017(mcp23x17.PinBanks):
