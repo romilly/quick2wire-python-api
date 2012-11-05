@@ -32,7 +32,9 @@ bits = zip(bits_out, bits_in)
 address = MCP23S17_BASE_ADDRESS
 
 
+@pytest.mark.hardware
 @pytest.mark.loopback
+@pytest.mark.spi
 def test_loopback_bits():
     with SPIDevice(0, 0) as mcp23s17:
         prepare_to_send_from_a_to_b(mcp23s17)

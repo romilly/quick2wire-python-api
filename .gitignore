@@ -3,17 +3,7 @@
 # Packages
 *.egg
 *.egg-info
-dist
-build
-eggs
-parts
-bin
-var
-sdist
-develop-eggs
-.installed.cfg
 MANIFEST
-README.rst
 
 # Installer logs
 pip-log.txt
@@ -25,14 +15,11 @@ pip-log.txt
 #Translations
 *.mo
 
-#Mr Developer
-.mr.developer.cfg
-
 # Backup files
 *~
 
 # Temporary output
-output
+output/
 
 # Virtual environment
 python?.?-*/

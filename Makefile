@@ -1,7 +1,7 @@
 
 # Which version of python are we using?
 ifndef python
-python=3.1
+python=3.2
 endif
 
 ARCHITECTURE:=$(shell uname -m)
@@ -48,6 +48,10 @@ check:
 check-loopback:
 	PYTHONPATH=src:$(PYTHON_LIBDIR) $(PYTHON_ENV)/bin/py.test test -m loopback
 .PHONY: check-loopback
+
+check-unit:
+	PYTHONPATH=src:$(PYTHON_LIBDIR) $(PYTHON_ENV)/bin/py.test test -m "not hardware and not loopback"
+.PHONY: check-unit
 
 check-install:
 	$(MAKE) PYTHON_ENV=build/test-$(python)-$(ARCHITECTURE) env-again
