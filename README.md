@@ -21,9 +21,7 @@ The GPIO API depends on Quick2Wire GPIO Admin.  To install Quick2Wire
 GPIO Admin, follow the instructions at
 http://github.com/quick2wire/quick2wire-gpio-admin
 
-The I2C API depends on I2C support in the kernel.  We've been using
-Chris Boot's kernel builds from
-http://www.bootc.net/projects/raspberry-pi-kernel/
+The I2C and SPI API depend on support in the kernel. Recent raspbian kernels should be fine.
 
 
 Installation
