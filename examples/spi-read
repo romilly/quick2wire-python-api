@@ -5,9 +5,6 @@ import time
 
 mcp23s17 = SPIDevice(0, 0)
 
-print ("clock mode before = %i" % mcp23s17.clock_mode)
-mcp23s17.clock_mode = SPI_MODE_3
-print ("clock mode after = %i" % mcp23s17.clock_mode)
 while(True):
     try:
         response = mcp23s17.transaction(writing_bytes(0x41, 0x13), reading(1))

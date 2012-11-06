@@ -86,6 +86,20 @@ class SPIDevice:
         """
         ioctl(self.fd, SPI_IOC_WR_MODE, struct.pack('I', mode))
 
+    @property
+    def speed_hz(self):
+        """
+        Returns the current speed in Hz for this SPI bus
+        """
+        return struct.unpack('I', ioctl(self.fd, SPI_IOC_RD_MAX_SPEED_HZ, "    "))[0]
+
+    @speed_hz.setter
+    def speed_hz(self,speedHz):
+        """
+        Changes the speed in Hz for this SPI bus
+        """
+        ioctl(self.fd, SPI_IOC_WR_MAX_SPEED_HZ, struct.pack('I', speedHz))
+
     def __enter__(self):
         return self
 

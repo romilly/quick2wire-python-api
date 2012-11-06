@@ -1,0 +1,20 @@
+#!/usr/bin/env python3
+
+from quick2wire.spi import *
+
+# Reduce the bus speed to 10KHz
+spi0 = SPIDevice(0, 0)
+start = spi0.speed_hz
+print ("current speed Hz: " + str(start))
+spi0.speed_hz = 10000
+print ("New speed Hz: " + str(spi0.speed_hz))
+spi0.speed_hz = start 
+print ("Restored speed Hz: " + str(spi0.speed_hz))
+
+# Toggle the clock mode
+mode = spi0.clock_mode
+print ("clock mode before = %i" % spi0.clock_mode)
+spi0.clock_mode = (mode ^ SPI_MODE_3) & SPI_MODE_3
+print ("clock mode after = %i" % spi0.clock_mode)
+spi0.clock_mode = mode
+print ("restored clock mode= %i" % spi0.clock_mode)
