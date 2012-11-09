@@ -52,7 +52,14 @@ class TestPin:
         assert p.is_exported
         assert p.direction == Pin.Out
 
+    def test_can_read_after_write(self):
+        p = Pin(25, Pin.Out)
+        p2 = Pin(25, Pin.Out)
 
+        p.value = 1
+        assert p2.value == 1
+        with open('/sys/class/gpio/gpio7/value', 'r+') as f:
+            assert f.read() == '1\n'
 
 @pytest.mark.gpio
 @pytest.mark.hardware

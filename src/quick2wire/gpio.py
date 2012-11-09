@@ -69,6 +69,7 @@ def pin_value_file(name, doc):
         f = self._lazyopen()
         f.seek(0)
         f.write(str(value))
+        f.flush()
     
     return property(_read, _write, doc=doc)
     
