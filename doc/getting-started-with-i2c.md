@@ -10,7 +10,8 @@ Warning:
 With a revision 2.0 board, if you connect an I2C device to the appropriate header,
 you will see it when you run `i2cdetect 1` instead of `i2cdetect 0`.
 
-Also **in the examples below, you need to change the line**
+Also **in the example below, and in the I2C examples in the examples directory,
+you need to change the line**
 
     with i2c.I2CBus() as bus:
 
