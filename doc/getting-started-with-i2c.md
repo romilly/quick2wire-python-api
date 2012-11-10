@@ -11,8 +11,11 @@ With a revision 2.0 board, if you connect an I2C device to the appropriate heade
 you will see it when you run `i2cdetect 1` instead of `i2cdetect 0`.
 
 Also **in the examples below, you need to change the line**
+
     with i2c.I2CBus() as bus:
+
 to read
+
     with i2c.I2CBus(1) as bus:
 
 We will automate the detection of the default bus as soon as we get our hands on a rev 2.0 board.
