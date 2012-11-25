@@ -43,8 +43,11 @@ def header_to_soc(header_pin_number):
     else:
         raise ValueError(str(header_pin_number)+" is not a valid GPIO header pin")
 
-def gpio_admin(subcommand, pin):
-    subprocess.check_call(["gpio-admin", subcommand, str(pin)])
+def gpio_admin(subcommand, pin, pull=None):
+    if pull:
+        subprocess.check_call(["gpio-admin", subcommand, str(pin), pull])
+    else:
+        subprocess.check_call(["gpio-admin", subcommand, str(pin)])
 
 
 def pin_file(name, parser, doc):
@@ -83,8 +86,11 @@ class Pin(object):
     Rising = "rising"
     Falling = "falling"
     Both = "both"
+
+    PullDown = "pulldown"
+    PullUp = "pullup"
     
-    def __init__(self, header_pin_number, direction=None, edge=None):
+    def __init__(self, header_pin_number, direction=None, edge=None, pull=None):
         """Creates a pin, given a header pin number.
         
         If the direction is specified, the pin is exported if
@@ -103,12 +109,14 @@ class Pin(object):
         self.header_pin_id = header_pin_number
         self.pin_id = header_to_soc(header_pin_number)
         self._file = None
+        self.pull = pull
         if direction:
             if not self.is_exported:
                 self.export()
             self.direction = direction
         if edge:
             self.edge = edge
+
 
     
     def __repr__(self):
@@ -130,7 +138,7 @@ class Pin(object):
 
         
         """
-        gpio_admin("export", self.pin_id)
+        gpio_admin("export", self.pin_id, self.pull)
     
     def unexport(self):
         """Unexport the pin, removing its control files from the filesystem.
