@@ -4,6 +4,12 @@ ifndef python
 python=3.2
 endif
 
+# Which devices are connected and configured for loopback testing?
+ifndef devices
+devices=mcp23017 gpio mcp23008
+endif
+
+
 ARCHITECTURE:=$(shell uname -m)
 
 PYTHON_ENV=$(PWD)/python$(python)-$(ARCHITECTURE)
@@ -18,7 +24,6 @@ export PYTHONPATH=$(PYTHON_LIBDIR)
 PROJECT=quick2wire-python-api
 VERSION:=$(shell $(PYTHON_EXE) setup.py --version)
 
-DEVICES=mcp23008 mcp23017 gpio
 
 all: check dist
 .PHONY: all
@@ -44,7 +49,7 @@ env-again: env-clean env
 .PHONY: env-again
 
 check:
-	PYTHONPATH=src:$(PYTHON_LIBDIR) $(PYTHON_ENV)/bin/py.test test $(DEVICES:%=-m %)
+	PYTHONPATH=src:$(PYTHON_LIBDIR) $(PYTHON_ENV)/bin/py.test test $(devices:%=-m %)
 .PHONY: check
 
 check-install:
