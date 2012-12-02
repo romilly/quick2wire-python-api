@@ -15,6 +15,7 @@ def inverse(topology):
 def bit(n):
     return 1 << n
 
+@pytest.mark.loopback
 @pytest.mark.mcp23017
 def test_mcp23017_loopback_via_registers():
     with i2c.I2CMaster() as master:

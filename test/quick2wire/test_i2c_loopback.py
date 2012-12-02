@@ -63,6 +63,7 @@ def check_high_bits(master, bitpattern):
     assert bitpattern << 4 == (read_register(master, GPIO) & 0xF0)
 
 
+@pytest.mark.loopback
 @pytest.mark.mcp23008
 def test_mcp23008_loopback_via_i2c_master_api():
     bitpatterns = [(1 << i) for i in range(0,4)]
@@ -80,9 +81,8 @@ def test_mcp23008_loopback_via_i2c_master_api():
             check_low_bits(master, bitpattern)
 
 
-@pytest.mark.hardware
 @pytest.mark.loopback
-@pytest.mark.i2c
+@pytest.mark.mcp23008
 def test_mcp23008_multibyte_reads():
     with i2c.I2CMaster() as master:
         reset(master)
@@ -102,9 +102,8 @@ def test_mcp23008_multibyte_reads():
         assert iopol_state == 0xAA
 
 
-@pytest.mark.hardware
 @pytest.mark.loopback
-@pytest.mark.i2c
+@pytest.mark.mcp23008
 def test_mcp23008_multibyte_writes():
     with i2c.I2CMaster() as master:
         reset(master)
