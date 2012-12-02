@@ -18,6 +18,8 @@ export PYTHONPATH=$(PYTHON_LIBDIR)
 PROJECT=quick2wire-python-api
 VERSION:=$(shell $(PYTHON_EXE) setup.py --version)
 
+DEVICES=mcp23008 mcp23017 gpio
+
 all: check dist
 .PHONY: all
 
@@ -42,16 +44,8 @@ env-again: env-clean env
 .PHONY: env-again
 
 check:
-	PYTHONPATH=src:$(PYTHON_LIBDIR) $(PYTHON_ENV)/bin/py.test test -m "not loopback"
+	PYTHONPATH=src:$(PYTHON_LIBDIR) $(PYTHON_ENV)/bin/py.test test $(DEVICES:%=-m %)
 .PHONY: check
-
-check-loopback:
-	PYTHONPATH=src:$(PYTHON_LIBDIR) $(PYTHON_ENV)/bin/py.test test -m loopback
-.PHONY: check-loopback
-
-check-unit:
-	PYTHONPATH=src:$(PYTHON_LIBDIR) $(PYTHON_ENV)/bin/py.test test -m "not hardware and not loopback"
-.PHONY: check-unit
 
 check-install:
 	$(MAKE) PYTHON_ENV=build/test-$(python)-$(ARCHITECTURE) env-again

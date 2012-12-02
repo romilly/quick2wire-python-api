@@ -5,7 +5,6 @@
 # The MCP23x17 has two register addressing modes, depending on the value of bit7 of IOCON
 # we assume bank=0 addressing (which is the POR default value)
 
-from abc import ABCMeta, abstractmethod
 import contextlib
 
 # TODO - import from GPIO or common definitions module
@@ -60,7 +59,7 @@ _initial_register_values = (
     ((IPOL, GPINTEN, DEFVAL, INTCON, GPPU, INTF, INTCAP, GPIO, OLAT), 0x00))
 
 
-class Registers(metaclass=ABCMeta):
+class Registers(object):
     """Abstract interface to MCP23x17 registers"""
     
     def reset(self):
@@ -75,20 +74,20 @@ class Registers(metaclass=ABCMeta):
     def write_banked_register(self, bank, reg, value):
         self.write_register(_banked_register(bank, reg), value)
         
-    def read_banked_register(self, bank, reg, value):
-        self.read_register(_banked_register(bank, reg))
-
-    @abstractmethod
+    def read_banked_register(self, bank, reg):
+        return self.read_register(_banked_register(bank, reg))
+    
     def write_register(self, reg, value):
+        """Implement in subclasses"""
         pass
-
-    @abstractmethod
+    
     def read_register(self, reg):
+        """Implement in subclasses"""
         pass
 
 
 
-class PinBanks:
+class PinBanks(object):
     def __init__(self, registers):
         self.registers = registers
         self.bank_a = PinBank(self, 0)
@@ -101,7 +100,7 @@ class PinBanks:
             bank.reset()
 
 
-class PinBank:
+class PinBank(object):
     def __init__(self, chip, bank_id):
         self.chip = chip
         self._bank_id = bank_id
@@ -116,7 +115,7 @@ class PinBank:
         return pin;
 
 
-class Pin:
+class Pin(object):
     def __init__(self, bank, index):
         self.bank = bank
         self.index = index

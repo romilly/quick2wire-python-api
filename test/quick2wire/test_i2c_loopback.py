@@ -63,9 +63,7 @@ def check_high_bits(master, bitpattern):
     assert bitpattern << 4 == (read_register(master, GPIO) & 0xF0)
 
 
-@pytest.mark.hardware
-@pytest.mark.loopback
-@pytest.mark.i2c
+@pytest.mark.mcp23008
 def test_mcp23008_loopback_via_i2c_master_api():
     bitpatterns = [(1 << i) for i in range(0,4)]
     
