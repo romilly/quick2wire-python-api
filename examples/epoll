@@ -4,7 +4,7 @@ import sys
 from quick2wire.gpio import Pin
 import select
 
-pin_num = int(sys.argv[1]) if len(sys.argv) > 1 else 12
+pin_num = int(sys.argv[1]) if len(sys.argv) > 1 else 11
 
 # Trigger should be one of "none", "rising", "falling", or "both"
 trigger = str.strip(sys.argv[2]) if len(sys.argv) > 2 else Pin.Both

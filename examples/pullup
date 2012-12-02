@@ -1,0 +1,20 @@
+#! /usr/bin/env python3
+
+#
+# Demonstrates how to enable the pull up or pull down resistors on
+# the Pi's GPIO pins.
+#
+
+from quick2wire.gpio import Pin
+
+pin = Pin(11, Pin.In)
+print( "Pull up/down is unspecified, pin is now", pin.value)
+pin.unexport()
+
+pin = Pin(11, Pin.In, pull=Pin.PullUp)
+print( "Pin is set with pull up, pin in is now", pin.value)
+pin.unexport()
+
+pin = Pin(11, Pin.In, pull=Pin.PullDown)
+print( "Pin is set with pull down, pin is now", pin.value)
+pin.unexport()

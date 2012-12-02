@@ -1,4 +1,5 @@
 from ctypes import addressof, create_string_buffer, sizeof, string_at
+import struct
 import posix
 from fcntl import ioctl
 from quick2wire.spi_ctypes import *
@@ -66,6 +67,38 @@ class SPIDevice:
         Closes the file descriptor.
         """
         posix.close(self.fd)
+
+    @property
+    def clock_mode(self):
+        """
+        Returns the current clock mode for the SPI bus
+        """
+        return ord(struct.unpack('c', ioctl(self.fd, SPI_IOC_RD_MODE, " "))[0])
+
+    @clock_mode.setter
+    def clock_mode(self,mode):
+        """
+        Changes the clock mode for this SPI bus
+
+        For example:
+             #start clock low, sample trailing edge
+             spi.clock_mode = SPI_MODE_1
+        """
+        ioctl(self.fd, SPI_IOC_WR_MODE, struct.pack('I', mode))
+
+    @property
+    def speed_hz(self):
+        """
+        Returns the current speed in Hz for this SPI bus
+        """
+        return struct.unpack('I', ioctl(self.fd, SPI_IOC_RD_MAX_SPEED_HZ, "    "))[0]
+
+    @speed_hz.setter
+    def speed_hz(self,speedHz):
+        """
+        Changes the speed in Hz for this SPI bus
+        """
+        ioctl(self.fd, SPI_IOC_WR_MAX_SPEED_HZ, struct.pack('I', speedHz))
 
     def __enter__(self):
         return self

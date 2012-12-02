@@ -1,6 +1,29 @@
 Getting Started With I2C
 ========================
 
+
+Warning:
+-------
+
+[Revision 2.0](http://www.raspberrypi.org/archives/1929) of the Raspberry Pi swaps the connections to I2C buses 0 and 1.
+
+With a revision 2.0 board, if you connect an I2C device to the appropriate header,
+you will see it when you run `i2cdetect 1` instead of `i2cdetect 0`.
+
+Also **in the example below, and in the I2C examples in the examples directory,
+you need to change the line**
+
+    with i2c.I2CBus() as bus:
+
+to read
+
+    with i2c.I2CBus(1) as bus:
+
+We will automate the detection of the default bus as soon as we get our hands on a rev 2.0 board.
+
+The example:
+------------
+
 In this example, we're going to write a program that reads the state
 of the GPIO pins of an MCP23008 port expander connected to the
 Raspberry Pi's I2C bus.
