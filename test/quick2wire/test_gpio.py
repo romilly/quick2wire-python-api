@@ -4,7 +4,7 @@ import pytest
 
 
 @pytest.mark.gpio
-@pytest.mark.hardware
+@pytest.mark.loopback
 class TestPin:
     def setup_method(self, method):
         self.pin = Pin(25)
@@ -62,7 +62,7 @@ class TestPin:
             assert f.read() == '1\n'
 
 @pytest.mark.gpio
-@pytest.mark.hardware
+@pytest.mark.loopback
 class TestExportedContextManager:
     def test_can_automatically_unexport_pin_with_context_manager(self):
         with exported(Pin(25)) as p:
