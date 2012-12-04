@@ -15,7 +15,7 @@ class PCF8591:
         self.master = master
         self.address = address
 
-    def begin_analoge_in(self, input_pins, auto_increment, channel):
+    def begin_analoge_in(self, channel, input_pins = FOUR_SINGLE_ENDED, auto_increment = False ):
         control = (input_pins << 4) | (1 << 2 if auto_increment else 0) | channel
         self.master.transaction(
                 writing_bytes(self.address, control))

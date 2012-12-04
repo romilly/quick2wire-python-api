@@ -4,14 +4,15 @@ from contextlib import closing
 import quick2wire.i2c as i2c
 from time import sleep
 
-c = 1
+# Connect VREF to one end of a Pot, AGND to another, and Pin 0 to the wiper
 if __name__ == '__main__':
     with closing(i2c.I2CMaster(0)) as master:
         pcf = PCF8591(master, 0x48)
-        pcf.begin_analoge_in(FOUR_SINGLE_ENDED, False, 0)
+        pcf.begin_analoge_in(0)
+        count = 1
         while True:
             data = pcf.read(1)
-            print("read: " + str(c) + ":" + str(data[0]))
-            c = c + 1
+            print("read: " + str(count) + ":" + str(data[0]))
+            count += 1
             sleep(.5)
 
