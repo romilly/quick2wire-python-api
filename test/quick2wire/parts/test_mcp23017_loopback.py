@@ -19,7 +19,7 @@ def bit(n):
 @pytest.mark.mcp23017
 def test_mcp23017_loopback_via_registers():
     with i2c.I2CMaster() as master:
-        chip = MCP23017Registers(master, 0x20)
+        chip = MCP23017Registers(master, 0x21) # so we can have the mcp23008 at 0x20
         
         chip.reset()
         check_connectivity(chip, Topology)
