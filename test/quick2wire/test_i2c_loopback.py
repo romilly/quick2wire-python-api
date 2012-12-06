@@ -15,7 +15,7 @@ released independently
 import quick2wire.i2c as i2c
 import pytest
 
-address = 0x20
+address = 0x21 # so as to avoid clashing woith the MCP23017 tests
 
 # Registers
 IODIR=0x00

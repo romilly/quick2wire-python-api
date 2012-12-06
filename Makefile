@@ -78,3 +78,18 @@ clean:
 
 again: clean all
 .PHONY: again
+
+
+SCANNED_FILES=$(shell find src/ -type d) $(shell find test/ -type d) Makefile setup.py
+
+.PHONY: continually
+continually:
+	@while true; do \
+	  clear; \
+	  if not make check; \
+	  then \
+	      notify-send --icon=error --category=build --expire-time=250 "$(PROJECT) build broken"; \
+	  fi; \
+	  date; \
+	  inotifywait -r -qq -e modify -e delete $(SCANNED_FILES); \
+	done

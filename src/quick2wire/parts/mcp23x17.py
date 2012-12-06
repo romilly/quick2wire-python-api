@@ -106,6 +106,10 @@ class PinBank(object):
         self._bank_id = bank_id
         self._pins = tuple([Pin(self, i) for i in range(8)])
     
+    @property
+    def index(self):
+        return self._bank_id
+    
     def __len__(self):
         return len(self._pins)
     
@@ -113,6 +117,9 @@ class PinBank(object):
         pin = self._pins[n]
         pin._open()
         return pin;
+    
+    def _read_register(self, register):
+        return self.chip.registers.read_banked_register(self._bank_id, register)
 
 
 class Pin(object):
@@ -121,6 +128,7 @@ class Pin(object):
         self.index = index
         self._is_claimed = False
         self.direction = In
+        self._bitmask = 1 << index
     
     def _open(self):
         if self._is_claimed:
@@ -135,4 +143,9 @@ class Pin(object):
     
     def __exit__(self, exc_type, exc_value, traceback):
         self.close()
+    
+    def get(self):
+        return bool(self.bank._read_register(GPIO) & self._bitmask)
+    
+    value = property(get)
 
