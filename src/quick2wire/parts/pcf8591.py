@@ -48,6 +48,10 @@ class PCF8591:
         return SingleInputPin(self, self._control & 0x3f)
 
     def read(self, count=1):
+        """ 
+        Read the next conversion with the current input channel and 
+        programming
+        """
         values = self.master.transaction(reading(self.address, count))[0]
         return values
 
