@@ -7,12 +7,11 @@ from time import sleep
 # Connect VREF to one end of a Pot, AGND to another, and Pin 0 to the wiper
 if __name__ == '__main__':
     with closing(i2c.I2CMaster(0)) as master:
-        pcf = PCF8591(master, 0x48)
-        pcf.begin_analoge_in(0)
+        pcf = PCF8591(master)
+        pin = pcf.begin_analoge_read(0)
         count = 1
         while True:
-            data = pcf.read(1)
-            print("read: " + str(count) + ":" + str(data[0]))
+            print("read: {} : {}".format(count, pin.read()))
             count += 1
             sleep(.5)
 
