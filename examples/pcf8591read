@@ -11,7 +11,7 @@ inputs = int(sys.argv[2]) if len(sys.argv) > 2 else FOUR_SINGLE_ENDED
 with closing(i2c.I2CMaster()) as master:
     pcf = PCF8591(master)
     pin = pcf.begin_analogue_read(pin, inputs)
-    for count in range(10):
+    for count in range(100):
         print("read: {} : {}".format(count, pin.read()))
         sleep(.5)
 
