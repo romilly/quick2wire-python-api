@@ -10,16 +10,8 @@ Warning:
 With a revision 2.0 board, if you connect an I2C device to the appropriate header,
 you will see it when you run `i2cdetect 1` instead of `i2cdetect 0`.
 
-Also **in the example below, and in the I2C examples in the examples directory,
-you need to change the line**
-
-    with i2c.I2CBus() as bus:
-
-to read
-
-    with i2c.I2CBus(1) as bus:
-
-We will automate the detection of the default bus as soon as we get our hands on a rev 2.0 board.
+The library now auto-detects whether you are running version 1.0 or 2.0 of the board, so the same code will work on
+either.
 
 The example:
 ------------
@@ -46,7 +38,7 @@ group membership.
 
 Check the MCP23008 is connected to your I2C bus and its address is
 configured as expected.  We can see the device on the bus by running
-the `i2cdetect` command:
+the `i2cdetect` command. Remember to replace 0 with 1 if you hav a revision 2 board.
 
     $ i2cdetect 0
     WARNING! This program can confuse your I2C bus, cause data loss and worse!

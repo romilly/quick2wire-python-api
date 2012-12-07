@@ -5,6 +5,7 @@
 import os
 import subprocess
 from contextlib import contextmanager
+from quick2wire.board_revision import revision
 
 # Maps header pin numbers to SoC GPIO numbers
 # See http://elinux.org/RPi_Low-level_peripherals
@@ -16,7 +17,7 @@ from contextlib import contextmanager
 #
 # Todo - different factory functions for creating Pins by SoC id,
 #        header id and Pi GPIO id.
-#
+
 RaspberryPi_HeaderToSOC = {
     3:  0, 
     5:  1, 
@@ -36,6 +37,8 @@ RaspberryPi_HeaderToSOC = {
     25: 7,
     26: 8
 }
+if revision()>1:
+    RaspberryPi_HeaderToSOC[13] = 27
 
 def header_to_soc(header_pin_number):
     if header_pin_number in RaspberryPi_HeaderToSOC:

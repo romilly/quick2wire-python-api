@@ -32,7 +32,7 @@ the header pin number and whether the pin is to be used for input or
 output.
 
     out_pin = Pin(12, Pin.Out)
-    in_pin = Pin(16, Pin.In)
+    in_pin = Pin(11, Pin.In)
 
 When you have a Pin instance you can read or write its value.  A value
 of 1 is high, a value of 0 is low.
@@ -50,7 +50,7 @@ Putting it all together into a single program:
     from quick2wire.gpio import Pin
     
     out_pin = Pin(12, Pin.Out)
-    in_pin = Pin(16, Pin.In)
+    in_pin = Pin(11, Pin.In)
     
     out_pin.value = 1
     print(in_pin.value)
@@ -64,34 +64,20 @@ as part of a [with](http://docs.python.org/reference/compound_stmts.html#with) s
 
     from quick2wire.gpio import Pin, exported
 
-    with exported(Pin(12, Pin.Out)) as out_pin, exported(Pin(16, Pin.In)) as in_pin:
+    with exported(Pin(12, Pin.Out)) as out_pin, exported(Pin(11, Pin.In)) as in_pin:
         out_pin.value = 1
     	print(in_pin.value)
 
 This will unexport the pins when the program leaves the `with` statement, even 
 if the user kills the program or a bad piece of code throws an exception.
 
-Here's a slightly more complicated example that blinks an LED attached to pin 8. This will 
+Here's a slightly more complicated example that blinks an LED attached to pin 12. This will
 loop forever until the user stops it with a Control-C.
 
     from time import sleep
     from quick2wire.gpio import Pin, exported
     
-    with exported(Pin(8, Pin.Out)) as pin:
+    with exported(Pin(12, Pin.Out)) as pin:
         while True:
             pin.value = 1 - pin.value
             sleep(1)
-
-
-Connecting Pins
----------------
-
-To make this blink program work, you'll need to know which physical pins to connect. The 
-`quick2wire.gpio` library sorts out the confusion of pin numbering schemes so that you can
-just specify the physical pin on the device. [This page](http://elinux.org/Rpi_Low-level_peripherals) 
-currently seems to be the best summary of the pins and the I/O roles they fulfill. The library
-will allow you to allocate only those pins which support GPIO. Lower numbered
-pins are at the top end of the Pi with the SD Card and power connector. Pins 1 and 2 (at the top of 
-the columns) are the 3.3 and 5 volt outputs. Here's a Pi wired up for the blink program 
-
-<img src="http://github.com/quick2wire/quick2wire-python-api/raw/master/doc/getting-started-with-gpio-setup.png" alt="GPIO wiring example" width="250"/>
