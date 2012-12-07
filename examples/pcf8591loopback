@@ -3,19 +3,17 @@ from quick2wire.parts.pcf8591 import *
 from contextlib import closing
 import quick2wire.i2c as i2c
 from time import sleep
+from itertools import cycle
 
 # Connect AOUT to Pin A1
 if __name__ == '__main__':
-    with closing(i2c.I2CMaster(0)) as master:
+    with closing(i2c.I2CMaster()) as master:
         pcf = PCF8591(master, 0x48)
-        count = 1
-        pin = pcf.begin_analoge_read(1)
-        while True:
-            pcf.analoge_out(count)
-            data = pin.read()
-            print("wrote: {}, read: {}".format(count,data))
-            count += 1
-            if count > 255:
-                count = 0
-            sleep(.5)
+        pin = pcf.begin_analogue_read(1)
+        for count in cycle(range(256)):
+            while True:
+                pcf.analogue_out(count)
+                data = pin.read()
+                print("wrote: {}, read: {}".format(count,data))
+                sleep(.5)
 

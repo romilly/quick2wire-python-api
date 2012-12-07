@@ -8,12 +8,10 @@ import sys
 pin = int(sys.argv[1]) if len(sys.argv) > 1 else 0
 inputs = int(sys.argv[2]) if len(sys.argv) > 2 else FOUR_SINGLE_ENDED
 
-with closing(i2c.I2CMaster(0)) as master:
+with closing(i2c.I2CMaster()) as master:
     pcf = PCF8591(master)
-    pin = pcf.begin_analoge_read(pin, inputs)
-    count = 1
-    while count < 10:
+    pin = pcf.begin_analogue_read(pin, inputs)
+    for count in range(10):
         print("read: {} : {}".format(count, pin.read()))
-        count += 1
         sleep(.5)
 
