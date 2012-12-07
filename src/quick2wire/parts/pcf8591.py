@@ -52,7 +52,7 @@ class PCF8591:
         Read the next conversion with the current input channel and 
         programming
         """
-        return self.master.transaction(reading(self.address, count))[0][0]
+        return self.master.transaction(reading(self.address, count))[0]
 
     def analogue_out(self, value):
         self._control = ANALOGUE_OUT | self._control

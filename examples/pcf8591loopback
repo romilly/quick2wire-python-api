@@ -11,9 +11,8 @@ if __name__ == '__main__':
         pcf = PCF8591(master, 0x48)
         pin = pcf.begin_analogue_read(1)
         for count in cycle(range(256)):
-            while True:
-                pcf.analogue_out(count)
-                data = pin.read()
-                print("wrote: {}, read: {}".format(count,data))
-                sleep(.5)
+            pcf.analogue_out(count)
+            data = pin.read()
+            print("wrote: {}, read: {}".format(count,data))
+            sleep(.5)
 
