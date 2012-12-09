@@ -4,5 +4,7 @@ def revision():
             for line in f:
                 if line.startswith('Revision'):
                     return 1 if line.rstrip()[-1] in ['1','2'] else 2
+            else:
+                return 0
     except:
         return 0
