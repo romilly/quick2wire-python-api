@@ -39,6 +39,7 @@ env-base:
 
 env-libs:
 	$(PIP) install pytest
+	$(PIP) install factcheck
 .PHONY: env-libs
 
 env-clean:

@@ -115,7 +115,6 @@ class PinBank(object):
     
     def __getitem__(self, n):
         pin = self._pins[n]
-        pin._open()
         return pin;
     
     def _read_register(self, register):
@@ -130,7 +129,7 @@ class Pin(object):
         self.direction = In
         self._bitmask = 1 << index
     
-    def _open(self):
+    def open(self):
         if self._is_claimed:
             raise ValueError("pin already in use")
         self._is_claimed = True
@@ -139,6 +138,7 @@ class Pin(object):
         self._is_claimed = False
     
     def __enter__(self):
+        self.open()
         return self
     
     def __exit__(self, exc_type, exc_value, traceback):
@@ -147,5 +147,8 @@ class Pin(object):
     def get(self):
         return bool(self.bank._read_register(GPIO) & self._bitmask)
     
-    value = property(get)
+    def set(self, new_value):
+        pass
+
+    value = property(get, set)
 
