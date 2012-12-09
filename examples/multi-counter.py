@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
-# runs on a rev 2.0 board, so uses I2C1
-# using MCP23017
+# demo will drive multiple MCP23017 devices at different addresses
+# see http://quick2wire.com/2012/12/see-the-new-boards-at-work-with-blinken-bars/ for demo
 
 
 import quick2wire.i2c as i2c
@@ -30,7 +30,7 @@ class PortExpander():
 offset = int(sys.argv[1]) if len(sys.argv) > 1 else 0
 address = 0x20 + offset
 
-with i2c.I2CMaster(1) as bus:
+with i2c.I2CMaster() as bus:
     pe = PortExpander(bus, address)
     pe.set_iodir_b(0x00)
     pe.set_gpio_b(0x00)

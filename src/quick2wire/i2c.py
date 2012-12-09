@@ -4,7 +4,9 @@ import posix
 from fcntl import ioctl
 from quick2wire.i2c_ctypes import *
 from ctypes import create_string_buffer, sizeof, c_int, byref, pointer, addressof, string_at
+from quick2wire.board_revision import revision
 
+default_bus = 1 if revision() > 1 else 0
 
 class I2CMaster:
     """Performs I2C I/O transactions on an I2C bus.
@@ -28,7 +30,7 @@ class I2CMaster:
                 writing(0x20, bytes([0x01, 0xFF])))
     """
     
-    def __init__(self, n=0, extra_open_flags=0):
+    def __init__(self, n=default_bus, extra_open_flags=0):
         """Opens the bus device.
         
         Arguments:
