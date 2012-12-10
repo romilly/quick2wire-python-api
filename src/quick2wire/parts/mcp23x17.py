@@ -23,6 +23,8 @@ INTCAP=8
 GPIO=9
 OLAT=10
 
+BANK_SIZE = 11
+
 _BankA = 0
 _BankB = 1
 
@@ -54,9 +56,11 @@ OLATB = _banked_register(_BankB, OLAT)
 
 
 _initial_register_values = (
-    ((IOCON,), 0x00),
     ((IODIR,), 0xFF),
     ((IPOL, GPINTEN, DEFVAL, INTCON, GPPU, INTF, INTCAP, GPIO, OLAT), 0x00))
+
+def _reset_sequence():
+    return [(reg,value) for regs, value in _initial_register_values for reg in regs]
 
 
 class Registers(object):
@@ -64,12 +68,10 @@ class Registers(object):
     
     def reset(self):
         """Reset to power-on state"""
-        for regs, value in _initial_register_values:
-            for reg in regs:
-                self.write_banked_register(_BankA, reg, value)
-                if reg != IOCON:
-                    # Avoid unnecessary communication
-                    self.write_banked_register(_BankB, reg, value)
+        self.write_register(IOCONA, 0x00)
+        for reg, value in _reset_sequence():
+            self.write_banked_register(_BankA, reg, value)
+            self.write_banked_register(_BankB, reg, value)
     
     def write_banked_register(self, bank, reg, value):
         self.write_register(_banked_register(bank, reg), value)
@@ -90,14 +92,15 @@ class Registers(object):
 class PinBanks(object):
     def __init__(self, registers):
         self.registers = registers
-        self.bank_a = PinBank(self, 0)
-        self.bank_b = PinBank(self, 1)
-        self.banks = (self.bank_a, self.bank_b)
+        self.banks = (PinBank(self, 0), PinBank(self, 1))
+    
+    def __getitem__(self, n):
+        return self.banks[n]
     
     def reset(self):
         self.registers.reset()
         for bank in self.banks:
-            bank.reset()
+            bank._reset_cache()
 
 
 class PinBank(object):
@@ -105,6 +108,11 @@ class PinBank(object):
         self.chip = chip
         self._bank_id = bank_id
         self._pins = tuple([Pin(self, i) for i in range(8)])
+        self._register_cache = [0]*BANK_SIZE # self._register_cache[IOCON] is ignored
+    
+    def _reset_cache(self):
+        for reg, value in _reset_sequence():
+            self._register_cache[reg] = value
     
     @property
     def index(self):
@@ -115,10 +123,23 @@ class PinBank(object):
     
     def __getitem__(self, n):
         pin = self._pins[n]
-        return pin;
+        return pin
+
+    def _get_register_bit(self, register, bit_index):
+        return bool(self._read_register(register) & (1<<bit_index))
+    
+    def _set_register_bit(self, register, bit_index, new_value):
+        bit_mask = 1 << bit_index
+        current_value = self._register_cache[register]
+        new_value = (current_value | bit_mask) if new_value else (current_value & ~bit_mask)
+        self.chip.registers.write_banked_register(self._bank_id, register, new_value)
+        self._register_cache[register] = new_value
     
     def _read_register(self, register):
         return self.chip.registers.read_banked_register(self._bank_id, register)
+    
+    def __str__(self):
+        return "PinBank["+self.index+"]"
 
 
 class Pin(object):
@@ -126,8 +147,6 @@ class Pin(object):
         self.bank = bank
         self.index = index
         self._is_claimed = False
-        self.direction = In
-        self._bitmask = 1 << index
     
     def open(self):
         if self._is_claimed:
@@ -144,11 +163,27 @@ class Pin(object):
     def __exit__(self, exc_type, exc_value, traceback):
         self.close()
     
+    @property
+    def direction(self):
+        return In if self._get_register_bit(IODIR) else Out
+    
+    @direction.setter
+    def direction(self, new_direction):
+        self._set_register_bit(IODIR, (new_direction == In))
+        
     def get(self):
-        return bool(self.bank._read_register(GPIO) & self._bitmask)
+        return self._get_register_bit(GPIO)
     
     def set(self, new_value):
-        pass
-
+        self._set_register_bit(GPIO, new_value)
+    
     value = property(get, set)
-
+    
+    def _set_register_bit(self, register, new_value):
+        self.bank._set_register_bit(register, self.index, new_value)
+                               
+    def _get_register_bit(self, register):
+        return self.bank._get_register_bit(register, self.index)
+        
+    def __str__(self):
+        return "Pin["+ self.bank.index + "." + self.index + "]"

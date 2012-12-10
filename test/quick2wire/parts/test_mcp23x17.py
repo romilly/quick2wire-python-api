@@ -1,5 +1,5 @@
 
-from itertools import product
+from itertools import product, permutations
 from quick2wire.parts.mcp23x17 import Registers, PinBanks, In, Out, IOCONA, IOCONB, GPIO
 from factcheck import *
 
@@ -24,6 +24,10 @@ class FakeRegisters(Registers):
     def write_register(self, reg, value):
         self.writes.append((reg, value))
         self.registers[reg] = value
+        if reg == IOCONA:
+            self.registers[IOCONB] = value
+        elif reg == IOCONB:
+            self.registers[IOCONA] = value
     
     def read_register(self, reg):
         return self.registers[reg]
@@ -33,6 +37,7 @@ def setup_function(function):
     global chip, registers
     registers = FakeRegisters()
     chip = PinBanks(registers)
+    chip.reset()
 
 
 def test_has_two_banks_of_eight_pins():
@@ -89,14 +94,37 @@ def test_can_read_value_of_input_pin(p):
 
 
 @forall(p=all_pins_of_chip())
-def work_in_progress_test_can_set_pin_to_output_mode_and_write_value(p):
+def test_can_set_pin_to_output_mode_and_write_value(p):
     p.direction = Out
-    
     p.value = 1
+    
     assert registers.read_banked_register(p.bank.index, GPIO) == (1 << p.index)
     
     p.value = 0
     assert registers.read_banked_register(p.bank.index, GPIO) == (0 << p.index)
 
+@forall(ps=permutations(product(bank_ids, pin_ids), 2), p2_value=[0,1])
+def test_can_write_value_of_pin_without_affecting_other_output_pins(ps, p2_value):
+    (b1,p1), (b2,p2) = ps
+    
+    with chip.banks[b1][p1] as pin1, chip.banks[b2][p2] as pin2:
+        pin1.direction = Out
+        pin2.direction = Out
+        
+        pin2.value = p2_value
+        
+        pin1.value = 0
+        assert registers.read_banked_register(b1, GPIO) & (1 << p1) == 0
+        assert registers.read_banked_register(b2, GPIO) & (1 << p2) == (p2_value << p2)
+        
+        pin1.value = 1
+        assert registers.read_banked_register(b1, GPIO) & (1 << p1) == (1 << p1)
+        assert registers.read_banked_register(b2, GPIO) & (1 << p2) == (p2_value << p2)
+        
+        pin1.value = 0
+        assert registers.read_banked_register(b1, GPIO) & (1 << p1) == 0
+        assert registers.read_banked_register(b2, GPIO) & (1 << p2) == (p2_value << p2)
+        
 
- 
+def _TODO_test_can_read_a_set_bit_then_write_then_read_same_set_bit():
+    assert False, "not implemented yet"
