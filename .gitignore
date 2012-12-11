@@ -20,6 +20,8 @@ pip-log.txt
 
 # Temporary output
 output/
+dist/
+README.txt
 
 # Virtual environment
 python?.?-*/
