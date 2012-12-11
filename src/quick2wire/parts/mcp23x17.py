@@ -43,6 +43,7 @@ INTCONA = _banked_register(_BankA, INTCON)
 INTCONB = _banked_register(_BankB, INTCON)
 IOCONA = _banked_register(_BankA, IOCON)
 IOCONB = _banked_register(_BankB, IOCON) # Actually addresses the same register as IOCONA
+IOCON_BOTH = IOCONA
 GPPUA = _banked_register(_BankA, GPPU)
 GPPUB = _banked_register(_BankB, GPPU)
 INTFA = _banked_register(_BankA, INTF)
@@ -68,7 +69,7 @@ class Registers(object):
     
     def reset(self):
         """Reset to power-on state"""
-        self.write_register(IOCONA, 0x00)
+        self.write_register(IOCON_BOTH, 0x00)
         for reg, value in _reset_sequence():
             self.write_banked_register(_BankA, reg, value)
             self.write_banked_register(_BankB, reg, value)

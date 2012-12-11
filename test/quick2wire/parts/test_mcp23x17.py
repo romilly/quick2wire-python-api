@@ -1,6 +1,7 @@
 
 from itertools import product, permutations
-from quick2wire.parts.mcp23x17 import Registers, PinBanks, In, Out, IOCONA, IOCONB, GPIO
+from quick2wire.parts.mcp23x17 import *
+from quick2wire.parts.mcp23x17 import _banked_register
 from factcheck import *
 
 bank_ids = range(2)
@@ -23,14 +24,24 @@ class FakeRegisters(Registers):
     
     def write_register(self, reg, value):
         self.writes.append((reg, value))
-        self.registers[reg] = value
-        if reg == IOCONA:
-            self.registers[IOCONB] = value
-        elif reg == IOCONB:
+        
+        if reg in (IOCONA, IOCONB):
             self.registers[IOCONA] = value
+            self.registers[IOCONB] = value
+        elif reg == GPIOA:
+            self.registers[GPIOA] = value & ~self.registers[IODIRA]
+        elif reg == GPIOB:
+            self.registers[GPIOB] = value & ~self.registers[IODIRB]
+        else:
+            self.registers[reg] = value
     
     def read_register(self, reg):
         return self.registers[reg]
+    
+    def set_gpio_inputs(self, bank, value):
+        gpio_reg = _banked_register(bank,GPIO)
+        iodir_reg = _banked_register(bank,IODIR)
+        self.registers[gpio_reg] = value & self.registers[iodir_reg]
 
 
 def setup_function(function):
@@ -86,10 +97,12 @@ def test_only_resets_iocon_once_because_same_register_has_two_addresses():
 
 @forall(p=all_pins_of_chip())
 def test_can_read_value_of_input_pin(p):
-    registers.write_banked_register(p.bank.index, GPIO, 1 << p.index)
+    p.direction = In
+    
+    registers.set_gpio_inputs(p.bank.index, 1 << p.index)
     assert p.value == 1
     
-    registers.write_banked_register(p.bank.index, GPIO, 0)
+    registers.set_gpio_inputs(p.bank.index, 0)
     assert p.value == 0
 
 
