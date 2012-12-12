@@ -133,11 +133,13 @@ class PinBank(object):
         bit_mask = 1 << bit_index
         current_value = self._register_cache[register]
         new_value = (current_value | bit_mask) if new_value else (current_value & ~bit_mask)
-        self.chip.registers.write_banked_register(self._bank_id, register, new_value)
         self._register_cache[register] = new_value
+        self.chip.registers.write_banked_register(self._bank_id, register, new_value)
     
     def _read_register(self, register):
-        return self.chip.registers.read_banked_register(self._bank_id, register)
+        current_value = self.chip.registers.read_banked_register(self._bank_id, register)
+        self._register_cache[register] = current_value
+        return current_value
     
     def __str__(self):
         return "PinBank["+self.index+"]"
@@ -176,9 +178,26 @@ class Pin(object):
         return self._get_register_bit(GPIO)
     
     def set(self, new_value):
-        self._set_register_bit(GPIO, new_value)
+        self._set_register_bit(OLAT, new_value)
     
     value = property(get, set)
+
+    @property
+    def pull_down(self):
+        return self._get_register_bit(GPPU)
+    
+    @pull_down.setter
+    def pull_down(self, value):
+        self._set_register_bit(GPPU, value)
+    
+    def interrupt_on_change(self):
+        self._set_register_bit(INTCON, 0)
+        self._set_register_bit(GPINTEN, 1)
+    
+    def interrupt_when(self, value):
+        self._set_register_bit(INTCON, 1)
+        self._set_register_bit(DEFVAL, value)
+        self._set_register_bit(GPINTEN, 1)
     
     def _set_register_bit(self, register, new_value):
         self.bank._set_register_bit(register, self.index, new_value)
@@ -186,5 +205,6 @@ class Pin(object):
     def _get_register_bit(self, register):
         return self.bank._get_register_bit(register, self.index)
         
-    def __str__(self):
-        return "Pin["+ self.bank.index + "." + self.index + "]"
+    def __repr__(self):
+        return "Pin(banks["+ str(self.bank.index) + "], " + str(self.index) + ")"
+    
