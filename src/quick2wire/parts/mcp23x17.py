@@ -93,14 +93,19 @@ class Registers(object):
 class PinBanks(object):
     def __init__(self, registers):
         self.registers = registers
-        self.banks = (PinBank(self, 0), PinBank(self, 1))
+        self._banks = (PinBank(self, 0), PinBank(self, 1))
     
-    def __getitem__(self, n):
-        return self.banks[n]
+    def bank(self, n):
+        return self._banks[n]
+    
+    def __len__(self):
+        return len(self._banks)
+
+    __getitem__ = bank
     
     def reset(self):
         self.registers.reset()
-        for bank in self.banks:
+        for bank in self._banks:
             bank._reset_cache()
 
 
@@ -122,10 +127,12 @@ class PinBank(object):
     def __len__(self):
         return len(self._pins)
     
-    def __getitem__(self, n):
+    def pin(self, n):
         pin = self._pins[n]
         return pin
-
+    
+    __getitem__ = pin
+    
     def _get_register_bit(self, register, bit_index):
         return bool(self._read_register(register) & (1<<bit_index))
     
@@ -142,7 +149,7 @@ class PinBank(object):
         return current_value
     
     def __str__(self):
-        return "PinBank["+self.index+"]"
+        return "PinBank("+self.index+")"
 
 
 class Pin(object):

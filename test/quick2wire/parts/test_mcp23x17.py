@@ -16,7 +16,7 @@ def all_pins_of_chip():
     
     for b in bank_ids:
         for p in pin_ids:
-            with chip.banks[b][p] as pin:
+            with chip[b][p] as pin:
                 yield pin
 
 def setup_function(function):
@@ -27,21 +27,21 @@ def setup_function(function):
 
 
 def test_has_two_banks_of_eight_pins():
-    assert len(chip.banks) == 2
+    assert len(chip) == 2
     for b in bank_ids:
-        assert len(chip.banks[b]) == 8
+        assert len(chip[b]) == 8
 
 @forall(b=bank_ids, p=pin_ids)
 def test_all_pins_report_their_bank_and_index(b, p):
-    assert chip.banks[b][p].bank == chip.banks[b]
-    assert chip.banks[b][p].index == p
+    assert chip[b][p].bank == chip[b]
+    assert chip[b][p].index == p
 
 
 @forall(b=bank_ids, p=pin_ids)
 def test_can_use_a_context_manager_to_claim_ownership_of_a_pin_in_a_bank_and_release_it(b, p):
-    with chip.banks[b][p] as pin:
+    with chip[b][p] as pin:
         try :
-            with chip.banks[b][p] as pin2:
+            with chip[b][p] as pin2:
                 raise AssertionError("claiming the pin should have failed")
         except ValueError as e:
             pass
@@ -49,10 +49,10 @@ def test_can_use_a_context_manager_to_claim_ownership_of_a_pin_in_a_bank_and_rel
 
 @forall(b=bank_ids, p=pin_ids)
 def test_a_pin_can_be_claimed_after_being_released(b, p):
-    with chip.banks[b][p] as pin:
+    with chip[b][p] as pin:
         pass
     
-    with chip.banks[b][p] as pin_again:
+    with chip[b][p] as pin_again:
         pass
 
 
@@ -98,7 +98,7 @@ def test_can_set_pin_to_output_mode_and_set_its_logical_value(p):
 def test_can_write_value_of_pin_without_affecting_other_output_pins(ps, p2_value):
     (b1,p1), (b2,p2) = ps
     
-    with chip.banks[b1][p1] as pin1, chip.banks[b2][p2] as pin2:
+    with chip[b1][p1] as pin1, chip[b2][p2] as pin2:
         pin1.direction = Out
         pin2.direction = Out
         
@@ -123,7 +123,7 @@ def test_can_read_an_input_bit_then_write_then_read_same_bit(ps, inpin_value):
     
     registers.given_gpio_inputs(inb, inpin_value<<inp)
     
-    with chip.banks[inb][inp] as inpin, chip.banks[outb][outp] as outpin:
+    with chip[inb][inp] as inpin, chip[outb][outp] as outpin:
         inpin.direction = In
         outpin.direction = Out
         
