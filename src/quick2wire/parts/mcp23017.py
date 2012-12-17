@@ -22,5 +22,5 @@ class Registers(mcp23x17.Registers):
 
 class MCP23017(mcp23x17.PinBanks):
     def __init__(self, master, address=0x20):
-        super().__init__(self, Registers(master, address))
+        super().__init__(Registers(master, address))
 
