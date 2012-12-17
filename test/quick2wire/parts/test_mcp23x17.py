@@ -19,7 +19,7 @@ def all_pins_of_chip():
             with chip[b][p] as pin:
                 yield pin
 
-def setup_function(function):
+def setup_function(function=None):
     global chip, registers
     registers = FakeRegisters()
     chip = PinBanks(registers)
@@ -81,6 +81,33 @@ def test_can_read_logical_value_of_input_pin(p):
     
     registers.given_gpio_inputs(p.bank.index, 0)
     assert p.value == 0
+
+
+@forall(b = bank_ids)
+def test_initially_banks_are_in_automatic_read_mode(b):
+    assert chip[b].read_mode == automatic
+
+
+@forall(b = bank_ids, p=pin_ids)
+def test_in_explicit_read_mode_bank_must_be_read_explicitly_before_pin_value_is_visible(b, p):
+    setup_function()
+    
+    bank = chip[b]
+    
+    bank.read_mode = explicit
+    
+    with bank[p] as pin:
+        registers.given_gpio_inputs(b, 0)
+        
+        assert pin.value == 0
+        
+        registers.given_gpio_inputs(b, 1<<p)
+        
+        assert pin.value == 0
+        
+        bank.read()
+        
+        assert pin.value == 1
 
 
 @forall(p=all_pins_of_chip())
@@ -164,7 +191,6 @@ def test_can_configure_pull_down_resistors(pin):
     assert registers.read_banked_register(pin.bank.index, GPPU) == ~(1<<pin.index) & 0xFF
 
 
-
 @forall(pin=all_pins_of_chip())
 def test_can_set_pin_to_interrupt_on_change(pin):
     registers.given_register_value(pin.bank.index, GPINTEN, 0)
@@ -176,10 +202,34 @@ def test_can_set_pin_to_interrupt_on_change(pin):
     assert registers.register_bit(pin.bank.index, INTCON, pin.index) == 0
 
 
+@forall(pin=all_pins_of_chip())
+def test_can_set_pin_to_interrupt_when_input_set_to_specific_value(pin):
+    registers.given_register_value(pin.bank.index, GPINTEN, 0)
+    registers.given_register_value(pin.bank.index, INTCON, 0)
+    
+    pin.interrupt_when(1)
+    
+    assert registers.register_bit(pin.bank.index, GPINTEN, pin.index) == 1
+    assert registers.register_bit(pin.bank.index, INTCON, pin.index) == 1
+
+
+@forall(pin=all_pins_of_chip())
+def DISABLED_test_must_explicitly_refresh_interrupt_state(pin):
+    pin.bank.read_mode = explicit
+    
+    pin.bank.interrupt_on_change()
+    
+    registers.given_register_value(pin.bank.index, INTCAP, 1<<pin.index)
+    
+    pin.bank.refresh()
+    
+    assert pin.interrupt == True
+    
 
 
 register_names = sorted([s for s in dir(mcp23x17) if s[-1] in ('A','B') and s.upper() == s], 
                         key=lambda s: getattr(mcp23x17, s))
+
 
 class FakeRegisters(Registers):
     def __init__(self):

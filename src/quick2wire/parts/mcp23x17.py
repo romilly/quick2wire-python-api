@@ -109,12 +109,27 @@ class PinBanks(object):
             bank._reset_cache()
 
 
+# Read and flush modes
+
+def explicit(f, reg):
+    """read() and flush() must be called explicitly."""
+    pass
+
+def automatic(f, reg):
+    """read() and flush() are called automatically on every read or write of Pin.value."""
+    f(reg)
+
+
 class PinBank(object):
     def __init__(self, chip, bank_id):
         self.chip = chip
         self._bank_id = bank_id
         self._pins = tuple([Pin(self, i) for i in range(8)])
-        self._register_cache = [0]*BANK_SIZE # self._register_cache[IOCON] is ignored
+        self._register_cache = [None]*BANK_SIZE # self._register_cache[IOCON] is ignored
+        self.read_mode = automatic
+    
+    def __str__(self):
+        return "PinBank("+self.index+")"
     
     def _reset_cache(self):
         for reg, value in _reset_sequence():
@@ -133,8 +148,19 @@ class PinBank(object):
     
     __getitem__ = pin
     
+    def read(self):
+        self._register_cache[GPIO] = None
+    
     def _get_register_bit(self, register, bit_index):
-        return bool(self._read_register(register) & (1<<bit_index))
+        self.read_mode(self._read_register, register)
+        
+        if self._register_cache[register] is None:
+            self._read_register(register)
+        
+        return bool(self._register_cache[register] & (1<<bit_index))
+    
+    def _read_register(self, register):
+        self._register_cache[register] = self.chip.registers.read_banked_register(self._bank_id, register)
     
     def _set_register_bit(self, register, bit_index, new_value):
         bit_mask = 1 << bit_index
@@ -142,14 +168,6 @@ class PinBank(object):
         new_value = (current_value | bit_mask) if new_value else (current_value & ~bit_mask)
         self._register_cache[register] = new_value
         self.chip.registers.write_banked_register(self._bank_id, register, new_value)
-    
-    def _read_register(self, register):
-        current_value = self.chip.registers.read_banked_register(self._bank_id, register)
-        self._register_cache[register] = current_value
-        return current_value
-    
-    def __str__(self):
-        return "PinBank("+self.index+")"
 
 
 class Pin(object):
@@ -188,7 +206,7 @@ class Pin(object):
         self._set_register_bit(OLAT, new_value)
     
     value = property(get, set)
-
+    
     @property
     def pull_down(self):
         return self._get_register_bit(GPPU)
@@ -202,13 +220,14 @@ class Pin(object):
         self._set_register_bit(GPINTEN, 1)
     
     def interrupt_when(self, value):
+        # TODO - do these in a single transaction?
         self._set_register_bit(INTCON, 1)
-        self._set_register_bit(DEFVAL, value)
+        self._set_register_bit(DEFVAL, not value)
         self._set_register_bit(GPINTEN, 1)
     
     def _set_register_bit(self, register, new_value):
         self.bank._set_register_bit(register, self.index, new_value)
-                               
+    
     def _get_register_bit(self, register):
         return self.bank._get_register_bit(register, self.index)
         
