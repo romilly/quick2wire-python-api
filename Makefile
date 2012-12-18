@@ -16,10 +16,6 @@ PYTHON_ENV=$(PWD)/python$(python)-$(ARCHITECTURE)
 PYTHON_EXE=$(PYTHON_ENV)/bin/python
 PIP=$(PYTHON_ENV)/bin/pip
 PYTHON_BUILDDIR=$(PYTHON_ENV)/build
-PYTHON_LIBDIR=$(PYTHON_ENV)/lib/python$(python)/site-packages
-
-# To stop setup.py complaining about paths
-export PYTHONPATH=$(PYTHON_LIBDIR)
 
 PROJECT=quick2wire-python-api
 VERSION:=$(shell $(PYTHON_EXE) setup.py --version)
