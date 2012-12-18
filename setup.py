@@ -1,7 +1,9 @@
 #!/usr/bin/env python
 
+from setuptools import setup
+from setuptools.command.test import test as TestCommand
+import sys
 import os
-from distutils.core import setup
 
 def contents_of(fname):
     try:
@@ -10,10 +12,32 @@ def contents_of(fname):
         return 'Quick2Wire API'
 
 
+def devices():
+    return os.environ.get('devices','').split()
+
+
+class PyTest(TestCommand):
+    def finalize_options(self):
+        print("devices:", devices())
+        
+        TestCommand.finalize_options(self)
+        self.test_suite = True
+        self.test_args = ['test', 
+                          '--duration=10', 
+                          '-m', 
+                          ("").join(d + " or " for d in devices()) + "not loopback"]
+    
+    def run_tests(self):
+        #import here, cause outside the eggs aren't loaded
+        import pytest
+        errno = pytest.main(self.test_args)
+        sys.exit(errno)
+
+
 setup(name='Quick2Wire',
-      version='1.1.0.0-a',
+      version='0.0.0.2',
       description='Quick2Wire API',
-      long_description=contents_of('README.rst'),
+      long_description=contents_of('README.txt'),
       author='Quick2Wire Ltd.',
       author_email='info@quick2wire.com',
       url='http://quick2wire.com',
@@ -27,16 +51,19 @@ setup(name='Quick2Wire',
         'License :: OSI Approved :: GNU Lesser General Public License (LGPL)',
         'License :: OSI Approved :: MIT',
         'Programming Language :: Python',
+        'Programming Language :: Python :: 3',
         'Natural Language :: English',
         'Topic :: Software Development',
       ],
       platforms=['Linux'],
       
-      provides=['quick2wire.gpio', 'quick2wire.i2c'],
-      packages=['quick2wire'],
+      provides=['quick2wire', 'quick2wire'],
+      
+      packages=['quick2wire', 'quick2wire.parts'],
       package_dir = {'': 'src'},
       scripts=[],
       
-      requires=[]
+      tests_require=['pytest'],
+      cmdclass = {'test': PyTest}
 )
 
