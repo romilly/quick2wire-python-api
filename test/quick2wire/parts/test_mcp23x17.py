@@ -21,6 +21,7 @@ def all_pins_of_chip():
 
 def setup_function(function=None):
     global chip, registers
+    
     registers = FakeRegisters()
     chip = PinBanks(registers)
     chip.reset()
@@ -74,6 +75,8 @@ def test_only_resets_iocon_once_because_same_register_has_two_addresses():
 
 @forall(p=all_pins_of_chip())
 def test_can_read_logical_value_of_input_pin(p):
+    chip.reset()
+    
     p.direction = In
     
     registers.given_gpio_inputs(p.bank.index, 1 << p.index)
@@ -90,7 +93,7 @@ def test_initially_banks_are_in_automatic_read_mode(b):
 
 @forall(b = bank_ids, p=pin_ids)
 def test_in_explicit_read_mode_bank_must_be_read_explicitly_before_pin_value_is_visible(b, p):
-    setup_function()
+    chip.reset()
     
     bank = chip[b]
     
@@ -168,6 +171,8 @@ def test_can_read_an_input_bit_then_write_then_read_same_bit(ps, inpin_value):
 
 @forall(pin=all_pins_of_chip())
 def test_can_configure_pull_down_resistors(pin):
+    chip.reset()
+    
     registers.given_register_value(pin.bank.index, GPPU, 0x00)
     
     assert pin.pull_down == False
