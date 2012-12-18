@@ -23,6 +23,9 @@ Raspberry Pi's I2C bus.
 Before You Start Coding...
 --------------------------
 
+By default, i2c is disabled in the raspbian kernel. To enable it, and check out your installation, follow [these
+instructions](http://quick2wire.com/articles/physical-python-part-1/)
+
 Ensure you are in the i2c group.  Run the `groups` command to list
 your group membership. For example:
 
