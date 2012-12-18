@@ -49,7 +49,7 @@ env-again: env-clean env
 .PHONY: env-again
 
 check:
-	PYTHONPATH=src:$(PYTHON_LIBDIR) $(PYTHON_ENV)/bin/py.test test -m "$(devices:%=% or) not loopback"
+	PYTHONPATH=src:$(PYTHON_LIBDIR) $(PYTHON_ENV)/bin/py.test test -m "$(devices:%=% or) not loopback" --duration=10
 .PHONY: check
 
 check-install:
