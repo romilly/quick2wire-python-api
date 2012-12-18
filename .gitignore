@@ -21,7 +21,8 @@ pip-log.txt
 # Temporary output
 output/
 dist/
-README.txt
+build/
+README.rst
 
 # Virtual environment
 python?.?-*/
