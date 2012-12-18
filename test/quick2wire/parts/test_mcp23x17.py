@@ -188,11 +188,6 @@ def test_can_configure_pull_down_resistors(pin):
     pin.pull_down = False
     assert pin.pull_down == False
     
-    print("registers:")
-    registers.print_registers()
-    print("writes:")
-    registers.print_writes()
-    
     assert registers.read_banked_register(pin.bank.index, GPPU) == ~(1<<pin.index) & 0xFF
 
 
@@ -219,21 +214,23 @@ def test_can_set_pin_to_interrupt_when_input_set_to_specific_value(pin):
 
 
 @forall(pin=all_pins_of_chip())
-def DISABLED_test_must_explicitly_refresh_interrupt_state(pin):
+def test_must_explicitly_read_to_update_interrupt_state(pin):
+    chip.reset()
+    
+    pin.direction = In
     pin.bank.read_mode = explicit
     
-    pin.bank.interrupt_on_change()
+    pin.interrupt_on_change()
     
     registers.given_register_value(pin.bank.index, INTCAP, 1<<pin.index)
     
-    pin.bank.refresh()
-    
-    assert pin.interrupt == True
-    
-
-
-register_names = sorted([s for s in dir(mcp23x17) if s[-1] in ('A','B') and s.upper() == s], 
-                        key=lambda s: getattr(mcp23x17, s))
+    assert not pin.interrupt
+    print("before read:")
+    registers.print_registers()
+    pin.bank.read()
+    print("after read:")
+    registers.print_registers()
+    assert pin.interrupt
 
 
 class FakeRegisters(Registers):
@@ -256,21 +253,22 @@ class FakeRegisters(Registers):
             self.registers[reg] = value
     
     def read_register(self, reg):
+        if reg == GPIOA:
+            value = (self.registers[GPIOA] & self.registers[IODIRA]) | (self.registers[OLATA] & ~self.registers[IODIRA])
+        elif reg == GPIOB:
+            value = (self.registers[GPIOB] & self.registers[IODIRB]) | (self.registers[OLATB] & ~self.registers[IODIRB])
+        else:
+            value = self.registers[reg]
+
         if reg in (INTCAPA, GPIOA):
             self.registers[INTCAPA] = 0
-        
-        if reg in (INTCAPB, GPIOB):
+        elif reg in (INTCAPB, GPIOB):
             self.registers[INTCAPB] = 0
-        
-        if reg == GPIOA:
-            return (self.registers[GPIOA] & self.registers[IODIRA]) | (self.registers[OLATA] & ~self.registers[IODIRA])
-        elif reg == GPIOB:
-            return (self.registers[GPIOB] & self.registers[IODIRB]) | (self.registers[OLATB] & ~self.registers[IODIRB])
-        else:
-            return self.registers[reg]
+          
+        return value
     
-    def register_bit(self, bank, register, bit):
-        return (self.read_register(_banked_register(bank,register)) >> bit) & 0x01
+    def register_bit(self, bank, reg, bit):
+        return (self.registers[_banked_register(bank,reg)] >> bit) & 0x01
     
     def given_gpio_inputs(self, bank, value):
         self.given_register_value(bank, GPIO, value)
@@ -279,12 +277,13 @@ class FakeRegisters(Registers):
         self.registers[_banked_register(bank,reg)] = value
     
     def print_registers(self):
-        for reg,value in zip(count(), self.registers):
+        for reg, value in zip(count(), self.registers):
             print(register_names[reg].ljust(8) + " = " + "%02X"%value)
 
     def print_writes(self):
-        for reg,value in self.writes:
+        for reg, value in self.writes:
             print(register_names[reg].ljust(8) + " := " + "%02X"%value)
 
     def clear_writes(self):
         self.writes = []
+

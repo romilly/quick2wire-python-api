@@ -23,6 +23,10 @@ INTCAP=8
 GPIO=9
 OLAT=10
 
+bank_register_names = sorted([s for s in globals() if s.upper() == s], 
+                             key=lambda s: globals()[s])
+
+
 BANK_SIZE = 11
 
 _BankA = 0
@@ -35,7 +39,7 @@ IODIRA = _banked_register(_BankA, IODIR)
 IODIRB = _banked_register(_BankB, IODIR)
 IPOLA = _banked_register(_BankA, IPOL)
 IPOLB = _banked_register(_BankB, IPOL)
-GPINTENA=_banked_register(_BankA, GPINTEN)
+GPINTENA =_banked_register(_BankA, GPINTEN)
 GPINTENB = _banked_register(_BankB, GPINTEN)
 DEFVALA = _banked_register(_BankA, DEFVAL)
 DEFVALB = _banked_register(_BankB, DEFVAL)
@@ -55,6 +59,8 @@ GPIOB = _banked_register(_BankB, GPIO)
 OLATA = _banked_register(_BankA, OLAT)
 OLATB = _banked_register(_BankB, OLAT)
 
+register_names = sorted([s for s in globals() if s[-1] in ('A','B') and s.upper() == s], 
+                        key=lambda s: globals()[s])
 
 _initial_register_values = (
     ((IODIR,), 0xFF),
@@ -115,9 +121,9 @@ def explicit(f, reg):
     """read() and flush() must be called explicitly."""
     pass
 
-def automatic(f, reg):
+def automatic(f, *args):
     """read() and flush() are called automatically on every read or write of Pin.value."""
-    f(reg)
+    f(*args)
 
 
 class PinBank(object):
@@ -149,7 +155,8 @@ class PinBank(object):
     __getitem__ = pin
     
     def read(self):
-        self._register_cache[GPIO] = None
+        self._read_register(INTCAP)
+        self._read_register(GPIO)
     
     def _get_register_bit(self, register, bit_index):
         self.read_mode(self._read_register, register)
@@ -198,7 +205,7 @@ class Pin(object):
     @direction.setter
     def direction(self, new_direction):
         self._set_register_bit(IODIR, (new_direction == In))
-        
+    
     def get(self):
         return self._get_register_bit(GPIO)
     
@@ -224,6 +231,10 @@ class Pin(object):
         self._set_register_bit(INTCON, 1)
         self._set_register_bit(DEFVAL, not value)
         self._set_register_bit(GPINTEN, 1)
+    
+    @property
+    def interrupt(self):
+        return self._get_register_bit(INTCAP)
     
     def _set_register_bit(self, register, new_value):
         self.bank._set_register_bit(register, self.index, new_value)
