@@ -115,15 +115,23 @@ class PinBanks(object):
             bank._reset_cache()
 
 
-# Read and flush modes
+# Read and write modes
 
-def explicit(f, reg):
-    """read() and flush() must be called explicitly."""
+def explicit_read(f):
+    """read() must be called explicitly."""
     pass
 
-def automatic(f, *args):
-    """read() and flush() are called automatically on every read or write of Pin.value."""
-    f(*args)
+def automatic_read(f):
+    """read() is called automatically on every get of Pin.value."""
+    f()
+
+def explicit_write(f):
+    """write() must be called explicitly."""
+    pass
+
+def automatic_write(f):
+    """registers are written when Pin attributes are set."""
+    f()
 
 
 class PinBank(object):
@@ -132,7 +140,9 @@ class PinBank(object):
         self._bank_id = bank_id
         self._pins = tuple([Pin(self, i) for i in range(8)])
         self._register_cache = [None]*BANK_SIZE # self._register_cache[IOCON] is ignored
-        self.read_mode = automatic
+        self._outstanding_writes = []
+        self.read_mode = automatic_read
+        self.write_mode = automatic_write
     
     def __str__(self):
         return "PinBank("+self.index+")"
@@ -158,8 +168,13 @@ class PinBank(object):
         self._read_register(INTCAP)
         self._read_register(GPIO)
     
+    def write(self):
+        for r in self._outstanding_writes:
+            self._write_register(r, self._register_cache[r])
+        self._outstanding_writes = []
+    
     def _get_register_bit(self, register, bit_index):
-        self.read_mode(self._read_register, register)
+        self.read_mode(lambda:self._read_register(register))
         
         if self._register_cache[register] is None:
             self._read_register(register)
@@ -173,7 +188,14 @@ class PinBank(object):
         bit_mask = 1 << bit_index
         current_value = self._register_cache[register]
         new_value = (current_value | bit_mask) if new_value else (current_value & ~bit_mask)
+        
         self._register_cache[register] = new_value
+        if register not in self._outstanding_writes:
+            self._outstanding_writes.append(register)
+        
+        self.write_mode(self.write)
+    
+    def _write_register(self, register, new_value):
         self.chip.registers.write_banked_register(self._bank_id, register, new_value)
 
 

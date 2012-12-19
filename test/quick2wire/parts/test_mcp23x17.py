@@ -87,8 +87,9 @@ def test_can_read_logical_value_of_input_pin(p):
 
 
 @forall(b = bank_ids)
-def test_initially_banks_are_in_automatic_read_mode(b):
-    assert chip[b].read_mode == automatic
+def test_initially_banks_are_in_automatic_mode(b):
+    assert chip[b].read_mode == automatic_read
+    assert chip[b].write_mode == automatic_write
 
 
 @forall(b = bank_ids, p=pin_ids)
@@ -97,7 +98,7 @@ def test_in_explicit_read_mode_bank_must_be_read_explicitly_before_pin_value_is_
     
     bank = chip[b]
     
-    bank.read_mode = explicit
+    bank.read_mode = explicit_read
     
     with bank[p] as pin:
         registers.given_gpio_inputs(b, 0)
@@ -218,19 +219,40 @@ def test_must_explicitly_read_to_update_interrupt_state(pin):
     chip.reset()
     
     pin.direction = In
-    pin.bank.read_mode = explicit
+    pin.bank.read_mode = explicit_read
     
     pin.interrupt_on_change()
     
     registers.given_register_value(pin.bank.index, INTCAP, 1<<pin.index)
     
     assert not pin.interrupt
-    print("before read:")
-    registers.print_registers()
     pin.bank.read()
-    print("after read:")
-    registers.print_registers()
     assert pin.interrupt
+
+
+@forall(b=bank_ids, p1=pin_ids, p2=pin_ids, where=lambda b,p1,p2: p1 != p2, samples=5)
+def test_in_explicit_write_mode_the_bank_caches_pin_states_until_written_to_chip(b, p1, p2):
+    chip.reset()
+    
+    with chip[b][p1] as pin1, chip[b][p2] as pin2:
+        chip[b].write_mode = explicit_write
+        
+        pin1.direction = Out
+        pin2.direction = Out
+        
+        assert registers.register_value(b, IODIR) == 0xFF
+        assert registers.register_value(b, OLAT) == 0x00
+        
+        pin1.value = True
+        
+        assert registers.register_value(b, OLAT) == 0x00
+        
+        pin1.bank.write()
+        
+        assert registers.register_bit(b, IODIR, p1) == 0
+        assert registers.register_bit(b, IODIR, p2) == 0
+        assert registers.register_bit(b, OLAT, p1) == 1
+
 
 
 class FakeRegisters(Registers):
@@ -267,8 +289,11 @@ class FakeRegisters(Registers):
           
         return value
     
+    def register_value(self, bank, reg):
+        return self.registers[_banked_register(bank,reg)]
+    
     def register_bit(self, bank, reg, bit):
-        return (self.registers[_banked_register(bank,reg)] >> bit) & 0x01
+        return (self.register_value(bank,reg) >> bit) & 0x01
     
     def given_gpio_inputs(self, bank, value):
         self.given_register_value(bank, GPIO, value)
@@ -286,4 +311,3 @@ class FakeRegisters(Registers):
 
     def clear_writes(self):
         self.writes = []
-
