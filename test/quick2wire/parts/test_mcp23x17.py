@@ -5,11 +5,10 @@ from quick2wire.parts.mcp23x17 import *
 from quick2wire.parts.mcp23x17 import _banked_register
 from factcheck import *
 
-print(dir(mcp23x17))
-
 bits = (1,0)
 bank_ids = range(2)
 pin_ids = range(8)
+
 
 def all_pins_of_chip():
     global chip
