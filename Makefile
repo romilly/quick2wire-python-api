@@ -49,7 +49,7 @@ check:
 
 check-install: TESTENV=$(abspath build/test-python$(python)-$(ARCHITECTURE))
 check-install: dist
-#	$(MAKE) PYTHON_ENV=$(TESTENV) env-again
+	$(MAKE) PYTHON_ENV=$(TESTENV) env-again
 	mkdir -p build/
 	cd build/ && tar xzf ../dist/$(PROJECT)-$(VERSION).tar.gz
 	cd build/$(PROJECT)-$(VERSION) && $(TESTENV)/bin/python setup.py install
