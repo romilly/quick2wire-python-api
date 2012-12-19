@@ -117,19 +117,19 @@ class PinBanks(object):
 
 # Read and write modes
 
-def explicit_read(f):
+def deferred_read(f):
     """read() must be called explicitly."""
     pass
 
-def automatic_read(f):
+def immediate_read(f):
     """read() is called automatically on every get of Pin.value."""
     f()
 
-def explicit_write(f):
+def deferred_write(f):
     """write() must be called explicitly."""
     pass
 
-def automatic_write(f):
+def immediate_write(f):
     """registers are written when Pin attributes are set."""
     f()
 
@@ -141,8 +141,8 @@ class PinBank(object):
         self._pins = tuple([Pin(self, i) for i in range(8)])
         self._register_cache = [None]*BANK_SIZE # self._register_cache[IOCON] is ignored
         self._outstanding_writes = []
-        self.read_mode = automatic_read
-        self.write_mode = automatic_write
+        self.read_mode = immediate_read
+        self.write_mode = immediate_write
     
     def __str__(self):
         return "PinBank("+self.index+")"

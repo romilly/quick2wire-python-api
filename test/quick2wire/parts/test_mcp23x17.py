@@ -88,17 +88,17 @@ def test_can_read_logical_value_of_input_pin(p):
 
 @forall(b = bank_ids)
 def test_initially_banks_are_in_automatic_mode(b):
-    assert chip[b].read_mode == automatic_read
-    assert chip[b].write_mode == automatic_write
+    assert chip[b].read_mode == immediate_read
+    assert chip[b].write_mode == immediate_write
 
 
 @forall(b = bank_ids, p=pin_ids)
-def test_in_explicit_read_mode_bank_must_be_read_explicitly_before_pin_value_is_visible(b, p):
+def test_in_deferred_read_mode_bank_must_be_read_explicitly_before_pin_value_is_visible(b, p):
     chip.reset()
     
     bank = chip[b]
     
-    bank.read_mode = explicit_read
+    bank.read_mode = deferred_read
     
     with bank[p] as pin:
         registers.given_gpio_inputs(b, 0)
@@ -219,7 +219,7 @@ def test_must_explicitly_read_to_update_interrupt_state(pin):
     chip.reset()
     
     pin.direction = In
-    pin.bank.read_mode = explicit_read
+    pin.bank.read_mode = deferred_read
     
     pin.interrupt_on_change()
     
@@ -231,11 +231,11 @@ def test_must_explicitly_read_to_update_interrupt_state(pin):
 
 
 @forall(b=bank_ids, p1=pin_ids, p2=pin_ids, where=lambda b,p1,p2: p1 != p2, samples=5)
-def test_in_explicit_write_mode_the_bank_caches_pin_states_until_written_to_chip(b, p1, p2):
+def test_in_deferred_write_mode_the_bank_caches_pin_states_until_written_to_chip(b, p1, p2):
     chip.reset()
     
     with chip[b][p1] as pin1, chip[b][p2] as pin2:
-        chip[b].write_mode = explicit_write
+        chip[b].write_mode = deferred_write
         
         pin1.direction = Out
         pin2.direction = Out
