@@ -18,8 +18,6 @@ def devices():
 
 class PyTest(TestCommand):
     def finalize_options(self):
-        print("devices:", devices())
-        
         TestCommand.finalize_options(self)
         self.test_suite = True
         self.test_args = ['test', 
@@ -34,9 +32,9 @@ class PyTest(TestCommand):
         sys.exit(errno)
 
 
-setup(name='Quick2Wire',
+setup(name='quick2wire-api',
       version='0.0.0.2',
-      description='Quick2Wire API',
+      description='Quick2Wire API for Physical Computing',
       long_description=contents_of('README.txt'),
       author='Quick2Wire Ltd.',
       author_email='info@quick2wire.com',

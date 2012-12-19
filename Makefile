@@ -15,9 +15,8 @@ ARCHITECTURE:=$(shell uname -m)
 PYTHON_ENV=$(PWD)/python$(python)-$(ARCHITECTURE)
 PYTHON_EXE=$(PYTHON_ENV)/bin/python
 PIP=$(PYTHON_ENV)/bin/pip
-PYTHON_BUILDDIR=$(PYTHON_ENV)/build
 
-PROJECT=quick2wire-python-api
+PROJECT:=$(shell $(PYTHON_EXE) setup.py --name)
 VERSION:=$(shell $(PYTHON_EXE) setup.py --version)
 
 
@@ -48,15 +47,14 @@ check:
 	$(PYTHON_EXE) setup.py test
 .PHONY: check
 
-check-install:
-	$(MAKE) PYTHON_ENV=build/test-$(python)-$(ARCHITECTURE) env-again
-	build/test-$(python)-$(ARCHITECTURE)/bin/python$(python) setup.py install
-	$(MAKE) PYTHON_ENV=build/test-$(python)-$(ARCHITECTURE) check
+check-install: TESTENV=$(abspath build/test-python$(python)-$(ARCHITECTURE))
+check-install: dist
+#	$(MAKE) PYTHON_ENV=$(TESTENV) env-again
+	mkdir -p build/
+	cd build/ && tar xzf ../dist/$(PROJECT)-$(VERSION).tar.gz
+	cd build/$(PROJECT)-$(VERSION) && $(TESTENV)/bin/python setup.py install
+	$(TESTENV)/bin/python setup.py test
 .PHONY: check-install
-
-build/test-$(python)-$(ARCHITECTURE):
-	mkdir -p $(dir $@)
-	cp -R $(PYTHON_ENV) $@
 
 dist/$(PROJECT)-$(VERSION).tar.gz: setup.py Makefile README.rst
 	$(PYTHON_EXE) setup.py sdist
