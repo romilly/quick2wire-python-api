@@ -1,15 +1,15 @@
 
 from itertools import product, permutations, count
+from warnings import catch_warnings, simplefilter as issue_warnings
 import quick2wire.parts.mcp23x17 as mcp23x17
 from quick2wire.parts.mcp23x17 import *
 from quick2wire.parts.mcp23x17 import _banked_register
 from factcheck import *
 
-print(dir(mcp23x17))
-
 bits = (1,0)
 bank_ids = range(2)
 pin_ids = range(8)
+
 
 def all_pins_of_chip():
     global chip
@@ -87,17 +87,18 @@ def test_can_read_logical_value_of_input_pin(p):
 
 
 @forall(b = bank_ids)
-def test_initially_banks_are_in_automatic_read_mode(b):
-    assert chip[b].read_mode == automatic
+def test_initially_banks_are_in_automatic_mode(b):
+    assert chip[b].read_mode == immediate_read
+    assert chip[b].write_mode == immediate_write
 
 
 @forall(b = bank_ids, p=pin_ids)
-def test_in_explicit_read_mode_bank_must_be_read_explicitly_before_pin_value_is_visible(b, p):
+def test_in_deferred_read_mode_bank_must_be_read_explicitly_before_pin_value_is_visible(b, p):
     chip.reset()
     
     bank = chip[b]
     
-    bank.read_mode = explicit
+    bank.read_mode = deferred_read
     
     with bank[p] as pin:
         registers.given_gpio_inputs(b, 0)
@@ -196,6 +197,7 @@ def test_can_set_pin_to_interrupt_on_change(pin):
     registers.given_register_value(pin.bank.index, GPINTEN, 0)
     registers.given_register_value(pin.bank.index, INTCON, 0xFF)
     
+    pin.bank.read_mode = deferred_read
     pin.interrupt_on_change()
     
     assert registers.register_bit(pin.bank.index, GPINTEN, pin.index) == 1
@@ -207,6 +209,7 @@ def test_can_set_pin_to_interrupt_when_input_set_to_specific_value(pin):
     registers.given_register_value(pin.bank.index, GPINTEN, 0)
     registers.given_register_value(pin.bank.index, INTCON, 0)
     
+    pin.bank.read_mode = deferred_read
     pin.interrupt_when(1)
     
     assert registers.register_bit(pin.bank.index, GPINTEN, pin.index) == 1
@@ -214,23 +217,84 @@ def test_can_set_pin_to_interrupt_when_input_set_to_specific_value(pin):
 
 
 @forall(pin=all_pins_of_chip())
+def test_issues_warning_if_interrupt_enabled_when_pin_is_in_immediate_read_mode(pin):
+    pin.bank.read_mode = immediate_read
+    
+    with catch_warnings(record=True) as warnings:
+        issue_warnings("always")
+        
+        pin.interrupt_when(1)
+
+        assert len(warnings) > 0
+
+
+@forall(pin=all_pins_of_chip())
+def test_issues_no_warning_if_interrupt_enabled_when_pin_is_in_deferred_read_mode(pin):
+    pin.bank.read_mode = deferred_read
+    
+    with catch_warnings(record=True) as warnings:
+        issue_warnings("always")
+        
+        pin.interrupt_when(1)
+        
+        print(warnings)
+        assert len(warnings) == 0
+
+
+@forall(pin=all_pins_of_chip())
+def test_issues_no_warning_if_interrupt_enabled_when_pin_is_in_custom_read_mode(pin):
+    def custom_read_mode(f):
+        pass
+    
+    pin.bank.read_mode = custom_read_mode
+    
+    with catch_warnings(record=True) as warnings:
+        issue_warnings("always")
+        
+        pin.interrupt_when(1)
+        
+        assert len(warnings) == 0
+
+
+@forall(pin=all_pins_of_chip())
 def test_must_explicitly_read_to_update_interrupt_state(pin):
     chip.reset()
     
     pin.direction = In
-    pin.bank.read_mode = explicit
+    pin.bank.read_mode = deferred_read
     
     pin.interrupt_on_change()
     
     registers.given_register_value(pin.bank.index, INTCAP, 1<<pin.index)
     
     assert not pin.interrupt
-    print("before read:")
-    registers.print_registers()
     pin.bank.read()
-    print("after read:")
-    registers.print_registers()
     assert pin.interrupt
+
+
+@forall(b=bank_ids, p1=pin_ids, p2=pin_ids, where=lambda b,p1,p2: p1 != p2, samples=5)
+def test_in_deferred_write_mode_the_bank_caches_pin_states_until_written_to_chip(b, p1, p2):
+    chip.reset()
+    
+    with chip[b][p1] as pin1, chip[b][p2] as pin2:
+        chip[b].write_mode = deferred_write
+        
+        pin1.direction = Out
+        pin2.direction = Out
+        
+        assert registers.register_value(b, IODIR) == 0xFF
+        assert registers.register_value(b, OLAT) == 0x00
+        
+        pin1.value = True
+        
+        assert registers.register_value(b, OLAT) == 0x00
+        
+        pin1.bank.write()
+        
+        assert registers.register_bit(b, IODIR, p1) == 0
+        assert registers.register_bit(b, IODIR, p2) == 0
+        assert registers.register_bit(b, OLAT, p1) == 1
+
 
 
 class FakeRegisters(Registers):
@@ -267,8 +331,11 @@ class FakeRegisters(Registers):
           
         return value
     
+    def register_value(self, bank, reg):
+        return self.registers[_banked_register(bank,reg)]
+    
     def register_bit(self, bank, reg, bit):
-        return (self.registers[_banked_register(bank,reg)] >> bit) & 0x01
+        return (self.register_value(bank,reg) >> bit) & 0x01
     
     def given_gpio_inputs(self, bank, value):
         self.given_register_value(bank, GPIO, value)
@@ -286,4 +353,3 @@ class FakeRegisters(Registers):
 
     def clear_writes(self):
         self.writes = []
-
