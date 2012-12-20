@@ -1,5 +1,6 @@
 
 from itertools import product, permutations, count
+from warnings import catch_warnings, simplefilter as issue_warnings
 import quick2wire.parts.mcp23x17 as mcp23x17
 from quick2wire.parts.mcp23x17 import *
 from quick2wire.parts.mcp23x17 import _banked_register
@@ -196,6 +197,7 @@ def test_can_set_pin_to_interrupt_on_change(pin):
     registers.given_register_value(pin.bank.index, GPINTEN, 0)
     registers.given_register_value(pin.bank.index, INTCON, 0xFF)
     
+    pin.bank.read_mode = deferred_read
     pin.interrupt_on_change()
     
     assert registers.register_bit(pin.bank.index, GPINTEN, pin.index) == 1
@@ -207,10 +209,51 @@ def test_can_set_pin_to_interrupt_when_input_set_to_specific_value(pin):
     registers.given_register_value(pin.bank.index, GPINTEN, 0)
     registers.given_register_value(pin.bank.index, INTCON, 0)
     
+    pin.bank.read_mode = deferred_read
     pin.interrupt_when(1)
     
     assert registers.register_bit(pin.bank.index, GPINTEN, pin.index) == 1
     assert registers.register_bit(pin.bank.index, INTCON, pin.index) == 1
+
+
+@forall(pin=all_pins_of_chip())
+def test_issues_warning_if_interrupt_enabled_when_pin_is_in_immediate_read_mode(pin):
+    pin.bank.read_mode = immediate_read
+    
+    with catch_warnings(record=True) as warnings:
+        issue_warnings("always")
+        
+        pin.interrupt_when(1)
+
+        assert len(warnings) > 0
+
+
+@forall(pin=all_pins_of_chip())
+def test_issues_no_warning_if_interrupt_enabled_when_pin_is_in_deferred_read_mode(pin):
+    pin.bank.read_mode = deferred_read
+    
+    with catch_warnings(record=True) as warnings:
+        issue_warnings("always")
+        
+        pin.interrupt_when(1)
+        
+        print(warnings)
+        assert len(warnings) == 0
+
+
+@forall(pin=all_pins_of_chip())
+def test_issues_no_warning_if_interrupt_enabled_when_pin_is_in_custom_read_mode(pin):
+    def custom_read_mode(f):
+        pass
+    
+    pin.bank.read_mode = custom_read_mode
+    
+    with catch_warnings(record=True) as warnings:
+        issue_warnings("always")
+        
+        pin.interrupt_when(1)
+        
+        assert len(warnings) == 0
 
 
 @forall(pin=all_pins_of_chip())

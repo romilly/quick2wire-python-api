@@ -6,6 +6,7 @@
 # we assume bank=0 addressing (which is the POR default value)
 
 import contextlib
+from warnings import warn
 
 # TODO - import from GPIO or common definitions module
 In = "in"
@@ -147,32 +148,39 @@ class PinBank(object):
     def __str__(self):
         return "PinBank("+self.index+")"
     
+
     def _reset_cache(self):
         for reg, value in _reset_sequence():
             self._register_cache[reg] = value
     
+
     @property
     def index(self):
         return self._bank_id
     
+
     def __len__(self):
         return len(self._pins)
     
+
     def pin(self, n):
         pin = self._pins[n]
         return pin
     
     __getitem__ = pin
     
+
     def read(self):
         self._read_register(INTCAP)
         self._read_register(GPIO)
     
+
     def write(self):
         for r in self._outstanding_writes:
             self._write_register(r, self._register_cache[r])
         self._outstanding_writes = []
     
+
     def _get_register_bit(self, register, bit_index):
         self.read_mode(lambda:self._read_register(register))
         
@@ -181,8 +189,10 @@ class PinBank(object):
         
         return bool(self._register_cache[register] & (1<<bit_index))
     
+
     def _read_register(self, register):
         self._register_cache[register] = self.chip.registers.read_banked_register(self._bank_id, register)
+
     
     def _set_register_bit(self, register, bit_index, new_value):
         bit_mask = 1 << bit_index
@@ -194,9 +204,16 @@ class PinBank(object):
             self._outstanding_writes.append(register)
         
         self.write_mode(self.write)
+
     
     def _write_register(self, register, new_value):
         self.chip.registers.write_banked_register(self._bank_id, register, new_value)
+
+
+    def _check_read_mode_for_interrupts(self):
+        if self.read_mode == immediate_read:
+            warn("interrupts enabled when in immediate read mode", stacklevel=1)
+    
 
 
 class Pin(object):
@@ -245,10 +262,13 @@ class Pin(object):
         self._set_register_bit(GPPU, value)
     
     def interrupt_on_change(self):
+        self.bank._check_read_mode_for_interrupts()
+        # TODO - do these in a single transaction?
         self._set_register_bit(INTCON, 0)
         self._set_register_bit(GPINTEN, 1)
     
     def interrupt_when(self, value):
+        self.bank._check_read_mode_for_interrupts()
         # TODO - do these in a single transaction?
         self._set_register_bit(INTCON, 1)
         self._set_register_bit(DEFVAL, not value)
