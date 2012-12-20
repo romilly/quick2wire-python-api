@@ -153,7 +153,7 @@ class PinBank(object):
         for reg, value in _reset_sequence():
             self._register_cache[reg] = value
     
-
+    
     @property
     def index(self):
         return self._bank_id
