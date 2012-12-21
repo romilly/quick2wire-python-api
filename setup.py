@@ -15,13 +15,12 @@ def contents_of(fname):
 def devices():
     return os.environ.get('devices','').split()
 
-
 class PyTest(TestCommand):
     def finalize_options(self):
         TestCommand.finalize_options(self)
         self.test_suite = True
         self.test_args = ['test', 
-                          '--duration=10', 
+                          '--duration=5', 
                           '-m', 
                           ("").join(d + " or " for d in devices()) + "not loopback"]
     
