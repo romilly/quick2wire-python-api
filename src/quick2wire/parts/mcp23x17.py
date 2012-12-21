@@ -12,6 +12,12 @@ from warnings import warn
 In = "in"
 Out = "out"
 
+# Bits within the IOCON regiseter
+IOCON_INTPOL=1
+IOCON_ODR=2
+IOCON_MIRROR=6
+
+# Register names within a bank
 IODIR=0
 IPOL=1
 GPINTEN=2
@@ -74,9 +80,10 @@ def _reset_sequence():
 class Registers(object):
     """Abstract interface to MCP23x17 registers"""
     
-    def reset(self):
+    def reset(self, iocon=0x00):
         """Reset to power-on state"""
-        self.write_register(IOCON_BOTH, 0x00)
+        self.write_register(IOCON_BOTH, iocon)
+        
         for reg, value in _reset_sequence():
             self.write_banked_register(_BankA, reg, value)
             self.write_banked_register(_BankB, reg, value)
@@ -97,6 +104,11 @@ class Registers(object):
 
 
 
+def _set_bit(current_value, bit_index, new_value):
+    bit_mask = 1 << bit_index
+    return (current_value | bit_mask) if new_value else (current_value & ~bit_mask)
+
+
 class PinBanks(object):
     def __init__(self, registers):
         self.registers = registers
@@ -110,8 +122,11 @@ class PinBanks(object):
 
     __getitem__ = bank
     
-    def reset(self):
-        self.registers.reset()
+    def reset(self, interrupt_polarity=False, interrupt_open_drain=False, interrupt_mirror=False):
+        self.registers.reset((interrupt_polarity << IOCON_INTPOL)
+                            |(interrupt_open_drain << IOCON_ODR)
+                            |(interrupt_mirror << IOCON_MIRROR))
+        
         for bank in self._banks:
             bank._reset_cache()
 
@@ -189,17 +204,13 @@ class PinBank(object):
         
         return bool(self._register_cache[register] & (1<<bit_index))
     
-
+    
     def _read_register(self, register):
         self._register_cache[register] = self.chip.registers.read_banked_register(self._bank_id, register)
-
+    
     
     def _set_register_bit(self, register, bit_index, new_value):
-        bit_mask = 1 << bit_index
-        current_value = self._register_cache[register]
-        new_value = (current_value | bit_mask) if new_value else (current_value & ~bit_mask)
-        
-        self._register_cache[register] = new_value
+        self._register_cache[register] = _set_bit(self._register_cache[register], bit_index, new_value)
         if register not in self._outstanding_writes:
             self._outstanding_writes.append(register)
         

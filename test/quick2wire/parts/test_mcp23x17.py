@@ -6,8 +6,8 @@ from quick2wire.parts.mcp23x17 import *
 from quick2wire.parts.mcp23x17 import _banked_register
 from factcheck import *
 
-bits = from_range(0,2)
-bank_ids = from_range(0,2)
+bits = from_range(2)
+bank_ids = from_range(2)
 pin_ids = from_range(0,8)
 banked_pin_ids = tuples(bank_ids, pin_ids)
 pin_pairs = ((p1,p2) for (p1,p2) in tuples(banked_pin_ids,banked_pin_ids) if p1 != p2)
@@ -68,14 +68,19 @@ def test_resets_iocon_before_other_registers():
     registers.clear_writes()
     
     chip.reset()
-    assert chip.registers.writes[0] == (IOCONA, 0)
+    assert chip.registers.writes[0][0] in (IOCONA, IOCONB)
 
 
-def test_only_resets_iocon_once_because_same_register_has_two_addresses():
-    registers.clear_writes()
+@forall(intpol=bits, odr=bits, mirror=bits, samples=4)
+def test_can_set_configuration_of_chip_on_reset(intpol, odr, mirror):
+    """Note: IOCON is duplicated in both banks so only need to test the contents in one bank"""
     
-    chip.reset()
-    assert len([r for (r,v) in chip.registers.writes if r in (IOCONA,IOCONB)]) == 1
+    chip.reset(interrupt_polarity=intpol, interrupt_open_drain=odr, interrupt_mirror=mirror)
+    
+    assert registers.register_bit(0, IOCON, IOCON_INTPOL) == intpol
+    assert registers.register_bit(0, IOCON, IOCON_ODR) == odr
+    assert registers.register_bit(0, IOCON, IOCON_MIRROR) == mirror
+
 
 
 @forall(b=bank_ids, p=pin_ids, samples=3)
@@ -98,7 +103,7 @@ def test_initially_banks_are_in_immediate_mode(b):
     assert chip[b].write_mode == immediate_write
 
 
-@forall(b = bank_ids, p=pin_ids, samples=3)
+@forall(b = bank_ids, p=pin_ids, samples=2)
 def test_in_deferred_read_mode_bank_must_be_read_explicitly_before_pin_value_is_visible(b, p):
     chip.reset()
     
@@ -364,3 +369,11 @@ class FakeRegisters(Registers):
 
     def clear_writes(self):
         self.writes = []
+        
+    def __repr__(self):
+        return type(self).__name__ + "()"
+    
+    def __str__(self):
+        return repr(self)
+
+
