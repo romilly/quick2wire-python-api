@@ -5,10 +5,6 @@ interface for the MCP23x17 series of GPIO expanders.
 The definitions in this module are common to the I2C MCP23017 and SPI
 MCP23S17. Only the methods for reading and writing to registers
 differ, and they must be defined by subclassing the Registers class.
-
-The MCP23x17 has two register addressing modes, depending on the value
-of bit7 of IOCON we assume bank=0 addressing (which is the POR default
-value).
 """
 
 import contextlib
@@ -87,6 +83,10 @@ class Registers(object):
     """Abstract interface for reading/writing MCP23x17 registers over the I2C or SPI bus.
     
     You shouldn't normally need to use this class.
+
+    The MCP23x17 has two register addressing modes, depending on the
+    value of bit7 of IOCON. We assume bank=0 addressing (which is the
+    POR default value).
     """
     
     def reset(self, iocon=0x00):
@@ -112,6 +112,10 @@ class Registers(object):
         """Write the value of a register.
         
         Implement in subclasses.
+        
+        Parameters:
+        reg   -- the register address
+        value -- the new value of the register
         """
         pass
     
@@ -119,6 +123,11 @@ class Registers(object):
         """Read the value of a register.
         
         Implement in subclasses.
+        
+        Parameters:
+        reg   -- the register address
+        
+        Returns: the value of the register.
         """
         pass
 
@@ -136,18 +145,36 @@ class PinBanks(object):
         self.registers = registers
         self._banks = (PinBank(self, 0), PinBank(self, 1))
     
+    def __len__(self):
+        """Returns the number of pin banks. (2 for the MCP23x17)"""
+        return len(self._banks)
+    
     def bank(self, n):
         """Returns bank n."""
         return self._banks[n]
     
-    def __len__(self):
-        """Returns the number of pin banks."""
-        return len(self._banks)
-    
     __getitem__ = bank
     
-    def reset(self, interrupt_polarity=False, interrupt_open_drain=False, interrupt_mirror=False):
-        """Resets the chip to power-on state and sets configuration flags in the IOCON register"""
+    def reset(self, interrupt_polarity=0, interrupt_open_drain=False, interrupt_mirror=False):
+        """Resets the chip to power-on state and sets configuration flags in the IOCON register
+        
+        Parameters:
+        interrupt_polarity   -- sets the polarity of the interrupt output 
+                                pin: 1 = active-high. 0 = active-low.
+        interrupt_open_drain -- configures the interrupt output pin as an 
+                                open-drain output.
+                                True = Open-drain output (overrides the 
+                                interrupt_polarity).
+                                False = Active driver output (the 
+                                interrupt_polarity parameter sets the 
+                                polarity).
+        interrupt_mirror     -- Sets the interrupt output mirroring.
+                                True = the interrupt output pins are 
+                                internally connected.
+                                False = the interrupt output pins are 
+                                not connected, INTA is associated with
+                                PortA and INTB is associated with PortB
+        """
         
         self.registers.reset((interrupt_polarity << IOCON_INTPOL)
                             |(interrupt_open_drain << IOCON_ODR)
@@ -160,11 +187,11 @@ class PinBanks(object):
 # Read and write modes
 
 def deferred_read(f):
-    """read() must be called explicitly."""
+    """A PinBank read mode: read() must be called explicitly."""
     pass
 
 def immediate_read(f):
-    """read() is called automatically whenever a pin value is read.
+    """A PinBank read mode: read() is called automatically whenever a pin value is read.
     
     Note: this mode is not compatible with interrupts. A warning will
     be issued if interrupts are enabled on a PinBank that is in
@@ -173,16 +200,16 @@ def immediate_read(f):
     f()
 
 def deferred_write(f):
-    """write() must be called explicitly."""
+    """A PinBank write mode: write() must be called explicitly."""
     pass
 
 def immediate_write(f):
-    """registers are written whenever Pin attributes are set."""
+    """A PinBank write mode: registers are written whenever Pin attributes are set."""
     f()
 
 
 class PinBank(object):
-    """A bank of GPIO pins"""
+    """A bank of 8 GPIO pins"""
     
     def __init__(self, chip, bank_id):
         self.chip = chip
@@ -200,7 +227,7 @@ class PinBank(object):
     
 
     def __len__(self):
-        """The number of pins in the bank."""
+        """The number of pins in the bank. (8 for the MCP23x17)"""
         return len(self._pins)
     
     
@@ -287,11 +314,16 @@ class Pin(object):
     """A digital Pin that can be used for input or output."""
     
     def __init__(self, bank, index):
+        """Called by the PinBank.  Not used by application code."""
         self.bank = bank
         self.index = index
         self._is_claimed = False
     
     def open(self):
+        """Acquire the Pin for use.
+        
+        Raises: ValueError if the pin is already in use.
+        """
         if self._is_claimed:
             raise ValueError("pin already in use")
         self._is_claimed = True
