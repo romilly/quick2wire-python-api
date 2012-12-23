@@ -240,7 +240,7 @@ class PinBank(object):
     
 
     def read(self):
-        """Read the interrupt capture and GPIO input registers from the chip.
+        """Read the GPIO input and interrupt capture registers from the chip.
         
         If the bank's read_mode is set to deferred_read, this must be
         called to make value property of the bank's Pins reflect the
@@ -375,22 +375,25 @@ class Pin(object):
     def pull_down(self, value):
         self._set_register_bit(GPPU, value)
     
-    def interrupt_on_change(self):
-        """Signal an interrupt on the bank's interrupt line whenever the value of the pin changes."""
+    def enable_interrupts(self, value=None):
+        """Signal an interrupt on the bank's interrupt line whenever the value of the pin changes.
+        
+        Parameters:
+        value -- If set, the interrupt is signalled when the pin's value is changed to this value.
+                 If not set, the interrupt is signalled whenever the pin's value changes.
+        """
         
         self.bank._check_read_mode_for_interrupts()
-        # TODO - do these in a single transaction?
-        self._set_register_bit(INTCON, 0)
+        if value is None:
+            self._set_register_bit(INTCON, 0)
+        else:
+            self._set_register_bit(INTCON, 1)
+            self._set_register_bit(DEFVAL, not value)
         self._set_register_bit(GPINTEN, 1)
     
-    def interrupt_when(self, value):
-        """Signal an interrupt on the bank's interrupt line whenever the value of the pin is changed to _value_"""
-        
-        self.bank._check_read_mode_for_interrupts()
-        # TODO - do these in a single transaction?
-        self._set_register_bit(INTCON, 1)
-        self._set_register_bit(DEFVAL, not value)
-        self._set_register_bit(GPINTEN, 1)
+    def disable_interrupts(self):
+        """Do not signal an interrupt when the value of the pin changes."""
+        self._set_register_bit(GPINTEN, 0)
     
     @property
     def interrupt(self):

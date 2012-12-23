@@ -203,29 +203,39 @@ def test_can_configure_pull_down_resistors(b, p):
 
 
 @forall(b=bank_ids, p=pin_ids, samples=3)
-def test_can_set_pin_to_interrupt_on_change(b, p):
+def test_can_set_pin_to_interrupt_when_input_changes(b, p):
     with chip[b][p] as pin:
         registers.given_register_value(b, GPINTEN, 0)
         registers.given_register_value(b, INTCON, 0xFF)
         
         pin.bank.read_mode = deferred_read
-        pin.interrupt_on_change()
+        pin.enable_interrupts()
         
         assert registers.register_bit(b, GPINTEN, p) == 1
         assert registers.register_bit(b, INTCON, p) == 0
 
 
 @forall(b=bank_ids, p=pin_ids, samples=3)
-def test_can_set_pin_to_interrupt_when_input_set_to_specific_value(b, p):
+def test_can_set_pin_to_interrupt_when_input_changes_to_specific_value(b, p):
     with chip[b][p] as pin:
         registers.given_register_value(b, GPINTEN, 0)
         registers.given_register_value(b, INTCON, 0)
         
         pin.bank.read_mode = deferred_read
-        pin.interrupt_when(1)
+        pin.enable_interrupts(value=1)
         
         assert registers.register_bit(b, GPINTEN, p) == 1
         assert registers.register_bit(b, INTCON, p) == 1
+
+@forall(b=bank_ids, p=pin_ids, samples=3)
+def test_can_disable_interrupts(b, p):
+    with chip[b][p] as pin:
+        pin.bank.read_mode = deferred_read
+        pin.enable_interrupts()
+        
+        pin.disable_interrupts()
+        
+        assert registers.register_bit(b, GPINTEN, p) == 0\
 
 
 @forall(b=bank_ids, p=pin_ids, samples=3)
@@ -236,7 +246,7 @@ def test_issues_warning_if_interrupt_enabled_when_pin_is_in_immediate_read_mode(
         with catch_warnings(record=True) as warnings:
             issue_warnings("always")
             
-            pin.interrupt_when(1)
+            pin.enable_interrupts(value=1)
             
             assert len(warnings) > 0
 
@@ -249,7 +259,7 @@ def test_issues_no_warning_if_interrupt_enabled_when_pin_is_in_deferred_read_mod
         with catch_warnings(record=True) as warnings:
             issue_warnings("always")
             
-            pin.interrupt_when(1)
+            pin.enable_interrupts()
             
             print(warnings)
             assert len(warnings) == 0
@@ -266,7 +276,7 @@ def test_issues_no_warning_if_interrupt_enabled_when_pin_is_in_custom_read_mode(
         with catch_warnings(record=True) as warnings:
             issue_warnings("always")
             
-            pin.interrupt_when(1)
+            pin.enable_interrupts()
             
             assert len(warnings) == 0
 
@@ -279,7 +289,7 @@ def test_must_explicitly_read_to_update_interrupt_state(b, p):
         pin.direction = In
         pin.bank.read_mode = deferred_read
         
-        pin.interrupt_on_change()
+        pin.enable_interrupts()
         
         registers.given_register_value(b, INTCAP, 1<<p)
         
