@@ -32,6 +32,7 @@ def test_has_two_banks_of_eight_pins():
     assert len(chip[0]) == 8
     assert len(chip[1]) == 8
 
+
 @forall(b=bank_ids, p=pin_ids, samples=3)
 def test_all_pins_report_their_bank_and_index(b, p):
     assert chip[b][p].bank == chip[b]
@@ -95,6 +96,7 @@ def test_can_read_logical_value_of_input_pin(b,p):
         
         registers.given_gpio_inputs(b, 0)
         assert pin.value == 0
+
 
 
 @forall(b=bank_ids)
@@ -321,6 +323,37 @@ def test_in_deferred_write_mode_the_bank_caches_pin_states_until_written_to_chip
         assert registers.register_bit(b, IODIR, p2) == 0
         assert registers.register_bit(b, OLAT, p1) == 1
 
+
+
+@forall(b=bank_ids, p=pin_ids, samples=3)
+def test_in_deferred_write_mode_can_set_value_of_input_pin_without_explicit_reset(b,p):
+    chip = PinBanks(registers)
+    bank = chip[b]
+    
+    with bank[p] as pin:
+        bank.write_mode = deferred_write
+        
+        pin.value = 1 
+        bank.write()
+        assert registers.register_bit(b, OLAT, p) == 1
+
+
+@forall(b=bank_ids, p=pin_ids, samples=3)
+def test_in_deferred_write_mode_a_reset_discards_outstanding_writes(b, p):
+    chip.reset()
+    
+    bank = chip[b]
+    with bank[p] as pin:
+        pin.direction = Out
+        bank.write_mode = deferred_write
+        
+        pin.value = 1
+        chip.reset()
+        
+        registers.clear_writes()
+        bank.write()
+        
+        assert registers.writes == []
 
 
 class FakeRegisters(Registers):

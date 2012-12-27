@@ -219,6 +219,7 @@ class PinBank(object):
         self._outstanding_writes = []
         self.read_mode = immediate_read
         self.write_mode = immediate_write
+        self._reset_cache()
     
     @property
     def index(self):
@@ -289,13 +290,14 @@ class PinBank(object):
             self._outstanding_writes.append(register)
         
         self.write_mode(self.write)
-
+    
     
     def _write_register(self, register, new_value):
         self.chip.registers.write_banked_register(self._bank_id, register, new_value)
 
 
     def _reset_cache(self):
+        self._outstanding_writes = []
         for reg, value in _reset_sequence():
             self._register_cache[reg] = value
     
