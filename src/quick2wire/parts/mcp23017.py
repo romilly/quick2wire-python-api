@@ -5,7 +5,7 @@ interface for the MCP23017 I2C GPIO expander.
 
 from quick2wire.i2c import writing_bytes, reading
 import quick2wire.parts.mcp23x17 as mcp23x17
-
+from quick2wire.parts.mcp23x17 import deferred_read, immediate_read, deferred_write, immediate_write, In, Out
 
 class MCP23017(mcp23x17.PinBanks):
     """Application programming interface to the MCP23017 GPIO extender"""
