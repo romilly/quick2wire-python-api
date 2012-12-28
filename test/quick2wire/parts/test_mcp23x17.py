@@ -114,7 +114,6 @@ def test_in_deferred_read_mode_bank_must_be_read_explicitly_before_pin_value_is_
     bank.read_mode = deferred_read
     
     with bank[p] as pin:
-        registers.given_gpio_inputs(b, 0)        
         assert pin.value == 0
         
         registers.given_gpio_inputs(b, 1<<p)
@@ -122,6 +121,12 @@ def test_in_deferred_read_mode_bank_must_be_read_explicitly_before_pin_value_is_
         
         bank.read()
         assert pin.value == 1
+        
+        registers.given_gpio_inputs(b, 0)        
+        assert pin.value == 1
+        
+        bank.read()
+        assert pin.value == 0
 
 
 @forall(b=bank_ids, p=pin_ids, samples=3)
