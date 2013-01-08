@@ -5,6 +5,9 @@ from setuptools.command.test import test as TestCommand
 import sys
 import os
 
+package = 'quick2wire'
+
+
 def contents_of(fname):
     try:
         return open(os.path.join(os.path.dirname(__file__), fname)).read()
@@ -19,7 +22,7 @@ class PyTest(TestCommand):
     def finalize_options(self):
         TestCommand.finalize_options(self)
         self.test_suite = True
-        self.test_args = ['test', 
+        self.test_args = [package,
                           '--duration=5', 
                           '-m', 
                           ("").join(d + " or " for d in devices()) + "not loopback"]
@@ -32,7 +35,7 @@ class PyTest(TestCommand):
 
 
 setup(name='quick2wire-api',
-      version='0.0.0.2',
+      version='0.0.0.3',
       description='Quick2Wire API for Physical Computing',
       long_description=contents_of('README.txt'),
       author='Quick2Wire Ltd.',
@@ -54,10 +57,9 @@ setup(name='quick2wire-api',
       ],
       platforms=['Linux'],
       
-      provides=['quick2wire', 'quick2wire'],
+      provides=[package],
       
-      packages=['quick2wire', 'quick2wire.parts'],
-      package_dir = {'': 'src'},
+      packages=[package, package+'.parts'],
       scripts=[],
       
       tests_require=['pytest'],
