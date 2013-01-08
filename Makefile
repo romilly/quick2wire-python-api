@@ -66,7 +66,7 @@ dist: dist/$(PROJECT)-$(VERSION).tar.gz
 .PHONY: dist
 
 clean:
-	rm -rf output/ dist/ build/ MANIFEST README.rst
+	rm -rf output/ dist/ build/ MANIFEST README.rst quick2wire_api.egg-info README.rst
 	find . -name '*.pyc' -o -name '*~' | xargs -r rm -f
 .PHONY: clean
 
