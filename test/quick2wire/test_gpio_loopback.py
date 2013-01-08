@@ -1,40 +1,43 @@
 
-from quick2wire.gpio import Pin
+from quick2wire.gpio import HeaderPin, GPIOPin, In, Out, exported
 from time import sleep
 import pytest
 
-Pins = [Pin(header_pin_number) for header_pin_number in [11, 12, 13, 15, 16, 18, 22, 7]]
 
-def setup_module():
-    for pin in Pins:
-        pin.export()
+def inverse(topology):
+    return [(b,a) for (a,b) in topology]
 
-def teardown_module():
-    for pin in Pins:
-        if pin.is_exported:
-            pin.unexport()
 
 @pytest.mark.loopback
 @pytest.mark.gpio
 def test_gpio_loopback():
-    assert_outputs_seen_at_corresponding_inputs(Pins[:4], Pins[4:])
-    assert_outputs_seen_at_corresponding_inputs(Pins[4:], Pins[:4])
+    assert_outputs_seen_at_corresponding_inputs(
+        GPIOPin, 
+        [(i,i+4) for i in range(4)])
 
 
-def assert_outputs_seen_at_corresponding_inputs(outputs, inputs):
-    for (op, ip) in zip(outputs, inputs):
-        assert_output_seen_at_input(op, ip)
+@pytest.mark.loopback
+@pytest.mark.gpio
+def test_gpio_loopback_by_header_pin():
+    assert_outputs_seen_at_corresponding_inputs(
+        HeaderPin, 
+        [(11,16), (12,18), (13,22), (15,7)])
 
 
-def assert_output_seen_at_input(output_pin, input_pin):
-    output_pin.direction = Pin.Out
-    input_pin.direction = Pin.In
+def assert_outputs_seen_at_corresponding_inputs(pin_type, topology):
+    for (op, ip) in topology:
+        assert_output_seen_at_input(pin_type, op, ip)
     
-    for value in [0, 1]:
-        output_pin.value = value
-        assert input_pin.value == value
-        
-    output_pin.value = 0
+    for (op, ip) in inverse(topology):
+        assert_output_seen_at_input(pin_type, op, ip)
+
+
+def assert_output_seen_at_input(pin_type, op, ip):
+    with exported(pin_type(op, direction=Out)) as output_pin, exported(pin_type(ip, direction=In)) as input_pin:
+        for value in [1, 0, 1, 0]:
+            output_pin.value = value
+            assert input_pin.value == value
+        print(op, "->", ip,": ok!")
 
 
 
