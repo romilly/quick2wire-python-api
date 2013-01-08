@@ -4,6 +4,12 @@ Quick2Wire Python API
 A Python library for controlling the hardware attached to the
 Raspberry Pi's header pins, [without running as the root user](http://quick2wire.com/articles/working-safely-with-your-pi/).
 
+STOP PRESS
+----------
+
+We have discovered that the Quick2Wire I2C API does not work if you upgrade the kernel of the official Raspbian distribution to Linux 3.6 by running rpi-update.  We are investigating the issue and hope to have a fix soon.  Until then, use the kernel that is distributed with the official Raspbian distro (currently 3.2.27).
+
+
 Dependencies
 ------------
 
