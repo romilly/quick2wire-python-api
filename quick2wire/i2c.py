@@ -71,7 +71,7 @@ class I2CMaster:
         msg_array = (i2c_msg*msg_count)(*msgs)
         ioctl_arg = i2c_rdwr_ioctl_data(msgs=msg_array, nmsgs=msg_count)
         
-        ioctl(self.fd, I2C_RDWR, addressof(ioctl_arg))
+        ioctl(self.fd, I2C_RDWR, ioctl_arg)
         
         return [i2c_msg_to_bytes(m) for m in msgs if (m.flags & I2C_M_RD)]
 
