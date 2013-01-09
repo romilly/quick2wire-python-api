@@ -67,10 +67,12 @@ def gpio_admin(subcommand, pin, pull=None):
 
 def pin_file(name, parser, doc):
     def _read(self):
+        self._ensure_exported()
         with open(self._pin_file(name), "r") as f:
             return parser(f.read())
 
     def _write(self, value):
+        self._ensure_exported()
         with open(self._pin_file(name), "w") as f:
             f.write(str(value))
 
@@ -86,12 +88,12 @@ class _IOPin(object):
     Rising = "rising"
     Falling = "falling"
     Both = "both"
-
+    
     PullDown = "pulldown"
     PullUp = "pullup"
     
-    def __init__(self, user_pin_number, soc_pin_number, direction=None, edge=None, pull=None):
-        """Creates a pin, given a header pin number.
+    def __init__(self, user_pin_number, soc_pin_number, direction=None, interrupt=None, pull=None):
+        """Creates a pin
         
         If the direction is specified, the pin is exported if
         necessary and its direction is set.  If the direction is not
@@ -100,8 +102,9 @@ class _IOPin(object):
         
         Parameters:
         user_pin_number -- the identity of the pin used to create the derived class.
-        soc_pin_number -- the pin on the header to control, identified by the SoC pin number.
-        direction      -- (optional) the direction of the pin, either In or Out.
+        soc_pin_number  -- the pin on the header to control, identified by the SoC pin number.
+        direction       -- (optional) the direction of the pin, either In or Out.
+        interrupt       -- (optional) 
         
         Raises:
         IOError        -- could not export the pin (if direction is given)
@@ -110,14 +113,11 @@ class _IOPin(object):
         self.pin_id = soc_pin_number
         self._file = None
         self.pull = pull
-        if direction:
-            if not self.is_exported:
-                self.export()
+        if direction is not None:
             self.direction = direction
-        if edge:
-            self.edge = edge
-
-
+        if interrupt is not None:
+            self.interrupt = interrupt
+    
     
     def __repr__(self):
         return self.__module__ + "." + str(self)
@@ -150,6 +150,10 @@ class _IOPin(object):
         self._maybe_close()
         gpio_admin("unexport", self.pin_id)
         
+    def _ensure_exported(self):
+        if not self.is_exported:
+            self.export()
+    
     @property
     def value(self):
         """The current value of the pin: 1 if the pin is high or 0 if
@@ -183,11 +187,11 @@ class _IOPin(object):
         
         """)
 
-    edge = pin_file("edge", str.strip,
-            """The edge property specifies what event (if any) will trigger an interrupt.
+    interrupt = pin_file("edge", str.strip,
+            """The interrupt property specifies what event (if any) will trigger an interrupt.
 
             Raises:
-            IOError -- could not read or set the pin's direction
+            IOError -- could not read or set the pin's interrupt trigger
 
             """)
     
@@ -195,27 +199,26 @@ class _IOPin(object):
         """
         Return the underlying fileno. Useful for calling select
         """
-        self._lazyopen().fileno()
+        return self._lazyopen().fileno()
         
-    def _pin_file(self, filename=""):
-        return "/sys/devices/virtual/gpio/gpio%i/%s" % (self.pin_id, filename)
-    
     def _lazyopen(self):
         if self._file is None:
             self._file = open(self._pin_file("value"), "r+")
         return self._file
-
+    
     def _maybe_close(self):
         if self._file is not None:
             self._file.close()
+            self._file = None
+    
+    def _pin_file(self, filename=""):
+        return "/sys/devices/virtual/gpio/gpio%i/%s" % (self.pin_id, filename)
+    
 
 
 class HeaderPin(_IOPin):
     def __init__(self, header_pin_number, *args, **kwargs):
         return super().__init__(header_pin_number, header_to_soc(header_pin_number), *args, **kwargs)
-
-# Backwards compatability
-Pin = HeaderPin
 
 class GPIOPin(_IOPin):
     def __init__(self, gpio_pin_number, *args, **kwargs):
@@ -234,6 +237,9 @@ PullDown = _IOPin.PullDown
 PullUp = _IOPin.PullUp
 
 
+
+# Backwards compatability
+Pin = HeaderPin
 
 @contextmanager
 def exported(pin):

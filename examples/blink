@@ -2,9 +2,9 @@
 
 import sys
 from time import sleep
-from quick2wire.gpio import Pin
+from quick2wire.gpio import GPIOPin, Out
 
-pin = Pin(int(sys.argv[1]) if len(sys.argv) > 1 else 12, Pin.Out)
+pin = GPIOPin(int(sys.argv[1]) if len(sys.argv) > 1 else 1, direction=Out)
 
 
 try:
