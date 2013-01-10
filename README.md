@@ -7,13 +7,16 @@ Raspberry Pi's header pins, [without running as the root user](http://quick2wire
 STOP PRESS
 ----------
 
-We have discovered that the Quick2Wire I2C API does not work if you upgrade the kernel of the official Raspbian distribution to Linux 3.6 by running rpi-update.  You see an error like:
+Earlier versions do not work if you upgrade the kernel of the official Raspbian distribution to Linux 3.6 by running rpi-update.  You see will  an error like:
 
     File "/home/pi/quick2wire-python-api/src/quick2wire/i2c.py", line 74, in transaction
         ioctl(self.fd, I2C_RDWR, addressof(ioctl_arg))
     OverflowError: Python int too large to convert to C long
 
-We are investigating the issue and hope to have a fix soon.  Until then, use the kernel that is distributed with the official Raspbian distro (currently Linux 3.2.27).
+Please pull the latest changes if you have this issue.  The I2C API now works on Raspbian with the 3.6 kernel and the 3.2 kernel that's shipped with 
+the official Raspbian distribution.  Note that we've recently reorganised the API repo slightly to conform with Python 
+conventions. The root of the repository should now be added to PYTHONPATH.  If you run python3 from within the root directory of th repository, you can import 
+quick2wire modules without having to fiddle with the PYTHONPATH at all. 
 
 
 Dependencies
