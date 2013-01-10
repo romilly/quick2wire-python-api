@@ -7,7 +7,7 @@ Raspberry Pi's header pins, [without running as the root user](http://quick2wire
 STOP PRESS
 ----------
 
-Earlier versions do not work if you upgrade the kernel of the official Raspbian distribution to Linux 3.6 by running rpi-update.  You see will  an error like:
+Earlier versions of the I2C API do not work if you upgrade the kernel of the official Raspbian distribution to Linux 3.6 by running rpi-update.  You will see an error like:
 
     File "/home/pi/quick2wire-python-api/src/quick2wire/i2c.py", line 74, in transaction
         ioctl(self.fd, I2C_RDWR, addressof(ioctl_arg))
