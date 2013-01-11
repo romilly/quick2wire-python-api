@@ -37,8 +37,9 @@ RaspberryPi_HeaderToSOC = {
     25: 7,
     26: 8
 }
-
 if revision() > 1:
+    RaspberryPi_HeaderToSOC[3] = 2
+    RaspberryPi_HeaderToSOC[5] = 3
     RaspberryPi_HeaderToSOC[13] = 27
 
 
