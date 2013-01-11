@@ -67,3 +67,11 @@ Getting Started
 
  * [Getting Started with GPIO](http://github.com/quick2wire/quick2wire-python-api/blob/master/doc/getting-started-with-gpio.md)
  * [Getting Started with I2C](http://github.com/quick2wire/quick2wire-python-api/blob/master/doc/getting-started-with-i2c.md)
+
+
+Help and Support
+----------------
+
+There is a [discussion group](https://groups.google.com/group/quick2wire-users) in which you can ask questions about the library.
+
+If you have discovered a bug or would like to request a feature, raise an issue in the [issue tracker](https://github.com/quick2wire/quick2wire-python-api/issues).
