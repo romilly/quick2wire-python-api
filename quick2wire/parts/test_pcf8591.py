@@ -8,7 +8,7 @@ from quick2wire.parts.pcf8591 import PCF8591
 ANALOGUE_IN = 1
 
 @pytest.mark.loopback
-@pytest.mark.mcp23017
+@pytest.mark.pcf8591
 def test_pcf8591_loopback():
     with i2c.I2CMaster() as master:
         chip = PCF8591(master)

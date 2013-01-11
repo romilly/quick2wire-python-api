@@ -37,14 +37,26 @@ RaspberryPi_HeaderToSOC = {
     25: 7,
     26: 8
 }
-if revision()>1:
+if revision() > 1:
+    RaspberryPi_HeaderToSOC[3] = 2
+    RaspberryPi_HeaderToSOC[5] = 3
     RaspberryPi_HeaderToSOC[13] = 27
+
+
+RaspberryPi_GPIOToHeader = [11, 12, 13, 15, 16, 18, 22, 7]
+
+def gpio_to_soc(gpio_pin_number):
+    if 0 <= gpio_pin_number < 8:
+        return header_to_soc(RaspberryPi_GPIOToHeader[gpio_pin_number])
+    else:
+        raise ValueError(str(gpio_pin_number)+" is not a valid GPIO pin")
+
 
 def header_to_soc(header_pin_number):
     if header_pin_number in RaspberryPi_HeaderToSOC:
         return RaspberryPi_HeaderToSOC[header_pin_number]
     else:
-        raise ValueError(str(header_pin_number)+" is not a valid GPIO header pin")
+        raise ValueError(str(header_pin_number)+" is not a valid IO header pin")
 
 def gpio_admin(subcommand, pin, pull=None):
     if pull:
@@ -53,48 +65,36 @@ def gpio_admin(subcommand, pin, pull=None):
         subprocess.check_call(["gpio-admin", subcommand, str(pin)])
 
 
+
 def pin_file(name, parser, doc):
     def _read(self):
+        self._ensure_exported()
         with open(self._pin_file(name), "r") as f:
             return parser(f.read())
 
     def _write(self, value):
+        self._ensure_exported()
         with open(self._pin_file(name), "w") as f:
             f.write(str(value))
 
     return property(_read, _write, doc=doc)
 
-def pin_value_file(name, doc):
-    def _read(self):
-        f = self._lazyopen()
-        f.seek(0)
-        v = f.read()
-        return int(v) if v else 0
 
-    def _write(self, value):
-        f = self._lazyopen()
-        f.seek(0)
-        f.write(str(value))
-        f.flush()
-    
-    return property(_read, _write, doc=doc)
-    
-
-class Pin(object):
+class _IOPin(object):
     """Controls a GPIO pin."""
     
     Out = "out"
     In = "in"
-
+    
     Rising = "rising"
     Falling = "falling"
     Both = "both"
-
+    
     PullDown = "pulldown"
     PullUp = "pullup"
     
-    def __init__(self, header_pin_number, direction=None, edge=None, pull=None):
-        """Creates a pin, given a header pin number.
+    def __init__(self, user_pin_number, soc_pin_number, direction=None, interrupt=None, pull=None):
+        """Creates a pin
         
         If the direction is specified, the pin is exported if
         necessary and its direction is set.  If the direction is not
@@ -102,31 +102,29 @@ class Pin(object):
         before you start using it.
         
         Parameters:
-        header_pin_id -- the pin on the header to control.
-        direction     -- (optional) the direction of the pin, either In or Out.
+        user_pin_number -- the identity of the pin used to create the derived class.
+        soc_pin_number  -- the pin on the header to control, identified by the SoC pin number.
+        direction       -- (optional) the direction of the pin, either In or Out.
+        interrupt       -- (optional) 
         
         Raises:
-        IOError       -- could not export the pin (if direction is given)
+        IOError        -- could not export the pin (if direction is given)
         """
-        
-        self.header_pin_id = header_pin_number
-        self.pin_id = header_to_soc(header_pin_number)
+        self.user_pin_number = user_pin_number
+        self.pin_id = soc_pin_number
         self._file = None
         self.pull = pull
-        if direction:
-            if not self.is_exported:
-                self.export()
+        if direction is not None:
             self.direction = direction
-        if edge:
-            self.edge = edge
-
-
+        if interrupt is not None:
+            self.interrupt = interrupt
+    
     
     def __repr__(self):
         return self.__module__ + "." + str(self)
     
     def __str__(self):
-        return "%s(%i)"%(self.__class__.__name__, self.header_pin_id)
+        return "%s(%i)"%(self.__class__.__name__, self.user_pin_number)
     
     @property
     def is_exported(self):
@@ -152,8 +150,13 @@ class Pin(object):
         """
         self._maybe_close()
         gpio_admin("unexport", self.pin_id)
+        
+    def _ensure_exported(self):
+        if not self.is_exported:
+            self.export()
     
-    value = pin_value_file("value", 
+    @property
+    def value(self):
         """The current value of the pin: 1 if the pin is high or 0 if
         the pin is low.
         
@@ -162,7 +165,18 @@ class Pin(object):
         Raises: 
         IOError -- could not read or write the pin's value.
         
-        """)
+        """
+        f = self._lazyopen()
+        f.seek(0)
+        v = f.read()
+        return int(v) if v else 0
+    
+    @value.setter
+    def value(self, new_value):
+        f = self._lazyopen()
+        f.seek(0)
+        f.write(str(int(new_value)))
+        f.flush()
     
     direction = pin_file("direction", str.strip,
         """The direction of the pin: either In or Out.
@@ -174,35 +188,59 @@ class Pin(object):
         
         """)
 
-    edge = pin_file("edge", str.strip,
-            """The edge property specifies what event (if any) will
-            trigger an interrupt.
+    interrupt = pin_file("edge", str.strip,
+            """The interrupt property specifies what event (if any) will trigger an interrupt.
 
             Raises:
-            IOError -- could not read or set the pin's direction
+            IOError -- could not read or set the pin's interrupt trigger
 
             """)
-
+    
     def fileno(self):
         """
         Return the underlying fileno. Useful for calling select
-       
         """
-        self._lazyopen()
-        return self._file.fileno()
+        return self._lazyopen().fileno()
+        
+    def _lazyopen(self):
+        if self._file is None:
+            self._file = open(self._pin_file("value"), "r+")
+        return self._file
+    
+    def _maybe_close(self):
+        if self._file is not None:
+            self._file.close()
+            self._file = None
     
     def _pin_file(self, filename=""):
         return "/sys/devices/virtual/gpio/gpio%i/%s" % (self.pin_id, filename)
+    
 
-    def _lazyopen(self):
-        if self._file == None:
-            self._file = open(self._pin_file("value"), "r+")
-        return self._file
 
-    def _maybe_close(self):
-        if self._file != None:
-            self._file.close()
+class HeaderPin(_IOPin):
+    def __init__(self, header_pin_number, *args, **kwargs):
+        return super().__init__(header_pin_number, header_to_soc(header_pin_number), *args, **kwargs)
 
+class GPIOPin(_IOPin):
+    def __init__(self, gpio_pin_number, *args, **kwargs):
+        return super().__init__(gpio_pin_number, gpio_to_soc(gpio_pin_number), *args, **kwargs)
+
+
+
+Out = _IOPin.Out
+In = _IOPin.In
+
+Rising = _IOPin.Rising
+Falling = _IOPin.Falling
+Both = _IOPin.Both
+
+PullDown = _IOPin.PullDown
+PullUp = _IOPin.PullUp
+
+
+
+# Backwards compatability
+Pin = HeaderPin
 
 @contextmanager
 def exported(pin):

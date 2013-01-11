@@ -19,7 +19,7 @@ To run all the tests use the command:
 
 This will run both unit and loopback tests. To run the loopback tests you must have the appropriate hardware devices connected to the Pi and connected into the expected loopback configuration.
 
-You can run loopback tests for a subset of devices (e.g. if you only have some connected) by running make with the `devices` variable set to a space-seprated list of devices.  For example:
+You can run loopback tests for a subset of devices (e.g. if you only have some connected) by running make with the `devices` variable set to a space-separated list of devices.  For example:
 
     make check devices="mcp23017 gpio"
 
@@ -27,7 +27,7 @@ The devices are:
 
  * gpio (used to test the GPIO API and the Quick2Wire breakout board via the Pi's SoC GPIO)
  * mcp23017 (used to test the MCP23017 expander board)
- * mcp23008 (used to test the I2C API, will be replaced with the mcp23017 eventually)
+ * pcf8591 (used to test the PCF8591 AD/DA board)
 
 
 
