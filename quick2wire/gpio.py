@@ -110,8 +110,8 @@ class _IOPin(object):
         Raises:
         IOError        -- could not export the pin (if direction is given)
         """
-        self.user_pin_number = user_pin_number
-        self.pin_id = soc_pin_number
+        self.index = user_pin_number
+        self.soc_pin_number = soc_pin_number
         self._file = None
         self.pull = pull
         if direction is not None:
@@ -124,7 +124,7 @@ class _IOPin(object):
         return self.__module__ + "." + str(self)
     
     def __str__(self):
-        return "%s(%i)"%(self.__class__.__name__, self.user_pin_number)
+        return "%s(%i)"%(self.__class__.__name__, self.index)
     
     @property
     def is_exported(self):
@@ -139,7 +139,7 @@ class _IOPin(object):
 
         
         """
-        gpio_admin("export", self.pin_id, self.pull)
+        gpio_admin("export", self.soc_pin_number, self.pull)
     
     def unexport(self):
         """Unexport the pin, removing its control files from the filesystem.
@@ -149,7 +149,7 @@ class _IOPin(object):
         
         """
         self._maybe_close()
-        gpio_admin("unexport", self.pin_id)
+        gpio_admin("unexport", self.soc_pin_number)
         
     def _ensure_exported(self):
         if not self.is_exported:
@@ -213,7 +213,7 @@ class _IOPin(object):
             self._file = None
     
     def _pin_file(self, filename=""):
-        return "/sys/devices/virtual/gpio/gpio%i/%s" % (self.pin_id, filename)
+        return "/sys/devices/virtual/gpio/gpio%i/%s" % (self.soc_pin_number, filename)
     
 
 
