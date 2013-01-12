@@ -32,7 +32,7 @@ INTCAP=8
 GPIO=9
 OLAT=10
 
-bank_register_names = sorted([s for s in globals() if s.upper() == s], 
+bank_register_names = sorted([s for s in globals().keys() if s.upper() == s], 
                              key=lambda s: globals()[s])
 
 
@@ -68,7 +68,7 @@ GPIOB = _banked_register(_BankB, GPIO)
 OLATA = _banked_register(_BankA, OLAT)
 OLATB = _banked_register(_BankB, OLAT)
 
-register_names = sorted([s for s in globals() if s[-1] in ('A','B') and s.upper() == s], 
+register_names = sorted([s for s in globals().keys() if s[-1] in ('A','B') and s.upper() == s], 
                         key=lambda s: globals()[s])
 
 _initial_register_values = (

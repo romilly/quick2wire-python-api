@@ -219,11 +219,11 @@ class _IOPin(object):
 
 class HeaderPin(_IOPin):
     def __init__(self, header_pin_number, *args, **kwargs):
-        return super().__init__(header_pin_number, header_to_soc(header_pin_number), *args, **kwargs)
+        return super(HeaderPin, self).__init__(header_pin_number, header_to_soc(header_pin_number), *args, **kwargs)
 
 class GPIOPin(_IOPin):
     def __init__(self, gpio_pin_number, *args, **kwargs):
-        return super().__init__(gpio_pin_number, gpio_to_soc(gpio_pin_number), *args, **kwargs)
+        return super(GPIOPin, self).__init__(gpio_pin_number, gpio_to_soc(gpio_pin_number), *args, **kwargs)
 
 
 
