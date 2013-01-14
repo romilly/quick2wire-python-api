@@ -187,24 +187,47 @@ def test_can_read_an_input_bit_then_write_then_read_same_bit(ps, inpin_value):
 
 
 @forall(b=bank_ids, p=pin_ids, samples=3)
-def test_can_configure_pull_down_resistors(b, p):
+def test_can_configure_polarity(b, p):
+    chip.reset()
+    
+    registers.given_register_value(b, IPOL, 0x00)
+    
+    with chip[b][p] as pin:
+        assert not pin.inverted
+        pin.inverted = True
+        assert pin.inverted
+        assert registers.read_banked_register(b, IPOL) == (1<<p)
+        
+        registers.given_register_value(b, IPOL, 0xFF)
+        
+        registers.clear_writes()
+        
+        assert pin.inverted
+        pin.inverted = False
+        assert not pin.inverted
+        
+        assert registers.read_banked_register(b, IPOL) == ~(1<<p) & 0xFF
+
+
+@forall(b=bank_ids, p=pin_ids, samples=3)
+def test_can_configure_pull_up_resistors(b, p):
     chip.reset()
     
     registers.given_register_value(b, GPPU, 0x00)
     
     with chip[b][p] as pin:
-        assert pin.pull_down == False
-        pin.pull_down = True
-        assert pin.pull_down == True
+        assert not pin.pull_up
+        pin.pull_up = True
+        assert pin.pull_up
         assert registers.read_banked_register(b, GPPU) == (1<<p)
         
         registers.given_register_value(b, GPPU, 0xFF)
         
         registers.clear_writes()
         
-        assert pin.pull_down == True
-        pin.pull_down = False
-        assert pin.pull_down == False
+        assert pin.pull_up
+        pin.pull_up = False
+        assert not pin.pull_up
         
         assert registers.read_banked_register(b, GPPU) == ~(1<<p) & 0xFF
 
@@ -362,6 +385,8 @@ def test_in_deferred_write_mode_a_reset_discards_outstanding_writes(b, p):
 
 
 class FakeRegisters(Registers):
+    """Note - does not simulate effect of the IPOL{A,B} registers."""
+    
     def __init__(self):
         self.registers = [0]*(BANK_SIZE*2)
         self.writes = []

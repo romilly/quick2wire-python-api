@@ -311,6 +311,14 @@ class PinBank(object):
         return "PinBank("+self.index+")"
     
 
+def _register_bit(register, doc, high_value=True, low_value=False):
+    def _read(self):
+        return high_value if self._get_register_bit(register) else low_value
+
+    def _write(self, value):
+        self._set_register_bit(register, value == high_value)
+    
+    return property(_read, _write, doc=doc)
 
 class Pin(object):
     """A digital Pin that can be used for input or output."""
@@ -340,15 +348,6 @@ class Pin(object):
     def __exit__(self, exc_type, exc_value, traceback):
         self.close()
     
-    @property
-    def direction(self):
-        """The direction of the pin: In if the pin is used for input, Out if it is used for output."""
-        return In if self._get_register_bit(IODIR) else Out
-    
-    @direction.setter
-    def direction(self, new_direction):
-        self._set_register_bit(IODIR, (new_direction == In))
-    
     def get(self):
         """Returns the value of the pin.  
         
@@ -365,17 +364,17 @@ class Pin(object):
         
     value = property(get, set, doc="""The value of the pin: 1 if the pin is high, 0 if the pin is low.""")
     
-    @property
-    def pull_down(self):
-        """Is the pull down resistor enabled for the pin?
-        True:  the pull down resistor is enabled
-        False: the pull down resistor is not enabled
-        """
-        return self._get_register_bit(GPPU)
+    direction = _register_bit(IODIR, high_value=In, low_value=Out,
+                              doc="""The direction of the pin: In if the pin is used for input, Out if it is used for output.""")
     
-    @pull_down.setter
-    def pull_down(self, value):
-        self._set_register_bit(GPPU, value)
+    inverted = _register_bit(IPOL, 
+        """Controls the polarity of the pin. If True, the value property will return the inverted signal on the hardware pin.""")
+    
+    pull_up = _register_bit(GPPU,
+        """Is the pull up resistor enabled for the pin?
+        True:  the pull up resistor is enabled
+        False: the pull up resistor is not enabled
+        """)
     
     def enable_interrupts(self, value=None):
         """Signal an interrupt on the bank's interrupt line whenever the value of the pin changes.
