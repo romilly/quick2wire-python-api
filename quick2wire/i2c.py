@@ -8,7 +8,7 @@ from quick2wire.board_revision import revision
 
 default_bus = 1 if revision() > 1 else 0
 
-class I2CMaster:
+class I2CMaster(object):
     """Performs I2C I/O transactions on an I2C bus.
     
     Transactions are performed by passing one or more I2C I/O messages
@@ -34,7 +34,7 @@ class I2CMaster:
         """Opens the bus device.
         
         Arguments:
-        n                -- the number of the bus (default 0,
+        n                -- the number of the bus (default is
                             the bus on the Raspberry Pi accessible
                             via the header pins).
         extra_open_flags -- extra flags passed to posix.open when 
