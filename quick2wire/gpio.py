@@ -34,8 +34,8 @@ RaspberryPi_HeaderToSOC = {
     21: 9, 
     22: 25, 
     23: 11, 
-    25: 7,
-    26: 8
+    24: 8,
+    26: 7
 }
 if revision() > 1:
     RaspberryPi_HeaderToSOC[3] = 2
@@ -245,7 +245,7 @@ Pin = HeaderPin
 @contextmanager
 def exported(pin):
     """A context manager that automatically exports a pin if necessary
-    and exports it at the end of the block.
+    and unexports it at the end of the block.
     
     Example::
     
