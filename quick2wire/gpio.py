@@ -37,6 +37,7 @@ RaspberryPi_HeaderToSOC = {
     24: 8,
     26: 7
 }
+
 if revision() > 1:
     RaspberryPi_HeaderToSOC[3] = 2
     RaspberryPi_HeaderToSOC[5] = 3
@@ -66,15 +67,15 @@ def gpio_admin(subcommand, pin, pull=None):
 
 
 
-def pin_file(name, parser, doc):
+def _pin_file(name, parser, doc):
     def _read(self):
         self._ensure_exported()
-        with open(self._pin_file(name), "r") as f:
+        with open(self._pin_path(name), "r") as f:
             return parser(f.read())
 
     def _write(self, value):
         self._ensure_exported()
-        with open(self._pin_file(name), "w") as f:
+        with open(self._pin_path(name), "w") as f:
             f.write(str(value))
 
     return property(_read, _write, doc=doc)
@@ -129,7 +130,7 @@ class _IOPin(object):
     @property
     def is_exported(self):
         """Has the pin been exported to user space?"""
-        return os.path.exists(self._pin_file())
+        return os.path.exists(self._pin_path())
     
     def export(self):
         """Export the pin to user space, making its control files visible in the filesystem.
@@ -178,7 +179,7 @@ class _IOPin(object):
         f.write(str(int(new_value)))
         f.flush()
     
-    direction = pin_file("direction", str.strip,
+    direction = _pin_file("direction", str.strip,
         """The direction of the pin: either In or Out.
         
         The value of the pin can only be set if its direction is Out.
@@ -188,7 +189,7 @@ class _IOPin(object):
         
         """)
 
-    interrupt = pin_file("edge", str.strip,
+    interrupt = _pin_file("edge", str.strip,
             """The interrupt property specifies what event (if any) will trigger an interrupt.
 
             Raises:
@@ -204,7 +205,7 @@ class _IOPin(object):
         
     def _lazyopen(self):
         if self._file is None:
-            self._file = open(self._pin_file("value"), "r+")
+            self._file = open(self._pin_path("value"), "r+")
         return self._file
     
     def _maybe_close(self):
@@ -212,7 +213,7 @@ class _IOPin(object):
             self._file.close()
             self._file = None
     
-    def _pin_file(self, filename=""):
+    def _pin_path(self, filename=""):
         return "/sys/devices/virtual/gpio/gpio%i/%s" % (self.soc_pin_number, filename)
     
 

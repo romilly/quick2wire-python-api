@@ -2,18 +2,18 @@
 
 import sys
 import os
-from select import epoll, EPOLLET, EPOLLIN, EPOLLOUT, EPOLLERR
 from quick2wire.gpio import GPIOPin, Both, In, Out, exported
+from quick2wire.selector import Selector, INPUT, EDGE
 
-with exported(GPIOPin(0, direction=In, interrupt=Both)) as button, exported(GPIOPin(1, direction=Out)) as led:
-     
-    ep = epoll()
-    ep.register(button, EPOLLET|EPOLLIN)
+with closing(Selector()) as selector, \
+     exported(GPIOPin(0, direction=In, interrupt=Both)) as button, \
+     exported(GPIOPin(1, direction=Out)) as led:
     
+    selector.add(button, INPUT, trigger=EDGE)
     while True:
-        for fileno, event in ep.poll():
-            if event & EPOLLIN: 
-                led.value = button.value
-            
+        selector.wait()
+        if selector.has_input:
+            led.value = button.value
+
 
 

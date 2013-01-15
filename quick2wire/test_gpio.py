@@ -1,5 +1,5 @@
 
-from quick2wire.gpio import Pin, exported
+from quick2wire.gpio import GPIOPin, exported, In, Out
 import pytest
 
 
@@ -7,7 +7,7 @@ import pytest
 @pytest.mark.loopback
 class TestPin:
     def setup_method(self, method):
-        self.pin = Pin(25)
+        self.pin = GPIOPin(0)
     
     def teardown_method(self, method):
         if self.pin.is_exported:
@@ -24,21 +24,21 @@ class TestPin:
         self.pin.unexport()
         with pytest.raises(IOError):
             self.pin.value
-    
+
     def test_can_set_and_query_direction_of_pin(self):
         self.pin.export()
         
-        self.pin.direction = Pin.Out
-        assert self.pin.direction == Pin.Out
+        self.pin.direction = Out
+        assert self.pin.direction == Out
         
-        self.pin.direction = Pin.In
-        assert self.pin.direction == Pin.In
+        self.pin.direction = In
+        assert self.pin.direction == In
 
         
     def test_can_set_value_of_output_pin(self):
         self.pin.export()
         
-        self.pin.direction = Pin.Out
+        self.pin.direction = Out
         
         self.pin.value = 1
         assert self.pin.value == 1
@@ -47,38 +47,50 @@ class TestPin:
         assert self.pin.value == 0
         
     def test_can_export_pin_and_set_direction_on_construction(self):
-        p = Pin(25, Pin.Out)
+        p = GPIOPin(0, Out)
         
         assert p.is_exported
-        assert p.direction == Pin.Out
+        assert p.direction == Out
 
     def test_can_read_after_write(self):
-        p = Pin(25, Pin.Out)
-        p2 = Pin(25, Pin.Out)
-
+        p = GPIOPin(0, Out)
+        p2 = GPIOPin(0, Out)
+        
         p.value = 1
         assert p2.value == 1
         with open('/sys/class/gpio/gpio7/value', 'r+') as f:
             assert f.read() == '1\n'
 
+    def test_closing_pin_resets_it_to_initial_state(self):
+        self.pin.open()
+        self.pin.direction = Out
+        self.pin.value = 1
+        self.pin.close()
+        
+        self.pin.open()
+        assert self.pin.direction == In
+        assert self.pin.value == 0
+    
+
+
 @pytest.mark.gpio
 @pytest.mark.loopback
 class TestExportedContextManager:
     def test_can_automatically_unexport_pin_with_context_manager(self):
-        with exported(Pin(25)) as p:
+        with exported(GPIOPin(0)) as p:
             assert p.is_exported
         
-        p = Pin(25)
+        p = GPIOPin(0)
         assert not p.is_exported
     
     def test_can_use_context_manager_with_pin_exported_by_constructor(self):
-        with exported(Pin(25, Pin.Out)) as p:
+        with exported(GPIOPin(0, Out)) as p:
             assert p.is_exported
         
-        p = Pin(25)
+        p = GPIOPin(0)
         assert not p.is_exported
     
     def test_can_use_context_manager_with_pin_already_exported(self):
-        Pin(25).export()
+        GPIOPin(0).export()
         self.test_can_automatically_unexport_pin_with_context_manager()
         
