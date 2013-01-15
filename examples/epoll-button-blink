@@ -2,6 +2,7 @@
 
 import sys
 import os
+from contextlib import closing
 from quick2wire.gpio import GPIOPin, Both, In, Out, exported
 from quick2wire.selector import Selector, INPUT, EDGE
 
@@ -10,6 +11,9 @@ with closing(Selector()) as selector, \
      exported(GPIOPin(1, direction=Out)) as led:
     
     selector.add(button, INPUT, trigger=EDGE)
+    
+    print("ready!")
+    
     while True:
         selector.wait()
         if selector.has_input:
