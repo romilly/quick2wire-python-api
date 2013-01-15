@@ -1,6 +1,9 @@
 
 from ctypes import *
 import os
+import errno
+
+# From sys/eventfd.h
 
 EFD_SEMAPHORE = 1
 EFD_CLOEXEC = 0o2000000
@@ -10,14 +13,13 @@ _libc = cdll.LoadLibrary(None)
 
 eventfd_t = c_uint64
 eventfd = _libc.eventfd
-eventfd_read = _libc.eventfd_read
-eventfd_write = _libc.eventfd_write
 
 
 class Semaphore:
     """A Semaphore implemented with eventfd so that it can be used with epoll."""
-    def __init__(self):
-        self._fd = eventfd(0, EFD_SEMAPHORE)
+    
+    def __init__(self, blocking=True):
+        self._fd = eventfd(0, EFD_SEMAPHORE|((not blocking)*EFD_NONBLOCK))
     
     def close(self):
         os.close(self._fd)
@@ -25,10 +27,15 @@ class Semaphore:
     def fileno(self):
         return self._fd
     
-    def signal(self, n=1):
-        eventfd_write(self._fd, c_int64(n))
+    def signal(self):
+        return os.write(self._fd, eventfd_t(1))
     
-    def ack(self, n=1):
-        buf = c_int64()
-        eventfd_read(self._fd, buf)
-        
+    def receive(self):
+        try:
+            os.read(self._fd, 8)
+            return True
+        except OSError as e:
+            if e.errno == errno.EAGAIN:
+                return False
+            else:
+                raise
