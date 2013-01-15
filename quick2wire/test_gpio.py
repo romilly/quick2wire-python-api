@@ -53,23 +53,12 @@ class TestPin:
         assert p.direction == Out
 
     def test_can_read_after_write(self):
-        p = GPIOPin(0, Out)
-        p2 = GPIOPin(0, Out)
+        outpin = GPIOPin(0, Out)
         
-        p.value = 1
-        assert p2.value == 1
-        with open('/sys/class/gpio/gpio7/value', 'r+') as f:
+        outpin.value = 1
+        assert self.pin.value == 1
+        with open('/sys/class/gpio/gpio17/value', 'r+') as f:
             assert f.read() == '1\n'
-
-    def test_closing_pin_resets_it_to_initial_state(self):
-        self.pin.open()
-        self.pin.direction = Out
-        self.pin.value = 1
-        self.pin.close()
-        
-        self.pin.open()
-        assert self.pin.direction == In
-        assert self.pin.value == 0
     
 
 
