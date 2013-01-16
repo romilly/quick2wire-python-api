@@ -13,8 +13,10 @@ def test_pcf8591_loopback():
     with i2c.I2CMaster() as master:
         chip = PCF8591(master)
         pin = chip.begin_analogue_read(ANALOGUE_IN)
+        
         for output in range(256):
             chip.analogue_out(output)
             sleep(0.05)
             input = pin.read()
+            
             assert abs(output - input) < 4
