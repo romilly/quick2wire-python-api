@@ -57,3 +57,29 @@ def test_can_use_a_different_value_to_identify_the_event_source():
         selector.wait()
         assert selector.ready == 999
 
+        
+def test_can_wait_with_a_timeout():
+    with closing(Semaphore(blocking=False)) as ev1, \
+         closing(Selector()) as selector:
+        
+        selector.add(ev1, INPUT, identifier=999)
+        
+        selector.wait(timeout=0)
+        assert selector.ready == None
+
+
+def test_can_remove_source_from_selector():
+    with closing(Semaphore(blocking=False)) as ev1, \
+         closing(Selector()) as selector:
+        
+        selector.add(ev1, INPUT)
+        
+        ev1.signal()
+        
+        selector.wait(timeout=0)
+        assert selector.ready == ev1
+        
+        selector.remove(ev1)
+        
+        selector.wait(timeout=0)
+        assert selector.ready == None

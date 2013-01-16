@@ -27,10 +27,20 @@ class Selector:
         self._sources[fileno] = identifier if identifier is not None else source
         self._epoll.register(fileno, eventmask|(select.EPOLLET*trigger))
     
+    def remove(self, source):
+        fileno = source.fileno()
+        self._epoll.unregister(source)
+        del self._sources[fileno]
+
     def wait(self, timeout=-1):
-        fileno, self.events = self._epoll.poll(timeout, maxevents=1)[0]
-        self.ready = self._sources[fileno]
+        self.ready = None
+        self.events = 0
         
+        readies = self._epoll.poll(timeout, maxevents=1)
+        if readies:
+            fileno, self.events = readies[0]
+            self.ready = self._sources[fileno]
+            
     @property
     def has_input(self):
         return bool(self.events & INPUT)
