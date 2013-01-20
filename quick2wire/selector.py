@@ -1,6 +1,8 @@
 
 
 import select
+from quick2wire.eventfd import Semaphore
+
 
 INPUT = select.EPOLLIN
 OUTPUT = select.EPOLLOUT

@@ -1,8 +1,7 @@
 
 from contextlib import closing
 from itertools import islice
-from quick2wire.eventfd import Semaphore
-from quick2wire.selector import Selector, INPUT, OUTPUT, ERROR
+from quick2wire.selector import Selector, INPUT, OUTPUT, ERROR, Semaphore
 
 
 def test_selector_is_a_convenient_api_to_epoll():
