@@ -13,6 +13,8 @@ _libc = cdll.LoadLibrary(None)
 
 eventfd_t = c_uint64
 eventfd = _libc.eventfd
+eventfd.argtypes = [c_uint, c_int]
+eventfd.restype = c_int
 
 
 class Semaphore:
@@ -20,7 +22,10 @@ class Semaphore:
     
     def __init__(self, blocking=True):
         self._fd = eventfd(0, EFD_SEMAPHORE|((not blocking)*EFD_NONBLOCK))
-    
+        if self._fd < 0:
+            e = get_errno()
+            raise OSError(e, errno.strerror(e))
+        
     def close(self):
         os.close(self._fd)
     
