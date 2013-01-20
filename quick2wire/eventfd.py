@@ -9,7 +9,7 @@ EFD_SEMAPHORE = 1
 EFD_CLOEXEC = 0o2000000
 EFD_NONBLOCK = 0o4000
 
-_libc = cdll.LoadLibrary(None)
+_libc = CDLL(None, use_errno=True)
 
 eventfd_t = c_uint64
 eventfd = _libc.eventfd

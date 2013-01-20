@@ -1,5 +1,6 @@
 
 
+import math
 from ctypes import *
 
 # From <time.h>
@@ -42,7 +43,7 @@ TFD_TIMER_ABSTIME = 1 << 0
 
 
 
-_libc = cdll.LoadLibrary(None)
+_libc = CDLL(None, use_errno=True)
 
 # Return file descriptor for new interval timer source.
 #
@@ -72,3 +73,18 @@ timerfd_gettime.argtypes = [c_int, POINTER(itimerspec)]
 timerfd_gettime.restype = c_int
 
 
+def seconds_to_timespec(secs):
+    fractional, whole = math.modf(secs)
+    return timespec(tv_secs=time_t(int(whole)),
+                    tv_nsecs=c_long(int(fractional*1000000.0)))
+
+class Timer:
+    def __init__(self, clock, blocking=True):
+        self._fd = timerfd_create(clock, (not blocking)*TFD_NONBLOCK)
+        if self._fd < 0:
+            e = get_errno()
+            raise OSError(e, errno.strerror(e))
+
+
+    def schedule(offset=0, interval=0):
+        pass
