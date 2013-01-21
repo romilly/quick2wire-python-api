@@ -1,21 +1,56 @@
 
 
 import math
+import os
 from ctypes import *
+import struct
+import quick2wire.syscall as syscall
+
 
 # From <time.h>
 
 time_t = c_long
 
+clockid_t = c_ulong
+
 class timespec(Structure):
     _fields_ = [("tv_sec", time_t),
                 ("tv_nsec", c_long)]
+    
+    __slots__ = [name for name,type in _fields_]
+    
+    @classmethod
+    def from_seconds(cls, secs):
+        t = cls()
+        t.seconds = secs
+        return t
+    
+    @property
+    def seconds(self):
+        if self.tv_nsec == 0:
+            return self.tv_sec
+        else:
+            return self.tv_sec + self.tv_nsec / 1000000000.0
+        
+    @seconds.setter
+    def seconds(self, secs):
+        fractional, whole = math.modf(secs)
+        self.tv_sec = int(whole)
+        self.tv_nsec = int(fractional * 1000000000)
+
 
 class itimerspec(Structure):
     _fields_ = [("it_interval", timespec), 
                 ("it_value", timespec)]
-
-clockid_t = c_ulong
+    
+    __slots__ = [name for name,type in _fields_]
+    
+    @classmethod
+    def from_seconds(cls, offset, interval):
+        spec = cls()
+        spec.it_value.seconds = offset
+        spec.it_interval.seconds = interval
+        return spec
 
 
 # from <bits/time.h>
@@ -43,15 +78,11 @@ TFD_TIMER_ABSTIME = 1 << 0
 
 
 
-_libc = CDLL(None, use_errno=True)
-
 # Return file descriptor for new interval timer source.
 #
 # extern int timerfd_create (clockid_t __clock_id, int __flags)
 
-timerfd_create = _libc.timerfd_create
-timerfd_create.argtypes = [clockid_t, c_int]
-timerfd_create.restype = c_int
+timerfd_create = syscall.lookup(c_int, "timerfd_create", (clockid_t, c_int))
 
 # Set next expiration time of interval timer source UFD to UTMR.  If
 # FLAGS has the TFD_TIMER_ABSTIME flag set the timeout value is
@@ -60,31 +91,43 @@ timerfd_create.restype = c_int
 # extern int timerfd_settime (int __ufd, int __flags,
 # 			      __const struct itimerspec *__utmr,
 # 			      struct itimerspec *__otmr)
-timerfd_settime = _libc.timerfd_settime
-timerfd_settime.argtypes = [c_int, c_int, POINTER(itimerspec), POINTER(itimerspec)]
-timerfd_settime.restype = c_int
+timerfd_settime = syscall.lookup(c_int, "timerfd_settime", (c_int, c_int, POINTER(itimerspec), POINTER(itimerspec)))
 
 # Return the next expiration time of UFD.
 #
 # extern int timerfd_gettime (int __ufd, struct itimerspec *__otmr)
 
-timerfd_gettime = _libc.timerfd_gettime
-timerfd_gettime.argtypes = [c_int, POINTER(itimerspec)]
-timerfd_gettime.restype = c_int
+timerfd_gettime = syscall.lookup(c_int, "timerfd_gettime", (c_int, POINTER(itimerspec)))
 
-
-def seconds_to_timespec(secs):
-    fractional, whole = math.modf(secs)
-    return timespec(tv_secs=time_t(int(whole)),
-                    tv_nsecs=c_long(int(fractional*1000000.0)))
 
 class Timer:
-    def __init__(self, clock, blocking=True):
+    def __init__(self, clock=CLOCK_REALTIME, blocking=True):
         self._fd = timerfd_create(clock, (not blocking)*TFD_NONBLOCK)
         if self._fd < 0:
             e = get_errno()
             raise OSError(e, errno.strerror(e))
-
-
-    def schedule(offset=0, interval=0):
-        pass
+    
+    def close(self):
+        os.close(self._fd)
+    
+    def schedule(self, offset=0, interval=0):
+        spec = itimerspec(it_value=timespec.from_seconds(offset), 
+                          it_interval=timespec.from_seconds(interval))
+        
+        print(spec)
+        
+        status = timerfd_settime(self._fd, 0, byref(spec), None)
+        if status < 0:
+            e = get_errno()
+            raise OSError(e, errno.strerror(e))
+    
+    def wait(self):
+        try:
+            buf = os.read(self._fd, 8)
+            return struct.unpack("Q", buf)[0]
+        except OSError as e:
+            if e.errno == errno.EAGAIN:
+                return 0
+            else:
+                raise e
+        
