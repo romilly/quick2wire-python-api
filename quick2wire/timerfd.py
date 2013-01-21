@@ -101,25 +101,45 @@ timerfd_gettime = syscall.lookup(c_int, "timerfd_gettime", (c_int, POINTER(itime
 
 
 class Timer:
-    def __init__(self, clock=CLOCK_REALTIME, blocking=True):
+    def __init__(self, clock=CLOCK_REALTIME, offset=0, interval=0, blocking=True):
         self._fd = timerfd_create(clock, (not blocking)*TFD_NONBLOCK)
-        if self._fd < 0:
-            e = get_errno()
-            raise OSError(e, errno.strerror(e))
+        self._offset = offset
+        self._interval = interval
+        self._started = False
     
     def close(self):
         os.close(self._fd)
     
-    def schedule(self, offset=0, interval=0):
-        spec = itimerspec(it_value=timespec.from_seconds(offset), 
-                          it_interval=timespec.from_seconds(interval))
+    @property
+    def offset(self):
+        return self._offset
+    
+    @offset.setter
+    def offset(self, new_offset):
+        self._offset = new_offset
+        if self._started:
+            self._schedule()
+    
+    @property
+    def interval(self):
+        return self._interval
+    
+    @interval.setter
+    def interval(self, new_interval):
+        self._interval = new_interval
+        if self._started:
+            self._schedule()
+    
+    def start(self):
+        if self._offset == 0 and self._interval == 0:
+            raise ValueError("timer will not fire because offset and interval are both zero")
         
-        print(spec)
+        self._schedule(self._offset or self._interval, self._interval)
+        self._started = True
         
-        status = timerfd_settime(self._fd, 0, byref(spec), None)
-        if status < 0:
-            e = get_errno()
-            raise OSError(e, errno.strerror(e))
+    def stop(self):
+        self._schedule(0, 0)
+        self._started = False
     
     def wait(self):
         try:
@@ -130,4 +150,8 @@ class Timer:
                 return 0
             else:
                 raise e
-        
+    
+    def _schedule(self, offset, interval):
+        spec = itimerspec.from_seconds(offset, interval)
+        timerfd_settime(self._fd, 0, byref(spec), None)
+    

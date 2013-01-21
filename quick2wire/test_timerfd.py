@@ -1,5 +1,5 @@
 
-from time import time
+from time import time, sleep
 from contextlib import closing
 from quick2wire.timerfd import Timer, timespec, itimerspec
 
@@ -9,6 +9,7 @@ def test_timespec_can_be_created_from_seconds():
     assert t.tv_sec == 4
     assert t.tv_nsec == 125000000
 
+
 def test_itimerspec_can_be_created_from_seconds():
     t = itimerspec.from_seconds(offset=4.125, interval=1.25)
     assert t.it_value.tv_sec == 4
@@ -16,11 +17,60 @@ def test_itimerspec_can_be_created_from_seconds():
     assert t.it_interval.tv_sec == 1
     assert t.it_interval.tv_nsec == 250000000
 
+
 def test_timer_waits_for_time_to_pass():
-    with closing(Timer()) as timer:
+    with closing(Timer(offset=0.125)) as timer:
         start = time()
-        timer.schedule(0.125)
-        n = timer.wait()
+        
+        timer.start()
+        timer.wait()
+        
         duration = time() - start
         
-        assert duration / n >= 0.125
+        assert duration >= 0.125
+
+
+def test_timer_can_repeat_with_interval():
+    with closing(Timer(interval=0.125)) as timer:
+        start = time()
+        
+        timer.start()
+        timer.wait()
+        timer.wait()
+        
+        duration = time() - start
+        
+        assert duration >= 0.25
+
+
+def test_timer_can_repeat_with_interval_after_offset():
+    with closing(Timer(offset=0.25, interval=0.125)) as timer:
+        start = time()
+        
+        timer.start()
+        timer.wait()
+        timer.wait()
+        timer.wait()
+        
+        duration = time() - start
+        
+        assert duration >= 0.5
+
+
+def test_timer_cannot_be_started_if_offset_and_interval_are_both_zero():
+    with closing(Timer()) as timer:
+        try:
+            timer.start()
+            assert False, "should have thrown ValueError"
+        except ValueError:
+            # expected
+            pass
+
+
+def test_timer_reports_how_many_times_it_triggered_since_last_wait():
+    with closing(Timer(interval=0.0125)) as timer:
+        timer.start()
+        sleep(0.5)
+        n = timer.wait()
+        
+        assert n >= 4
