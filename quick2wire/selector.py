@@ -2,7 +2,7 @@
 
 import select
 from quick2wire.eventfd import Semaphore
-
+from quick2wire.timerfd import Timer
 
 INPUT = select.EPOLLIN
 OUTPUT = select.EPOLLOUT

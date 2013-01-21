@@ -1,7 +1,7 @@
 
 from contextlib import closing
 from itertools import islice
-from quick2wire.selector import Selector, INPUT, OUTPUT, ERROR, Semaphore
+from quick2wire.selector import Selector, INPUT, OUTPUT, ERROR, Semaphore, Timer
 
 
 def test_selector_is_a_convenient_api_to_epoll():
@@ -82,3 +82,16 @@ def test_can_remove_source_from_selector():
         
         selector.wait(timeout=0)
         assert selector.ready == None
+
+
+def test_can_wait_for_timer():
+    with closing(Timer(blocking=False,offset=0.0125)) as timer, \
+         closing(Selector()) as selector:
+        
+        selector.add(timer, INPUT)
+        
+        timer.start()
+        
+        selector.wait()
+        
+        assert selector.ready == timer

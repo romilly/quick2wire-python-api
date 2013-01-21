@@ -109,7 +109,11 @@ class Timer:
     
     def close(self):
         os.close(self._fd)
-    
+        self._fd = None
+        
+    def fileno(self):
+        return self._fd
+
     @property
     def offset(self):
         return self._offset
