@@ -24,7 +24,7 @@ class Selector:
     def fileno(self):
         return self._epoll.fileno()
     
-    def add(self, source, eventmask, trigger=LEVEL, identifier=None):
+    def add(self, source, eventmask=INPUT|ERROR, trigger=LEVEL, identifier=None):
         fileno = source.fileno()
         self._sources[fileno] = identifier if identifier is not None else source
         self._epoll.register(fileno, eventmask|(select.EPOLLET*trigger))

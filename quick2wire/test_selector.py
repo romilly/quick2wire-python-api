@@ -20,7 +20,21 @@ def test_selector_is_a_convenient_api_to_epoll():
         assert selector.has_hangup == False
         assert selector.has_priority_input == False
 
+def test_event_mask_defaults_to_input_and_error():
+    with closing(Selector()) as selector:
+        ev1 = Semaphore(blocking=False)
         
+        selector.add(ev1)
+        ev1.signal()
+        
+        selector.wait(timeout=0)
+        assert selector.ready == ev1
+        assert selector.has_input == True
+
+        
+        
+
+
 def test_selecting_from_multiple_event_sources():
     with closing(Semaphore(blocking=False)) as ev1, \
          closing(Semaphore(blocking=False)) as ev2, \
