@@ -101,21 +101,40 @@ timerfd_gettime = syscall.lookup(c_int, "timerfd_gettime", (c_int, POINTER(itime
 
 
 class Timer:
-    def __init__(self, clock=CLOCK_REALTIME, offset=0, interval=0, blocking=True):
+    """A one-shot or repeating timer that can be added to a Selector."""
+    
+    def __init__(self, offset=0, interval=0, blocking=True, clock=CLOCK_REALTIME):
+        """Creates a new Timer.
+        
+        Arguments:
+        offset   -- the initial expiration time, measured in seconds from
+                    the call to start().
+        interval -- if non-zero, the interval for periodic timer expirations, 
+                    measured in seconds.
+        blocking -- if False calls to wait() do not block until the timer 
+                    expires but return 0 if the timer has not expired. 
+                    (default = True)
+        clock    -- the system clock used to measure time:
+                    CLOCK_REALTIME  -- system-wide realtime clock.
+                    CLOCK_MONOTONIC -- monotonic system-wide clock.
+        """
         self._fd = timerfd_create(clock, (not blocking)*TFD_NONBLOCK)
         self._offset = offset
         self._interval = interval
         self._started = False
     
     def close(self):
+        """Closes the Timer and releases its file descriptor."""
         os.close(self._fd)
         self._fd = None
         
     def fileno(self):
+        """Returns the Timer's file descriptor."""
         return self._fd
 
     @property
     def offset(self):
+        """the initial expiration time, measured in seconds from the call to start()."""
         return self._offset
     
     @offset.setter
@@ -126,6 +145,10 @@ class Timer:
     
     @property
     def interval(self):
+        """The interval, specified in seconds, with which the timer will repeat.
+        
+        If zero, the timer only fires once, when the offset expires.
+        """
         return self._interval
     
     @interval.setter
@@ -135,6 +158,11 @@ class Timer:
             self._schedule()
     
     def start(self):
+        """Starts the timer running.
+        
+        Raises:
+        ValueError -- if offset and interval are both zero.
+        """
         if self._offset == 0 and self._interval == 0:
             raise ValueError("timer will not fire because offset and interval are both zero")
         
@@ -142,10 +170,25 @@ class Timer:
         self._started = True
         
     def stop(self):
+        """Stops the timer running. Any scheduled timer events will not fire."""
         self._schedule(0, 0)
         self._started = False
     
     def wait(self):
+        """Receives timer events.
+        
+        If the timer has already expired one or more times since its
+        settings were last modified or wait() was last called then
+        wait() returns the number of expirations that have occurred.
+
+        If no timer expirations have occurred, then the call either
+        blocks until the next timer expiration, or returns 0 if the
+        Timer is non-blocking (was created with the blocking parameter
+        set to False).
+        
+        Raises:
+        OSError -- an OS error occurred reading the state of the timer.
+        """
         try:
             buf = os.read(self._fd, 8)
             return struct.unpack("Q", buf)[0]

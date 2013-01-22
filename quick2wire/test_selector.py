@@ -48,11 +48,11 @@ def test_selecting_from_multiple_event_sources():
         
         selector.wait()
         first = selector.ready
-        first.receive()
+        first.wait()
         
         selector.wait()
         second = selector.ready
-        second.receive()
+        second.wait()
         
         assert first in (ev1, ev2)
         assert second in (ev1, ev2)
