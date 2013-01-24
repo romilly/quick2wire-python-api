@@ -23,7 +23,6 @@ class Selector:
         """Initialises a Selector.
         
         Arguments:
-        
         size_hint -- A hint of the number of event sources that will
                      be added to the Selector, or -1 for the default.
                      Used to optimize internal data structures, it
@@ -39,11 +38,10 @@ class Selector:
         """Returns the Selector's file descriptor."""
         return self._epoll.fileno()
     
-    def add(self, source, eventmask=INPUT|ERROR, trigger=LEVEL, identifier=None):
+    def add(self, source, eventmask=INPUT|ERROR, trigger=None, identifier=None):
         """Adds an event source to the Selector.
         
         Arguments:
-        
         source     -- the event source to add.  Must provide a fileno() 
                       method that returns its file descriptor.
                       
@@ -66,6 +64,8 @@ class Selector:
                       source itself.
         """
         fileno = source.fileno()
+        trigger = trigger if trigger is not None else getattr(source, "__trigger__", LEVEL)
+        
         self._sources[fileno] = identifier if identifier is not None else source
         self._epoll.register(fileno, eventmask|(select.EPOLLET*trigger))
     
@@ -94,7 +94,6 @@ class Selector:
         timeout, the `ready` property is `None`.
         
         Arguments: 
-        
         timeout -- maximum time to wait for an event. Specified in
                    seconds (can be less than one). Default is no
                    timeout: wait forever for an event.

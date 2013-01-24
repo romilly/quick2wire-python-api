@@ -4,7 +4,7 @@ import sys
 import os
 from contextlib import closing
 from quick2wire.gpio import GPIOPin, Both, In, Out, exported
-from quick2wire.selector import Selector, INPUT, EDGE, Timer
+from quick2wire.selector import Selector, Timer
 
 blink_rate=2.0
 
@@ -13,8 +13,8 @@ with closing(Selector()) as selector, \
      exported(GPIOPin(0, direction=In, interrupt=Both)) as button_pin, \
      exported(GPIOPin(1, direction=Out)) as led_pin:
     
-    selector.add(button_pin, INPUT, trigger=EDGE)
-    selector.add(timer, INPUT)
+    selector.add(button_pin)
+    selector.add(timer)
     
     print("ready")
     

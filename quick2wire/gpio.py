@@ -6,6 +6,7 @@ import os
 import subprocess
 from contextlib import contextmanager
 from quick2wire.board_revision import revision
+from quick2wire.selector import EDGE
 
 # Maps header pin numbers to SoC GPIO numbers
 # See http://elinux.org/RPi_Low-level_peripherals
@@ -93,6 +94,8 @@ class _IOPin(object):
     
     PullDown = "pulldown"
     PullUp = "pullup"
+    
+    __trigger__ = EDGE
     
     def __init__(self, user_pin_number, soc_pin_number, direction=None, interrupt=None, pull=None):
         """Creates a pin
