@@ -17,7 +17,7 @@ eventfd_t = c_uint64
 eventfd = syscall.lookup(c_int, "eventfd", (c_uint, c_int))
 
 
-class Semaphore:
+class Semaphore(syscall.SelfClosing):
     """A Semaphore implemented with eventfd that can be added to a Selector."""
     
     def __init__(self, count=0, blocking=True):

@@ -1,6 +1,5 @@
 
 from time import time, sleep
-from contextlib import closing
 from quick2wire.timerfd import Timer, timespec, itimerspec
 
 
@@ -19,7 +18,7 @@ def test_itimerspec_can_be_created_from_seconds():
 
 
 def test_timer_waits_for_time_to_pass():
-    with closing(Timer(offset=0.125)) as timer:
+    with Timer(offset=0.125) as timer:
         start = time()
         
         timer.start()
@@ -31,7 +30,7 @@ def test_timer_waits_for_time_to_pass():
 
 
 def test_timer_can_repeat_with_interval():
-    with closing(Timer(interval=0.125)) as timer:
+    with Timer(interval=0.125) as timer:
         start = time()
         
         timer.start()
@@ -44,7 +43,7 @@ def test_timer_can_repeat_with_interval():
 
 
 def test_timer_can_repeat_with_interval_after_offset():
-    with closing(Timer(offset=0.25, interval=0.125)) as timer:
+    with Timer(offset=0.25, interval=0.125) as timer:
         start = time()
         
         timer.start()
@@ -58,7 +57,7 @@ def test_timer_can_repeat_with_interval_after_offset():
 
 
 def test_timer_cannot_be_started_if_offset_and_interval_are_both_zero():
-    with closing(Timer()) as timer:
+    with Timer() as timer:
         try:
             timer.start()
             assert False, "should have thrown ValueError"
@@ -68,7 +67,7 @@ def test_timer_cannot_be_started_if_offset_and_interval_are_both_zero():
 
 
 def test_timer_reports_how_many_times_it_triggered_since_last_wait():
-    with closing(Timer(interval=0.0125)) as timer:
+    with Timer(interval=0.0125) as timer:
         timer.start()
         sleep(0.5)
         n = timer.wait()

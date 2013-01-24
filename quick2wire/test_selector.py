@@ -5,8 +5,8 @@ from quick2wire.selector import Selector, INPUT, OUTPUT, ERROR, Semaphore, Timer
 
 
 def test_selector_is_a_convenient_api_to_epoll():
-    with closing(Semaphore(blocking=False)) as ev1, \
-         closing(Selector()) as selector:
+    with Semaphore(blocking=False) as ev1, \
+         Selector() as selector:
         
         selector.add(ev1, INPUT)
         
@@ -20,8 +20,9 @@ def test_selector_is_a_convenient_api_to_epoll():
         assert selector.has_hangup == False
         assert selector.has_priority_input == False
 
+
 def test_event_mask_defaults_to_input_and_error():
-    with closing(Selector()) as selector:
+    with Selector() as selector:
         ev1 = Semaphore(blocking=False)
         
         selector.add(ev1)
@@ -31,14 +32,11 @@ def test_event_mask_defaults_to_input_and_error():
         assert selector.ready == ev1
         assert selector.has_input == True
 
-        
-        
-
 
 def test_selecting_from_multiple_event_sources():
-    with closing(Semaphore(blocking=False)) as ev1, \
-         closing(Semaphore(blocking=False)) as ev2, \
-         closing(Selector()) as selector:
+    with Semaphore(blocking=False) as ev1, \
+         Semaphore(blocking=False) as ev2, \
+         Selector() as selector:
         
         selector.add(ev1, INPUT)
         selector.add(ev2, INPUT)
@@ -60,8 +58,8 @@ def test_selecting_from_multiple_event_sources():
         
         
 def test_can_use_a_different_value_to_identify_the_event_source():
-    with closing(Semaphore(blocking=False)) as ev1, \
-         closing(Selector()) as selector:
+    with Semaphore(blocking=False) as ev1, \
+         Selector() as selector:
         
         selector.add(ev1, INPUT, identifier=999)
         
@@ -72,8 +70,8 @@ def test_can_use_a_different_value_to_identify_the_event_source():
 
         
 def test_can_wait_with_a_timeout():
-    with closing(Semaphore(blocking=False)) as ev1, \
-         closing(Selector()) as selector:
+    with Semaphore(blocking=False) as ev1, \
+         Selector() as selector:
         
         selector.add(ev1, INPUT, identifier=999)
         
@@ -82,8 +80,8 @@ def test_can_wait_with_a_timeout():
 
 
 def test_can_remove_source_from_selector():
-    with closing(Semaphore(blocking=False)) as ev1, \
-         closing(Selector()) as selector:
+    with Semaphore(blocking=False) as ev1, \
+         Selector() as selector:
         
         selector.add(ev1, INPUT)
         
@@ -99,8 +97,8 @@ def test_can_remove_source_from_selector():
 
 
 def test_can_wait_for_timer():
-    with closing(Timer(blocking=False,offset=0.0125)) as timer, \
-         closing(Selector()) as selector:
+    with Timer(blocking=False,offset=0.0125) as timer, \
+         Selector() as selector:
         
         selector.add(timer, INPUT)
         

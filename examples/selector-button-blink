@@ -8,10 +8,10 @@ from quick2wire.selector import Selector, Timer
 
 blink_rate=2.0
 
-with closing(Selector()) as selector, \
-     closing(Timer(interval=1/blink_rate)) as timer, \
-     exported(GPIOPin(0, direction=In, interrupt=Both)) as button_pin, \
-     exported(GPIOPin(1, direction=Out)) as led_pin:
+with exported(GPIOPin(0, direction=In, interrupt=Both)) as button_pin, \
+     exported(GPIOPin(1, direction=Out)) as led_pin, \
+     Timer(interval=1/blink_rate) as timer, \
+     Selector() as selector:
     
     selector.add(button_pin)
     selector.add(timer)

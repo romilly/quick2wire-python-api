@@ -17,3 +17,14 @@ def lookup(restype, name, argtypes):
     f.argtypes = argtypes
     f.errcheck = errcheck
     return f
+
+
+class SelfClosing(object):
+    def __enter__(self):
+        return self
+
+    def __exit__(self, *exc):
+        self.close()
+        return False
+
+    

@@ -4,6 +4,7 @@ import math
 import os
 from ctypes import *
 import struct
+from contextlib import closing
 import quick2wire.syscall as syscall
 
 
@@ -100,7 +101,7 @@ timerfd_settime = syscall.lookup(c_int, "timerfd_settime", (c_int, c_int, POINTE
 timerfd_gettime = syscall.lookup(c_int, "timerfd_gettime", (c_int, POINTER(itimerspec)))
 
 
-class Timer:
+class Timer(syscall.SelfClosing):
     """A one-shot or repeating timer that can be added to a Selector."""
     
     def __init__(self, offset=0, interval=0, blocking=True, clock=CLOCK_REALTIME):
@@ -201,4 +202,4 @@ class Timer:
     def _schedule(self, offset, interval):
         spec = itimerspec.from_seconds(offset, interval)
         timerfd_settime(self._fd, 0, byref(spec), None)
-    
+

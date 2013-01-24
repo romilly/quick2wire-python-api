@@ -3,6 +3,7 @@ communication.
 """
 
 import select
+from quick2wire.syscall import SelfClosing
 from quick2wire.eventfd import Semaphore
 from quick2wire.timerfd import Timer
 
@@ -16,7 +17,7 @@ LEVEL = 0
 EDGE = 1
 
 
-class Selector:
+class Selector(SelfClosing):
     """Lets a thread wait for multiple events and handle them one at a time."""
     
     def __init__(self, size_hint=-1):
