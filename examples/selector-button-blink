@@ -1,4 +1,4 @@
-#!/usr/bin/python3
+#!/usr/bin/env python3
 
 import sys
 import os
@@ -8,8 +8,8 @@ from quick2wire.selector import Selector, Timer
 
 blink_rate=2.0
 
-with exported(GPIOPin(0, direction=In, interrupt=Both)) as button_pin, \
-     exported(GPIOPin(1, direction=Out)) as led_pin, \
+with GPIOPin(0, direction=In, interrupt=Both) as button_pin, \
+     GPIOPin(1, direction=Out) as led_pin, \
      Timer(interval=1/blink_rate) as timer, \
      Selector() as selector:
     

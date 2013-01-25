@@ -68,19 +68,6 @@ def gpio_admin(subcommand, pin, pull=None):
 
 
 
-def _pin_file(name, parser, doc):
-    def _read(self):
-        self._ensure_exported()
-        with open(self._pin_path(name), "r") as f:
-            return parser(f.read())
-
-    def _write(self, value):
-        self._ensure_exported()
-        with open(self._pin_path(name), "w") as f:
-            f.write(str(value))
-
-    return property(_read, _write, doc=doc)
-
 
 class _IOPin(object):
     """Controls a GPIO pin."""
@@ -97,7 +84,7 @@ class _IOPin(object):
     
     __trigger__ = EDGE
     
-    def __init__(self, user_pin_number, soc_pin_number, direction=None, interrupt=None, pull=None):
+    def __init__(self, user_pin_number, soc_pin_number, direction=In, interrupt=None, pull=None):
         """Creates a pin
         
         If the direction is specified, the pin is exported if
@@ -109,7 +96,8 @@ class _IOPin(object):
         user_pin_number -- the identity of the pin used to create the derived class.
         soc_pin_number  -- the pin on the header to control, identified by the SoC pin number.
         direction       -- (optional) the direction of the pin, either In or Out.
-        interrupt       -- (optional) 
+        interrupt       -- (optional)
+        pull            -- (optional)
         
         Raises:
         IOError        -- could not export the pin (if direction is given)
@@ -117,47 +105,35 @@ class _IOPin(object):
         self.index = user_pin_number
         self.soc_pin_number = soc_pin_number
         self._file = None
-        self.pull = pull
-        if direction is not None:
-            self.direction = direction
-        if interrupt is not None:
-            self.interrupt = interrupt
+        self._direction = direction
+        self._interrupt = interrupt
+        self._pull = pull
     
     
-    def __repr__(self):
-        return self.__module__ + "." + str(self)
+    def open(self):
+        gpio_admin("export", self.soc_pin_number, self._pull)
+        self._file = open(self._pin_path("value"), "r+")
+        self._write("direction", self._direction)
+        if self._direction == In:
+            self._write("edge", self._interrupt if self._interrupt is not None else "none")
+            
+    def close(self):
+        if not self.closed:
+            if self.direction == Out:
+                self.value = 0
+            self._file.close()
+            self._file = None
+            self._write("direction", In)
+            self._write("edge", "none")
+            gpio_admin("unexport", self.soc_pin_number)
     
-    def __str__(self):
-        return "%s(%i)"%(self.__class__.__name__, self.index)
+    def __enter__(self):
+        self.open()
+        return self
     
-    @property
-    def is_exported(self):
-        """Has the pin been exported to user space?"""
-        return os.path.exists(self._pin_path())
-    
-    def export(self):
-        """Export the pin to user space, making its control files visible in the filesystem.
-        
-        Raises:
-        IOError -- could not export the pin.
-
-        
-        """
-        gpio_admin("export", self.soc_pin_number, self.pull)
-    
-    def unexport(self):
-        """Unexport the pin, removing its control files from the filesystem.
-        
-        Raises:
-        IOError -- could not unexport the pin.
-        
-        """
-        self._maybe_close()
-        gpio_admin("unexport", self.soc_pin_number)
-        
-    def _ensure_exported(self):
-        if not self.is_exported:
-            self.export()
+    def __exit__(self, *exc):
+        self.close()
+        return False
     
     @property
     def value(self):
@@ -168,56 +144,87 @@ class _IOPin(object):
         
         Raises: 
         IOError -- could not read or write the pin's value.
-        
         """
-        f = self._lazyopen()
-        f.seek(0)
-        v = f.read()
+        self._check_open()
+        self._file.seek(0)
+        v = self._file.read()
         return int(v) if v else 0
     
     @value.setter
     def value(self, new_value):
-        f = self._lazyopen()
-        f.seek(0)
-        f.write(str(int(new_value)))
-        f.flush()
+        self._check_open()
+        if self._direction != Out:
+            raise ValueError("not an output pin")
+        self._file.seek(0)
+        self._file.write(str(int(new_value)))
+        self._file.flush()
     
-    direction = _pin_file("direction", str.strip,
+        
+    @property
+    def direction(self):
         """The direction of the pin: either In or Out.
         
         The value of the pin can only be set if its direction is Out.
         
         Raises:
-        IOError -- could not read or set the pin's direction.
+        IOError -- could not set the pin's direction.
+        """
+        return self._direction
+    
+    @direction.setter
+    def direction(self, new_value):
+        self._write("direction", new_value)
+        self._direction = new_value
+    
+    @property 
+    def interrupt(self):
+        """The interrupt property specifies what event (if any) will raise an interrupt.
         
-        """)
+        One of: 
+        Rising  -- voltage changing from low to high
+        Falling -- voltage changing from high to low
+        Both    -- voltage changing in either direction
+        None    -- interrupts are not raised
+        
+        Raises:
+        IOError -- could not read or set the pin's interrupt trigger
+        """
+        return self._interrupt
+    
+    @interrupt.setter
+    def interrupt(self, new_value):
+        self._write("edge", new_value)
+        self._interrupt = new_value
 
-    interrupt = _pin_file("edge", str.strip,
-            """The interrupt property specifies what event (if any) will trigger an interrupt.
-
-            Raises:
-            IOError -- could not read or set the pin's interrupt trigger
-
-            """)
+    @property
+    def pull(self):
+        return self._pull
     
     def fileno(self):
-        """
-        Return the underlying fileno. Useful for calling select
-        """
-        return self._lazyopen().fileno()
-        
-    def _lazyopen(self):
-        if self._file is None:
-            self._file = open(self._pin_path("value"), "r+")
-        return self._file
+        """Return the underlying file descriptor.  Useful for select, epoll, etc."""
+        return self._file.fileno()
     
-    def _maybe_close(self):
-        if self._file is not None:
-            self._file.close()
-            self._file = None
+    @property
+    def closed(self):
+        """Returns if this pin is closed"""
+        return self._file is None or self._file.closed
+    
+    def _check_open(self):
+        if self.closed:
+            raise IOError(str(self) + " is closed")
+    
+    def _write(self, filename, value):
+        with open(self._pin_path(filename), "w+") as f:
+            f.write(value)
     
     def _pin_path(self, filename=""):
         return "/sys/devices/virtual/gpio/gpio%i/%s" % (self.soc_pin_number, filename)
+    
+    def __repr__(self):
+        return self.__module__ + "." + str(self)
+    
+    def __str__(self):
+        return "%s(%i)"%(self.__class__.__name__, self.index)
     
 
 

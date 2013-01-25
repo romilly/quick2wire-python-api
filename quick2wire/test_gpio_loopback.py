@@ -33,7 +33,7 @@ def assert_outputs_seen_at_corresponding_inputs(pin_type, topology):
 
 
 def assert_output_seen_at_input(pin_type, op, ip):
-    with exported(pin_type(op, direction=Out)) as output_pin, exported(pin_type(ip, direction=In)) as input_pin:
+    with pin_type(op, direction=Out) as output_pin, pin_type(ip, direction=In) as input_pin:
         for value in [1, 0, 1, 0]:
             output_pin.value = value
             assert input_pin.value == value

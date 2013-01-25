@@ -5,16 +5,14 @@
 # the Pi's GPIO pins.
 #
 
-from quick2wire.gpio import Pin
+from quick2wire.gpio import GPIOPin, In, PullUp, PullDown
 
-pin = Pin(11, Pin.In)
-print( "Pull up/down is unspecified, pin is now", pin.value)
-pin.unexport()
+with GPIOPin(0, In) as pin:
+    print("Pull up/down is unspecified, pin is now", pin.value)
 
-pin = Pin(11, Pin.In, pull=Pin.PullUp)
-print( "Pin is set with pull up, pin in is now", pin.value)
-pin.unexport()
+with GPIOPin(0, In, pull=PullUp) as pin:
+    print("Pin is set with pull up, pin in is now", pin.value)
 
-pin = Pin(11, Pin.In, pull=Pin.PullDown)
-print( "Pin is set with pull down, pin is now", pin.value)
-pin.unexport()
+with GPIOPin(0, In, pull=PullDown) as pin:
+    print("Pin is set with pull down, pin is now", pin.value)
+
