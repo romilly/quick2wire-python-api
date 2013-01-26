@@ -68,23 +68,23 @@ def gpio_admin(subcommand, pin, pull=None):
 
 
 
+Out = "out"
+In = "in"
+    
+Rising = "rising"
+Falling = "falling"
+Both = "both"
+    
+PullDown = "pulldown"
+PullUp = "pullup"
+    
 
-class _IOPin(object):
+class Pin(object):
     """Controls a GPIO pin."""
-    
-    Out = "out"
-    In = "in"
-    
-    Rising = "rising"
-    Falling = "falling"
-    Both = "both"
-    
-    PullDown = "pulldown"
-    PullUp = "pullup"
     
     __trigger__ = EDGE
     
-    def __init__(self, user_pin_number, soc_pin_number, direction=In, interrupt=None, pull=None):
+    def __init__(self, index_to_soc_pin_number, index, direction=In, interrupt=None, pull=None):
         """Creates a pin
         
         Parameters:
@@ -97,13 +97,21 @@ class _IOPin(object):
         Raises:
         IOError        -- could not export the pin (if direction is given)
         """
-        self.index = user_pin_number
-        self.soc_pin_number = soc_pin_number
+        self._index_to_soc_pin_number = index_to_soc_pin_number
+        self._index = index
         self._file = None
         self._direction = direction
         self._interrupt = interrupt
         self._pull = pull
     
+    
+    @property 
+    def index(self):
+        return self._index
+    
+    @property
+    def soc_pin_number(self):
+        return self._index_to_soc_pin_number(self._index)
     
     def open(self):
         gpio_admin("export", self.soc_pin_number, self._pull)
@@ -218,43 +226,24 @@ class _IOPin(object):
         return self.__module__ + "." + str(self)
     
     def __str__(self):
-        return "%s(%i)"%(self.__class__.__name__, self.index)
+        return "%s(%s,%i)"%(self.__class__.__name__, self._index_to_soc_pin_number.__name__, self.index)
     
 
+def pi_broadcom_soc(index):
+    return index
 
-class HeaderPin(_IOPin):
-    def __init__(self, header_pin_number, *args, **kwargs):
-        return super(HeaderPin, self).__init__(header_pin_number, header_to_soc(header_pin_number), *args, **kwargs)
+def pi_header(index):
+    return header_to_soc(index)
 
-class GPIOPin(_IOPin):
-    def __init__(self, gpio_pin_number, *args, **kwargs):
-        return super(GPIOPin, self).__init__(gpio_pin_number, gpio_to_soc(gpio_pin_number), *args, **kwargs)
-
-
-
-Out = _IOPin.Out
-In = _IOPin.In
-
-Rising = _IOPin.Rising
-Falling = _IOPin.Falling
-Both = _IOPin.Both
-
-PullDown = _IOPin.PullDown
-PullUp = _IOPin.PullUp
+def gpio_breakout(index):
+    return gpio_to_soc(index)
 
 
 
 # Backwards compatability
-Pin = HeaderPin
 
-@contextmanager
-def exported(pin):
-    """Obsolete.  Pins are their own context managers.
-    
-    Example::
-    
-        with GPIOPin(0) as pin:
-            print(pin.value)
-    
-    """
-    return pin
+def HeaderPin(header_pin_number, *args, **kwargs):
+    return Pin(pi_header, header_pin_number, *args, **kwargs)
+
+def GPIOPin(gpio_pin_number, *args, **kwargs):
+    return Pin(gpio_breakout, gpio_pin_number, *args, **kwargs)
