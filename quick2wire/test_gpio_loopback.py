@@ -1,5 +1,5 @@
 
-from quick2wire.gpio import HeaderPin, GPIOPin, In, Out, exported
+from quick2wire.gpio import HeaderPin, GPIOPin, In, Out
 from time import sleep
 import pytest
 
@@ -37,7 +37,3 @@ def assert_output_seen_at_input(pin_type, op, ip):
         for value in [1, 0, 1, 0]:
             output_pin.value = value
             assert input_pin.value == value
-        print(op, "->", ip,": ok!")
-
-
-

@@ -3,7 +3,7 @@
 import sys
 import os
 from contextlib import closing
-from quick2wire.gpio import GPIOPin, Both, In, Out, exported
+from quick2wire.gpio import GPIOPin, Both, In, Out
 from quick2wire.selector import Selector, Timer
 
 blink_rate=2.0

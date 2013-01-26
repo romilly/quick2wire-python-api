@@ -87,11 +87,6 @@ class _IOPin(object):
     def __init__(self, user_pin_number, soc_pin_number, direction=In, interrupt=None, pull=None):
         """Creates a pin
         
-        If the direction is specified, the pin is exported if
-        necessary and its direction is set.  If the direction is not
-        specified, the pin is not exported and you must call export()
-        before you start using it.
-        
         Parameters:
         user_pin_number -- the identity of the pin used to create the derived class.
         soc_pin_number  -- the pin on the header to control, identified by the SoC pin number.
@@ -137,8 +132,7 @@ class _IOPin(object):
     
     @property
     def value(self):
-        """The current value of the pin: 1 if the pin is high or 0 if
-        the pin is low.
+        """The current value of the pin: 1 if the pin is high or 0 if the pin is low.
         
         The value can only be set if the pin's direction is Out.
         
@@ -255,19 +249,12 @@ Pin = HeaderPin
 
 @contextmanager
 def exported(pin):
-    """A context manager that automatically exports a pin if necessary
-    and unexports it at the end of the block.
+    """Obsolete.  Pins are their own context managers.
     
     Example::
     
-        with exported(Pin(15)) as pin:
+        with GPIOPin(0) as pin:
             print(pin.value)
     
     """
-    
-    if not pin.is_exported:
-        pin.export()
-    try:
-        yield pin
-    finally:
-        pin.unexport()
+    return pin
