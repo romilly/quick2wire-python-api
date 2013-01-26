@@ -8,6 +8,7 @@ When adding a feature to the API, check you have done all necessary steps from t
   * written unit tests
   * written loopback tests
   * published the version of quick2wire-gpio-admin that the API relies upon to dist.quick2wire.com
+  * updated the getting-started documentation.
 
 If you changed gpio-admin, also:
 
