@@ -35,50 +35,38 @@ output.
     in_pin = Pin(0, direction=In)
     out_pin = Pin(1, direction=Out)
 
-When you have a Pin instance you can read or write its value.  A value
-of 1 is high, a value of 0 is low.
-   
-    out_pin.value = 1
-    print(in_pin.value)
+You must open a pin before you can read or write its value and close
+the pin when you no longer need it.  The most convenient way to do
+this is to use Python's `with` statement, which will open the pins at
+the start of the statement and close them when the body of the
+statement has finished running, even if the user kills the program or
+a bad piece of code throws an exception.
+    
+    with in_pin, out_pin:
+        out_pin.value = 1
+        print(in_pin.value)
 
-When you have finished using the pin, you must unexport it:
-
-    out_pin.unexport()
-    in_pin.unexport()
+A pin has a value of 1 when high, a value of 0 when low.
 
 Putting it all together into a single program:
 
-    from quick2wire.gpio import Pin
+    from quick2wire.gpio import Pin, In, Out
     
     in_pin = Pin(0, direction=In)
     out_pin = Pin(1, direction=Out)
     
-    out_pin.value = 1
-    print(in_pin.value)
-    
-    out_pin.unexport()
-    in_pin.unexport()
-
-To make sure you always unexport any pins you've exported, you can wrap the Pin objects
-with `exported()`, a Python [context manager](http://docs.python.org/reference/datamodel.html#context-managers),
-as part of a [with](http://docs.python.org/reference/compound_stmts.html#with) statement:
-
-    from quick2wire.gpio import Pin, exported
-
-    with exported(GPIOPin(0, direction=In)) as in_pin, exported(GPIOPin(1, direction=Out)) as out_pin:
+    with in_pin, out_pin:
         out_pin.value = 1
-    	print(in_pin.value)
+        print(in_pin.value)
 
-This will unexport the pins when the program leaves the `with` statement, even 
-if the user kills the program or a bad piece of code throws an exception.
 
 Here's a slightly more complicated example that blinks an LED attached to pin 1. This will
 loop forever until the user stops it with a Control-C.
 
     from time import sleep
-    from quick2wire.gpio import GPIOPin, Out, exported
+    from quick2wire.gpio import GPIOPin, Out
     
-    with exported(GPIOPin(1, direction=Out)) as pin:
+    with GPIOPin(1, direction=Out) as pin:
         while True:
             pin.value = 1 - pin.value
             sleep(1)
