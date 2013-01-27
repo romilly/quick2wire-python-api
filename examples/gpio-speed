@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 from datetime import datetime
-from quick2wire.gpio import Pin
+from quick2wire.gpio import gpio, In, Out
 from timeit import Timer
 
 
@@ -17,8 +17,8 @@ def onepass_toggle():
 
 iterations = 10000
 
-outpin = Pin(12, Pin.Out)
-inpin = Pin(11, Pin.In)
+outpin = gpio.pin(0, Out)
+inpin = gpio.pin(1, In)
 
 with inpin, outpin:
     overhead = Timer(nothin).timeit(iterations)

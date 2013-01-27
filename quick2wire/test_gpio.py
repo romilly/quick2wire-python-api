@@ -1,14 +1,14 @@
 
 import os
-from quick2wire.gpio import GPIOPin, In, Out, PullDown, gpio_admin
+from quick2wire.gpio import gpio, In, Out, PullDown, gpio_admin
 import pytest
 
 
 @pytest.mark.gpio
 @pytest.mark.loopback
-class TestGPIOPin:
+class TestGPIO:
     def test_pin_must_be_opened_before_use_and_is_unusable_after_being_closed(self):
-        pin = GPIOPin(0)
+        pin = gpio.pin(0)
         
         with pytest.raises(IOError):
             pin.value
@@ -24,7 +24,7 @@ class TestGPIOPin:
     
     
     def test_opens_and_closes_itself_when_used_as_a_context_manager(self):
-        pin = GPIOPin(0)
+        pin = gpio.pin(0)
         
         with pin:
             pin.value
@@ -34,14 +34,14 @@ class TestGPIOPin:
     
     
     def test_exports_gpio_device_to_userspace_when_opened_and_unexports_when_closed(self):
-        with GPIOPin(0) as pin:
+        with gpio.pin(0) as pin:
             assert os.path.exists('/sys/class/gpio/gpio17/value')
         
         assert not os.path.exists('/sys/class/gpio/gpio17/value')
     
     
     def test_can_set_and_query_direction_of_pin_when_open(self):
-        with GPIOPin(0) as pin:
+        with gpio.pin(0) as pin:
             pin.direction = Out
             assert pin.direction == Out
             
@@ -54,7 +54,7 @@ class TestGPIOPin:
     
     
     def test_can_set_direction_on_construction(self):
-        pin = GPIOPin(0, Out)
+        pin = gpio.pin(0, Out)
         
         assert pin.direction == Out
         assert not os.path.exists("/sys/class/gpio/gpio17/direction")
@@ -65,7 +65,7 @@ class TestGPIOPin:
     
     
     def test_setting_value_of_output_pin_writes_to_device_file(self):
-        with GPIOPin(0) as pin:
+        with gpio.pin(0) as pin:
             pin.direction = Out
             
             pin.value = 1
@@ -78,7 +78,7 @@ class TestGPIOPin:
     
     
     def test_direction_and_value_of_pin_is_reset_when_closed(self):
-        with GPIOPin(0, Out) as pin:
+        with gpio.pin(0, Out) as pin:
             pin.value = 1
         
         gpio_admin("export", 17, PullDown)
@@ -88,8 +88,14 @@ class TestGPIOPin:
         finally:
             gpio_admin("unexport", 17)
 
-            
+    def test_cannot_get_a_pin_with_an_invalid_index(self):
+        with pytest.raises(IndexError):
+            gpio.pin(-1)
+        
+        with pytest.raises(IndexError):
+            gpio.pin(len(gpio))
 
+        
 def content_of(filename):
     with open(filename, 'r') as f:
         return f.read()

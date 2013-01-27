@@ -2,10 +2,10 @@
 
 import sys
 from time import sleep
-from quick2wire.gpio import GPIOPin, In, Out
+from quick2wire.gpio import gpio, In, Out
 
-led = GPIOPin(1, direction=Out)
-button = GPIOPin(0, direction=In)
+led = gpio.pin(1, direction=Out)
+button = gpio.pin(0, direction=In)
 
 with led, button:
      while True:

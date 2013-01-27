@@ -1,19 +1,19 @@
 #!/usr/bin/python3
 
 from contextlib import closing
-from quick2wire.gpio import Pin
+from quick2wire.gpio import gpio
 from quick2wire.helpers.display import AnalogueDisplay
 import quick2wire.i2c as i2c
 from quick2wire.parts.pcf8591 import PCF8591
 
 with closing(i2c.I2CMaster()) as master:
     pcf = PCF8591(master)
-    pins = [Pin(header_pin_number, Pin.Out) for header_pin_number in [11, 12, 13, 15, 16, 18, 22, 7]]
+    pins = [gpio.pin(i, Out) for i in range(8)]
     display = AnalogueDisplay(64, *pins)
     pin = pcf.begin_analogue_read(0)
     try:
         while(True):
             display.display(pin.read())
-   except KeyboardInterrupt:
+    except KeyboardInterrupt:
         display.display(63)
 

@@ -2,9 +2,9 @@
 
 from itertools import cycle
 from time import sleep
-from quick2wire.gpio import GPIOPin, Out
+from quick2wire.gpio import gpio, Out
 
-pins = [GPIOPin(n, Out) for n in range(8)]
+pins = [gpio.pin(i, Out) for i in range(8)]
 
 try:
     for p in pins:
