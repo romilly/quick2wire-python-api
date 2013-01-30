@@ -15,8 +15,8 @@ time_t = c_long
 clockid_t = c_ulong
 
 class timespec(Structure):
-    _fields_ = [("tv_sec", time_t),
-                ("tv_nsec", c_long)]
+    _fields_ = [("sec", time_t),
+                ("nsec", c_long)]
     
     __slots__ = [name for name,type in _fields_]
     
@@ -28,29 +28,29 @@ class timespec(Structure):
     
     @property
     def seconds(self):
-        if self.tv_nsec == 0:
-            return self.tv_sec
+        if self.nsec == 0:
+            return self.sec
         else:
-            return self.tv_sec + self.tv_nsec / 1000000000.0
+            return self.sec + self.nsec / 1000000000.0
         
     @seconds.setter
     def seconds(self, secs):
         fractional, whole = math.modf(secs)
-        self.tv_sec = int(whole)
-        self.tv_nsec = int(fractional * 1000000000)
+        self.sec = int(whole)
+        self.nsec = int(fractional * 1000000000)
 
 
 class itimerspec(Structure):
-    _fields_ = [("it_interval", timespec), 
-                ("it_value", timespec)]
+    _fields_ = [("interval", timespec), 
+                ("value", timespec)]
     
     __slots__ = [name for name,type in _fields_]
     
     @classmethod
     def from_seconds(cls, offset, interval):
         spec = cls()
-        spec.it_value.seconds = offset
-        spec.it_interval.seconds = interval
+        spec.value.seconds = offset
+        spec.interval.seconds = interval
         return spec
 
 
