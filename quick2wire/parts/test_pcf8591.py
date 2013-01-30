@@ -1,7 +1,6 @@
 
 from quick2wire.i2c_ctypes import I2C_M_RD
-from quick2wire.parts.pcf8591 import PinBank as PCF8591
-from quick2wire.parts.pcf8591 import FOUR_SINGLE_ENDED, THREE_DIFFERENTIAL, SINGLE_ENDED_AND_DIFFERENTIAL, TWO_DIFFERENTIAL
+from quick2wire.parts.pcf8591 import PCF8591, FOUR_SINGLE_ENDED, THREE_DIFFERENTIAL, SINGLE_ENDED_AND_DIFFERENTIAL, TWO_DIFFERENTIAL
 from factcheck import forall, from_range
 
 class FakeI2CMaster:
@@ -172,5 +171,75 @@ def test_does_not_write_control_byte_to_switch_channel_if_multiple_reads_from_sa
     assert ctl2.buf[0][0] == 0b00010001
 
 
+def test_opening_and_closing_the_output_pin_turns_the_digital_to_analogue_converter_on_and_off():
+    adc = PCF8591(i2c, FOUR_SINGLE_ENDED)
     
+    adc.output_pin.open()
+    assert i2c.request_count == 1
+    m1, = i2c.request(0)
+    assert is_write(m1)
+    assert m1.addr == adc.address
+    assert m1.len == 1
+    assert m1.buf[0][0] == 0b01000000
+    
+    adc.output_pin.close()
+    assert i2c.request_count == 2
+    m2, = i2c.request(1)
+    assert is_write(m2)
+    assert m2.addr == adc.address
+    assert m2.len == 1
+    assert m2.buf[0][0] == 0b00000000
 
+
+def test_output_pin_opens_and_closes_itself_when_used_as_a_context_manager():
+    adc = PCF8591(i2c, FOUR_SINGLE_ENDED)
+    
+    with adc.output_pin:
+        assert i2c.request_count == 1
+    
+    assert i2c.request_count == 2
+
+
+def test_setting_value_of_output_pin_sends_value_as_second_written_byte():
+    adc = PCF8591(i2c, FOUR_SINGLE_ENDED, samples=1)
+    
+    with adc.output_pin as pin:
+        pin.value = 0.5
+        
+        assert i2c.request_count == 2
+        m1, = i2c.request(1)
+        assert m1.addr == adc.address
+        assert m1.len == 2
+        assert m1.buf[0][0] == 0b01000000
+        assert m1.buf[1][0] == 127
+
+        pin.value = 0.25
+        
+        assert i2c.request_count == 3
+        m2, = i2c.request(2)
+        assert m2.addr == adc.address
+        assert m2.len == 2
+        assert m2.buf[0][0] == 0b01000000
+        assert m2.buf[1][0] == 63
+
+
+
+def test_setting_value_of_output_pin_does_not_affect_currently_selected_input_pin():
+    adc = PCF8591(i2c, FOUR_SINGLE_ENDED, samples=1)
+    
+    with adc.output_pin as opin:
+        assert i2c.request_count == 1
+        
+        adc.input_pin(1).get()
+        assert i2c.request_count == 3
+        
+        opin.value = 0.5
+        assert i2c.request_count == 4
+        assert i2c.request(3)[0].buf[0][0] == 0b01000001
+        
+        adc.input_pin(2).get()
+        assert i2c.request_count == 6
+        
+        opin.value = 0.5
+        assert i2c.request_count == 7
+        assert i2c.request(6)[0].buf[0][0] == 0b01000010
