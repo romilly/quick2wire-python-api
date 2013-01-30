@@ -1,6 +1,7 @@
 from quick2wire.i2c import writing_bytes, reading
 from quick2wire.gpio import Out, In
 
+DEFAULT_ADDRESS = 0x48
 
 FOUR_SINGLE_ENDED = 0
 THREE_DIFFERENTIAL = 1
@@ -84,7 +85,7 @@ class InputPin(object):
 class PCF8591(object):
     """Access to the PCF8591 A/D and D/A converter"""
     
-    def __init__(self, master, mode, address=0x48, samples=3):
+    def __init__(self, master, mode, address=DEFAULT_ADDRESS, samples=3):
         self.master = master
         self.address = address
         self._control_flags = (mode << 4)
