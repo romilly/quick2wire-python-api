@@ -1,14 +1,19 @@
 
 from time import time, sleep
 from quick2wire.timerfd import Timer, timespec, itimerspec
+import pytest
 
 
+@pytest.mark.loopback
+@pytest.mark.timer
 def test_timespec_can_be_created_from_seconds():
     t = timespec.from_seconds(4.125)
     assert t.sec == 4
     assert t.nsec == 125000000
 
 
+@pytest.mark.loopback
+@pytest.mark.timer
 def test_itimerspec_can_be_created_from_seconds():
     t = itimerspec.from_seconds(offset=4.125, interval=1.25)
     assert t.value.sec == 4
@@ -17,6 +22,8 @@ def test_itimerspec_can_be_created_from_seconds():
     assert t.interval.nsec == 250000000
 
 
+@pytest.mark.loopback
+@pytest.mark.timer
 def test_timer_waits_for_time_to_pass():
     with Timer(offset=0.125) as timer:
         start = time()
@@ -29,6 +36,8 @@ def test_timer_waits_for_time_to_pass():
         assert duration >= 0.125
 
 
+@pytest.mark.loopback
+@pytest.mark.timer
 def test_timer_can_repeat_with_interval():
     with Timer(interval=0.125) as timer:
         start = time()
@@ -42,6 +51,8 @@ def test_timer_can_repeat_with_interval():
         assert duration >= 0.25
 
 
+@pytest.mark.loopback
+@pytest.mark.timer
 def test_timer_can_repeat_with_interval_after_offset():
     with Timer(offset=0.25, interval=0.125) as timer:
         start = time()
@@ -56,6 +67,8 @@ def test_timer_can_repeat_with_interval_after_offset():
         assert duration >= 0.5
 
 
+@pytest.mark.loopback
+@pytest.mark.timer
 def test_timer_cannot_be_started_if_offset_and_interval_are_both_zero():
     with Timer() as timer:
         try:
@@ -66,6 +79,8 @@ def test_timer_cannot_be_started_if_offset_and_interval_are_both_zero():
             pass
 
 
+@pytest.mark.loopback
+@pytest.mark.timer
 def test_timer_reports_how_many_times_it_triggered_since_last_wait():
     with Timer(interval=0.0125) as timer:
         timer.start()
