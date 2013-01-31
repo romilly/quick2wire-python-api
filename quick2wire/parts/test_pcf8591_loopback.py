@@ -13,7 +13,7 @@ ANALOGUE_IN = 1
 def test_pcf8591_loopback():
     with I2CMaster() as i2c:
         adc = PCF8591(i2c, FOUR_SINGLE_ENDED)
-        input = adc.input(ANALOGUE_IN)
+        input = adc.single_ended_input(ANALOGUE_IN)
         
         with adc.output as output:
             for i in range(256):

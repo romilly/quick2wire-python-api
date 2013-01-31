@@ -7,11 +7,10 @@ from quick2wire.i2c import I2CMaster
 
 address = int(sys.argv[1]) if len(sys.argv) > 1 else DEFAULT_ADDRESS
 pin_index = int(sys.argv[2]) if len(sys.argv) > 2 else 0
-mode = int(sys.argv[3]) if len(sys.argv) > 3 else FOUR_SINGLE_ENDED
 
 with I2CMaster() as i2c:
-    adc = PCF8591(i2c, mode)
-    pin = adc.input_pin(pin_index)
+    adc = PCF8591(i2c, FOUR_SINGLE_ENDED)
+    pin = adc.single_ended_input(pin_index)
     
     count = 1
     while True:
