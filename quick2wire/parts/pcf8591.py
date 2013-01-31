@@ -98,12 +98,12 @@ class PCF8591(object):
             self._single_ended_inputs = ()
             self._differential_inputs = tuple(_InputChannel(self,i,self.read_differential) for i in range(2))
         elif mode == SINGLE_ENDED_AND_DIFFERENTIAL:
-            self._single_ended_inputs = tuple(_InputChannel(self,i,self.read_single_ended) for i in range(2))
+            self._single_ended_inputs = tuple(_InputChannel(self,i,self.read_single_ended) for i in (0,1))
             self._differential_inputs = (_InputChannel(self,2,self.read_differential),)
         elif mode == THREE_DIFFERENTIAL:
             self._single_ended_inputs = ()
             self._differential_inputs = tuple(_InputChannel(self,i,self.read_differential) for i in range(3))
-        
+    
     @property
     def output(self):
         """The single analogue output channel"""
