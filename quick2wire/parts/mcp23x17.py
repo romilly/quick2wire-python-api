@@ -9,6 +9,7 @@ differ, and they must be defined by subclassing the Registers class.
 
 import contextlib
 from warnings import warn
+from quick2wire.gpio import PinAPI, PinBankAPI
 
 # TODO - import from GPIO or common definitions module
 In = "in"
@@ -208,7 +209,7 @@ def immediate_write(f):
     f()
 
 
-class PinBank(object):
+class PinBank(PinBankAPI):
     """A bank of 8 GPIO pins"""
     
     def __init__(self, chip, bank_id):
@@ -320,13 +321,12 @@ def _register_bit(register, doc, high_value=True, low_value=False):
     
     return property(_read, _write, doc=doc)
 
-class Pin(object):
+class Pin(PinAPI):
     """A digital Pin that can be used for input or output."""
     
     def __init__(self, bank, index):
         """Called by the PinBank.  Not used by application code."""
-        self.bank = bank
-        self.index = index
+        super(Pin,self).__init__(bank,index)
         self._is_claimed = False
     
     def open(self):
@@ -341,13 +341,6 @@ class Pin(object):
     def close(self):
         self._is_claimed = False
     
-    def __enter__(self):
-        self.open()
-        return self
-    
-    def __exit__(self, exc_type, exc_value, traceback):
-        self.close()
-    
     def get(self):
         """Returns the value of the pin.  
         
@@ -361,8 +354,6 @@ class Pin(object):
         The same as pin.value, but a method so that it can easily be passed around as a function.
         """
         self._set_register_bit(OLAT, new_value)
-        
-    value = property(get, set, doc="""The value of the pin: 1 if the pin is high, 0 if the pin is low.""")
     
     direction = _register_bit(IODIR, high_value=In, low_value=Out,
                               doc="""The direction of the pin: In if the pin is used for input, Out if it is used for output.""")

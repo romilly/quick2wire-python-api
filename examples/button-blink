@@ -1,12 +1,13 @@
-#!/usr/bin/python3
+#!/usr/bin/env python3
 
 import sys
 from time import sleep
-from quick2wire.gpio import GPIOPin, In, Out
+from quick2wire.gpio import pins, In, Out
 
-led = GPIOPin(1, direction=Out)
-button = GPIOPin(0, direction=In)
+led = pins.pin(1, direction=Out)
+button = pins.pin(0, direction=In)
 
-while True:
-      led.value = button.value
-      sleep(0.1)
+with led, button:
+     while True:
+          led.value = button.value
+          sleep(0.1)

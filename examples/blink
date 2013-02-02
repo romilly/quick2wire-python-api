@@ -2,16 +2,12 @@
 
 import sys
 from time import sleep
-from quick2wire.gpio import GPIOPin, Out
+from quick2wire.gpio import pins, Out
 
-pin = GPIOPin(int(sys.argv[1]) if len(sys.argv) > 1 else 1, direction=Out)
-
-
-try:
+pin = pins.pin(int(sys.argv[1]) if len(sys.argv) > 1 else 1, direction=Out)
+with pin:
     pin.value = 1
     while True:
         sleep(1)
         pin.value = 1 - pin.value
-except KeyboardInterrupt:
-    pin.value = 0
-    pin.unexport()
+
