@@ -279,5 +279,5 @@ def map_with(pin_mapping):
 
 pi_broadcom_soc = PinBank(lambda p: p)
 pi_header_1 = PinBank(map_with(_pi_header_1_pins))
-gpio_breakout = PinBank(map_with(_pi_gpio_pins), len(_pi_gpio_pins))
+pins = PinBank(map_with(_pi_gpio_pins), len(_pi_gpio_pins))
 

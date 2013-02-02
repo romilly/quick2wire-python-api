@@ -1,5 +1,5 @@
 
-from quick2wire.gpio import pi_header_1, gpio_breakout, In, Out
+from quick2wire.gpio import pins, pi_header_1, In, Out
 from time import sleep
 import pytest
 
@@ -12,7 +12,7 @@ def inverse(topology):
 @pytest.mark.gpio
 def test_gpio_loopback():
     assert_outputs_seen_at_corresponding_inputs(
-        gpio_breakout, 
+        pins, 
         [(i,i+4) for i in range(4)])
 
 
