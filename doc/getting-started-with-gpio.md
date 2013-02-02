@@ -24,23 +24,23 @@ Now Let's Write Some Code!
 
 The GPIO pins are controlled by Pin objects, and those Pin objects are
 managed by a "pin bank".  The simplest pin bank to use is called
-`gpio_breakout` and gives access to the pins labelled P0 to P7 on the
+`pins` and gives access to the pins labelled P0 to P7 on the
 Quick2Wire interface board (or named GPIO0 to GPIO7 on the Raspberry
 Pi's header number 1).  There's also a bank called pi_header_1 that
 gives access to all the header pins, but we don't need that for this
 example.
 
-Python programs must import the `gpio` pin bank from the
+Python programs must import the `pins` pin bank from the
 `quick2wire.gpio` module, along with constants to configure the pin:
 
-    from quick2wire.gpio import gpio_breakout, In, Out
+    from quick2wire.gpio import pins, In, Out
 
 Then you can get a Pin by calling the pin bank's `pin` method. This
 takes two arguments: the pin number and whether the pin is to be used
 for input or output.
 
-    in_pin = gpio_breakout.pin(0, direction=In)
-    out_pin = gpio_breakout.pin(1, direction=Out)
+    in_pin = pins.pin(0, direction=In)
+    out_pin = pins.pin(1, direction=Out)
 
 You must open a pin before you can read or write its value and close
 the pin when you no longer need it.  The most convenient way to do
@@ -57,10 +57,10 @@ A pin has a value of 1 when high, a value of 0 when low.
 
 Putting it all together into a single program:
 
-    from quick2wire.gpio import gpio_breakout, In, Out
+    from quick2wire.gpio import pins, In, Out
     
-    in_pin = gpio_breakout.pin(0, direction=In)
-    out_pin = gpio_breakout.pin(1, direction=Out)
+    in_pin = pins.pin(0, direction=In)
+    out_pin = pins.pin(1, direction=Out)
     
     with in_pin, out_pin:
         out_pin.value = 1
@@ -71,9 +71,9 @@ Here's a slightly more complicated example that blinks an LED attached to pin 1.
 loop forever until the user stops it with a Control-C.
 
     from time import sleep
-    from quick2wire.gpio import gpio_breakout, Out
+    from quick2wire.gpio import pins, Out
     
-    with gpio_breakout.pin(1, direction=Out) as pin:
+    with pins.pin(1, direction=Out) as pin:
         while True:
             pin.value = 1 - pin.value
             sleep(1)
