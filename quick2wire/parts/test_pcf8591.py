@@ -2,7 +2,7 @@
 from quick2wire.i2c_ctypes import I2C_M_RD
 from quick2wire.gpio import In
 from quick2wire.parts.pcf8591 import PCF8591, FOUR_SINGLE_ENDED, THREE_DIFFERENTIAL, SINGLE_ENDED_AND_DIFFERENTIAL, TWO_DIFFERENTIAL
-from factcheck import forall, from_range
+import pytest
 
 
 class FakeI2CMaster:
@@ -71,8 +71,6 @@ def correct_message_for(adc):
     return check
 
 
-octets = from_range(256)
-
 
 def setup_function(f):
     i2c.clear()
@@ -110,6 +108,10 @@ def test_can_be_created_with_two_differential_inputs():
     assert adc.single_ended_input_count == 0
     assert adc.differential_input_count == 2
     assert_all_input_pins_report_direction(adc)
+
+def test_cannot_be_created_with_an_invalid_mode():
+    with pytest.raises(ValueError):
+        PCF8591(i2c, 999)
 
 def test_can_read_a_single_ended_pin():
     adc = create_pcf8591(i2c, FOUR_SINGLE_ENDED, samples=1)

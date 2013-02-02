@@ -1,12 +1,91 @@
 """
-Application-programming interface for the PCF8591 I2C A/D D/A converter.
+API for the PCF8591 I2C A/D D/A converter.
+
+The PCF8591 has four physical input pins, named AIN0 to AIN3, at which
+it measures voltage, and a single physical output pin, named AOUT, at
+which it generates analogue output.
+
+Applications control the chip by setting the state of logical channels
+that the chip maps to its physical pins. There is one output channel
+and up to four input channels, depending on the mode.  Input channels
+are either _single-ended_, measuring the voltage on a input pin, or
+_differential_, measuring the voltage difference between two input
+pins.
+
+A PCF8591 is created with an I2CMaster, through which it communicates
+with the chip, and a mode, one of:
+
+FOUR_SINGLE_ENDED -- four single-ended channels reporting voltage at
+                     AIN0 to AIN3, no differential inputs.
+
+THREE_DIFFERENTIAL -- three differential inputs reporting voltage
+                      difference between AIN0 to AIN2 and AIN3. No
+                      single-ended channels.
+
+SINGLE_ENDED_AND_DIFFERENTIAL -- two single ended channels reporting
+                                 voltage at AIN0 and AIN1 and one
+                                 differential channel reporting the
+                                 voltage difference between AIN2 and
+                                 AIN3.
+
+TWO_DIFFERENTIAL -- two differential channels, the first reporting the
+                    voltage difference between AIN0 and AIN1, and the
+                    second reporting the voltage difference between
+                    AIN2 and AIN3. No single-ended channels.
+
+(See the documentation for the PCF8591 class for additional, optional
+constructor parameters.)
+
+For example:
+
+    with I2CMaster() as i2c:
+        adc = PCF8591(i2c, SINGLE_ENDED_AND_DIFFERENTIAL)
+        
+        assert adc.single_ended_input_count == 2
+        assert adc.differential_input_count == 1
+
+
+Once created you can use the channels of the PCF8591.  Input channels
+are obtained from the `single_ended_input` and `differential_input`
+methods.
+
+    input = adc.single_ended_input(0)
+    dinput = adc.differential_input(0)
+
+The analogue signal of a channel is obtained by querying its `value`
+property.  For single-ended channels the value varies between 0 and 1.
+For differential channels the value varies between -1 and 1.
+
+The PCF8591 uses the successive approximation conversion technique.
+The initial sample returned from the chip will be inaccurate and
+successive samples will return increasingly accurate measurements.
+Thus there is a trade-off between speed and accuracy.  The PCF8591
+class lets you tune this trade off by setting the number of samples
+that are made every time the `value` property is queried by specifying
+the `samples` parameter when instantiating the PCF8591 and by
+assigning to the `samples` property after construction.
+
+The output channel must be opened before use, to turn on the chip's
+D/A converter, and closed when no longer required, to turn it off
+again and conserve power. It's easiest to do this with a context
+manager.  When turned on, assigning a value between 0 and 1 to the
+output channel's `value` property with set the voltage at the chip's
+physical AOUT pin:
+
+    with adc.output as output:
+        # the D/A converter in the chip is now turned on
+        output.value = 0.75
+   
+    # at the end of the with statement the D/A converter is turned off again
+
+
 """
 
 from ctypes import c_int8
 from quick2wire.i2c import writing_bytes, reading
 from quick2wire.gpio import Out, In
 
-DEFAULT_ADDRESS = 0x48
+BASE_ADDRESS = 0x48
 
 FOUR_SINGLE_ENDED = 0
 THREE_DIFFERENTIAL = 1
@@ -17,73 +96,25 @@ _ANALOGUE_OUTPUT_ENABLE_FLAG = 1 << 6
 
 
 
-class _OutputChannel(object):
-    def __init__(self, bank):
-        self.bank = bank
-        self._value = 0x80
-    
-    def open(self):
-        self.bank._enable_output()
-    
-    def close(self):
-        self.bank._disable_output()
-    
-    def __enter__(self):
-        self.open()
-        return self
-    
-    def __exit__(self, *exc):
-        self.close()
-        return False
-    
-    @property
-    def direction(self):
-        return Out
-    
-    def get(self):
-        return self._value
-    
-    def set(self, value):
-        self._value = value
-        self.bank.write(self._value)
-    
-    value = property(get, set)
-
-
-class _InputChannel(object):
-    def __init__(self, bank, index, read_fn):
-        self.bank = bank
-        self.index = index
-        self._read = read_fn
-    
-    @property
-    def direction(self):
-        return In
-    
-    def get(self):
-        return self._read(self.index)
-    
-    value = property(get)
-    
-    # No-op implementations of Pin resource management API
-    
-    def open(self):
-        pass
-    
-    def close(self):
-        pass
-    
-    def __enter__(self):
-        return self
-    
-    def __exit__(self, *exc):
-        return False
-
-
 class PCF8591(object):
-    """API to query and control an PCF8591 A/D and D/A converter via I2C"""
+    """API to query and control an PCF8591 A/D and D/A converter via I2C.
     
-    def __init__(self, master, mode, address=DEFAULT_ADDRESS, samples=3):
+    See module documentation for details on how to use this class.
+    """
+    
+    def __init__(self, master, mode, address=BASE_ADDRESS, samples=3):
+        """Initialises a PCF8591.
+        
+        Parameters:
+        master -- the I2CMaster with which to communicate with the
+                  PCF8591 chip.
+        mode -- one of FOUR_SINGLE_ENDED, TWO_DIFFERENTIAL, 
+                THREE_DIFFERENTIAL or SINGLE_ENDED_AND_DIFFERENTIAL.
+        address -- the I2C address of the PCF8591 chip.
+                   (optional, default = BASE_ADDRESS)
+        samples -- the number of samples made per query.
+                   (optional, default = 3)
+        """
         self.master = master
         self.address = address
         self.samples = samples
@@ -103,6 +134,8 @@ class PCF8591(object):
         elif mode == THREE_DIFFERENTIAL:
             self._single_ended_inputs = ()
             self._differential_inputs = tuple(_InputChannel(self,i,self.read_differential) for i in range(3))
+        else:
+            raise ValueError("invalid mode " + str(mode))
     
     @property
     def output(self):
@@ -167,3 +200,67 @@ class PCF8591(object):
             results = self.master.transaction(reading(self.address, 1))
         
         return results[0][0]
+
+
+class _OutputChannel(object):
+    def __init__(self, bank):
+        self.bank = bank
+        self._value = 0x80
+    
+    def open(self):
+        self.bank._enable_output()
+    
+    def close(self):
+        self.bank._disable_output()
+    
+    def __enter__(self):
+        self.open()
+        return self
+    
+    def __exit__(self, *exc):
+        self.close()
+        return False
+    
+    @property
+    def direction(self):
+        return Out
+    
+    def get(self):
+        return self._value
+    
+    def set(self, value):
+        self._value = value
+        self.bank.write(self._value)
+    
+    value = property(get, set)
+
+
+class _InputChannel(object):
+    def __init__(self, bank, index, read_fn):
+        self.bank = bank
+        self.index = index
+        self._read = read_fn
+    
+    @property
+    def direction(self):
+        return In
+    
+    def get(self):
+        return self._read(self.index)
+    
+    value = property(get)
+    
+    # No-op implementations of Pin resource management API
+    
+    def open(self):
+        pass
+    
+    def close(self):
+        pass
+    
+    def __enter__(self):
+        return self
+    
+    def __exit__(self, *exc):
+        return False
+
