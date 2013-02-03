@@ -10,7 +10,7 @@ blink_rate = 2.0
 led = pins.pin(1, direction=Out)
 button = pins.pin(0, direction=In)
 
-with led:
+with led, button:
     print("ready")
     
     for v in cycle([1,0]):
