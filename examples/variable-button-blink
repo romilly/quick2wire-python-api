@@ -5,17 +5,27 @@ import os
 from contextlib import closing
 from quick2wire.gpio import pins, Both, In, Out
 from quick2wire.selector import Selector, Timer
+from quick2wire.i2c import I2CMaster
+from quick2wire.parts.pcf8591 import PCF8591, FOUR_SINGLE_ENDED
 
-blink_rate=2.0
+max_blink_rate=5.0
+min_blink_rate=1.0
 
 with pins.pin(0, direction=In, interrupt=Both) as button, \
      pins.pin(1, direction=Out) as led, \
-     Timer(interval=1/blink_rate) as timer, \
+     I2CMaster() as i2c, \
+     Timer() as timer, \
      Selector() as selector:
+    
+    adc = PCF8591(i2c, FOUR_SINGLE_ENDED)
+    rate_input = adc.single_ended_input(0)
+    
+    def blink_interval():
+        return 1 / (min_blink_rate + rate_input.value * (max_blink_rate - min_blink_rate))
     
     selector.add(button)
     selector.add(timer)
-    
+
     print("ready")
     
     while True:
@@ -24,6 +34,7 @@ with pins.pin(0, direction=In, interrupt=Both) as button, \
         if selector.ready == button:
             if button.value:
                 led.value = 1
+                timer.interval = blink_interval()
                 timer.start()
             else:
                 led.value = 0
@@ -32,3 +43,5 @@ with pins.pin(0, direction=In, interrupt=Both) as button, \
         elif selector.ready == timer:
             timer.wait()
             led.value = not led.value
+            timer.interval = blink_interval()
+

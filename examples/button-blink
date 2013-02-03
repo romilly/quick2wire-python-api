@@ -1,13 +1,18 @@
 #!/usr/bin/env python3
 
 import sys
+from itertools import cycle
 from time import sleep
 from quick2wire.gpio import pins, In, Out
+
+blink_rate = 2.0
 
 led = pins.pin(1, direction=Out)
 button = pins.pin(0, direction=In)
 
 with led, button:
-     while True:
-          led.value = button.value
-          sleep(0.1)
+    print("ready")
+    
+    for v in cycle([1,0]):
+        led.value = v * button.value
+        sleep(1/blink_rate)
