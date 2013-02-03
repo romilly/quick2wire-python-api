@@ -67,6 +67,31 @@ def test_timer_can_repeat_with_interval_after_offset():
         assert duration >= 0.5
 
 
+def test_can_change_offset_while_timer_is_running():
+    with Timer(offset=1.0) as timer:
+        start = time()
+        timer.start()
+        timer.offset = 0.125
+        timer.wait()
+        
+        duration = time() - start
+        
+        assert duration < 1
+
+
+def test_can_change_interval_while_timer_is_running():
+    with Timer(offset=0.125, interval=1.0) as timer:
+        start = time()
+        timer.start()
+        timer.wait()
+        timer.interval = 0.125
+        timer.wait()
+        
+        duration = time() - start
+        
+        assert duration < 1
+
+
 @pytest.mark.loopback
 @pytest.mark.timer
 def test_timer_cannot_be_started_if_offset_and_interval_are_both_zero():
