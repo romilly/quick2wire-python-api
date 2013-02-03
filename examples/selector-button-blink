@@ -8,12 +8,12 @@ from quick2wire.selector import Selector, Timer
 
 blink_rate=2.0
 
-with pins.pin(0, direction=In, interrupt=Both) as button_pin, \
-     pins.pin(1, direction=Out) as led_pin, \
+with pins.pin(0, direction=In, interrupt=Both) as button, \
+     pins.pin(1, direction=Out) as led, \
      Timer(interval=1/blink_rate) as timer, \
      Selector() as selector:
     
-    selector.add(button_pin)
+    selector.add(button)
     selector.add(timer)
     
     print("ready")
@@ -21,13 +21,14 @@ with pins.pin(0, direction=In, interrupt=Both) as button_pin, \
     while True:
         selector.wait()
         
-        if selector.ready == button_pin:
-            if button_pin.value:
-                led_pin.value = 1
+        if selector.ready == button:
+            if button.value:
+                led.value = 1
                 timer.start()
             else:
-                led_pin.value = 0
+                led.value = 0
                 timer.stop()
+        
         elif selector.ready == timer:
             timer.wait()
             led_pin.value = not led_pin.value
