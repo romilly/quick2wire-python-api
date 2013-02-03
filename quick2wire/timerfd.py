@@ -142,7 +142,7 @@ class Timer(syscall.SelfClosing):
     def offset(self, new_offset):
         self._offset = new_offset
         if self._started:
-            self._schedule()
+            self._apply_schedule()
     
     @property
     def interval(self):
@@ -156,7 +156,7 @@ class Timer(syscall.SelfClosing):
     def interval(self, new_interval):
         self._interval = new_interval
         if self._started:
-            self._schedule()
+            self._apply_schedule()
     
     def start(self):
         """Starts the timer running.
@@ -167,7 +167,7 @@ class Timer(syscall.SelfClosing):
         if self._offset == 0 and self._interval == 0:
             raise ValueError("timer will not fire because offset and interval are both zero")
         
-        self._schedule(self._offset or self._interval, self._interval)
+        self._apply_schedule()
         self._started = True
         
     def stop(self):
@@ -199,7 +199,10 @@ class Timer(syscall.SelfClosing):
             else:
                 raise e
     
+    def _apply_schedule(self):
+        self._schedule(self._offset or self._interval, self._interval)
+    
     def _schedule(self, offset, interval):
         spec = itimerspec.from_seconds(offset, interval)
         timerfd_settime(self._fd, 0, byref(spec), None)
-
+    
