@@ -229,55 +229,62 @@ class PinBank(PinBankAPI):
 
 _pi_revision = revision()
 
-def by_revision(d):
-    return d[_pi_revision]
+if _pi_revision == 0:
+    # Not running on the Raspberry Pi, so define no-op pin banks
+    pins = PinBank(lambda p: p)
+    pi_broadcom_soc = pins
+    pi_header_1 = pins
+
+else:
+    def by_revision(d):
+        return d[_pi_revision]
 
 
-# Maps header pin numbers to SoC GPIO numbers
-# See http://elinux.org/RPi_Low-level_peripherals
-#
-# Note: - header pins are numbered from 1, SoC GPIO from zero 
-#       - the Pi documentation identifies some header pins as GPIO0,
-#         GPIO1, etc., but these are not the same as the SoC GPIO
-#         numbers.
-
-_pi_header_1_pins = {
-    3:  by_revision({1:0, 2:2}), 
-    5:  by_revision({1:1, 2:3}), 
-    7:  4, 
-    8:  14, 
-    10: 15, 
-    11: 17, 
-    12: 18, 
-    13: by_revision({1:21, 2:27}), 
-    15: 22, 
-    16: 23, 
-    18: 24, 
-    19: 10, 
-    21: 9, 
-    22: 25, 
-    23: 11, 
-    24: 8,
-    26: 7
-}
-
-_pi_gpio_pins = [_pi_header_1_pins[i] for i in [11, 12, 13, 15, 16, 18, 22, 7]]
-
-
-def lookup(pin_mapping, i):
-    try:
-        if i >= 0:
-            return pin_mapping[i]
-    except LookupError:
-        pass
+    # Maps header pin numbers to SoC GPIO numbers
+    # See http://elinux.org/RPi_Low-level_peripherals
+    #
+    # Note: - header pins are numbered from 1, SoC GPIO from zero 
+    #       - the Pi documentation identifies some header pins as GPIO0,
+    #         GPIO1, etc., but these are not the same as the SoC GPIO
+    #         numbers.
     
-    raise IndexError(str(i) + " is not a valid pin index")
+    _pi_header_1_pins = {
+        3:  by_revision({1:0, 2:2}), 
+        5:  by_revision({1:1, 2:3}), 
+        7:  4, 
+        8:  14, 
+        10: 15, 
+        11: 17, 
+        12: 18, 
+        13: by_revision({1:21, 2:27}), 
+        15: 22, 
+        16: 23, 
+        18: 24, 
+        19: 10, 
+        21: 9, 
+        22: 25, 
+        23: 11, 
+        24: 8,
+        26: 7
+        }
+    
+    _pi_gpio_pins = [_pi_header_1_pins[i] for i in [11, 12, 13, 15, 16, 18, 22, 7]]
+    
+    
+    def lookup(pin_mapping, i):
+        try:
+            if i >= 0:
+                return pin_mapping[i]
+        except LookupError:
+            pass
+        
+        raise IndexError(str(i) + " is not a valid pin index")
 
-def map_with(pin_mapping):
-    return lambda i: lookup(pin_mapping,i)
-
-
-pi_broadcom_soc = PinBank(lambda p: p)
-pi_header_1 = PinBank(map_with(_pi_header_1_pins))
-pins = PinBank(map_with(_pi_gpio_pins), len(_pi_gpio_pins))
-
+    def map_with(pin_mapping):
+        return lambda i: lookup(pin_mapping,i)
+    
+    
+    pi_broadcom_soc = PinBank(lambda p: p)
+    pi_header_1 = PinBank(map_with(_pi_header_1_pins))
+    pins = PinBank(map_with(_pi_gpio_pins), len(_pi_gpio_pins))
+    
