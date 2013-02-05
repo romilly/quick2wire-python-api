@@ -1,9 +1,6 @@
 #!/usr/bin/env python3
 
-import sys
-import os
-from contextlib import closing
-from quick2wire.gpio import pins, Both, In, Out
+from quick2wire.gpio import pins, In, Out, Both
 from quick2wire.selector import Selector, Timer
 from quick2wire.i2c import I2CMaster
 from quick2wire.parts.pcf8591 import PCF8591, FOUR_SINGLE_ENDED
@@ -11,8 +8,10 @@ from quick2wire.parts.pcf8591 import PCF8591, FOUR_SINGLE_ENDED
 max_blink_rate=5.0
 min_blink_rate=1.0
 
-with pins.pin(0, direction=In, interrupt=Both) as button, \
-     pins.pin(1, direction=Out) as led, \
+button = pins.pin(0, direction=In, interrupt=Both)
+led = pins.pin(1, direction=Out)
+
+with button, led, \
      I2CMaster() as i2c, \
      Timer() as timer, \
      Selector() as selector:

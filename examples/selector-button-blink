@@ -1,16 +1,13 @@
 #!/usr/bin/env python3
 
-import sys
-import os
-from contextlib import closing
-from quick2wire.gpio import pins, Both, In, Out
+from quick2wire.gpio import pins, In, Out, Both
 from quick2wire.selector import Selector, Timer
 
-blink_rate=2.0
+button = pins.pin(0, direction=In, interrupt=Both)
+led = pins.pin(1, direction=Out)
 
-with pins.pin(0, direction=In, interrupt=Both) as button, \
-     pins.pin(1, direction=Out) as led, \
-     Timer(interval=1/blink_rate) as timer, \
+with button, led, \
+     Timer(interval=0.5) as timer, \
      Selector() as selector:
     
     selector.add(button)

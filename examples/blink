@@ -1,19 +1,16 @@
 #!/usr/bin/env python3
 
-import sys
 from itertools import cycle
 from time import sleep
 from quick2wire.gpio import pins, Out
 
-blink_rate = 2.0
-
-led = pins.pin(int(sys.argv[1]) if len(sys.argv) > 1 else 1, direction=Out)
+led = pins.pin(1, direction=Out)
 
 led_state = 1
 
 with led:
     for v in cycle([1,0]):
         led.value = v
-        sleep(1/blink_rate)
+        sleep(0.5)
 
 
