@@ -227,6 +227,12 @@ class PinBank(PinBankAPI):
             raise TypeError(self.__class__.__name__ + " has no len")
 
 
+BUTTON = 0
+LED = 1
+SPI_INTERRUPT = 6
+I2C_INTERRUPT = 7
+
+
 _pi_revision = revision()
 
 if _pi_revision == 0:
@@ -288,3 +294,4 @@ else:
     pi_header_1 = PinBank(map_with(_pi_header_1_pins))
     pins = PinBank(map_with(_pi_gpio_pins), len(_pi_gpio_pins))
     
+
