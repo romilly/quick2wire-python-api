@@ -160,11 +160,11 @@ class PCF8591(object):
         """Returns the n'th differential analogue input channel"""        
         return self._differential_inputs[n]
     
-    def _enable_output(self):
+    def enable_output(self):
         self._control_flags |= _ANALOGUE_OUTPUT_ENABLE_FLAG
         self._write_control_flags()
     
-    def _disable_output(self):
+    def disable_output(self):
         self._control_flags &= ~_ANALOGUE_OUTPUT_ENABLE_FLAG
         self._write_control_flags()
     
@@ -208,10 +208,10 @@ class _OutputChannel(object):
         self._value = 0x80
     
     def open(self):
-        self.bank._enable_output()
+        self.bank.enable_output()
     
     def close(self):
-        self.bank._disable_output()
+        self.bank.disable_output()
     
     def __enter__(self):
         self.open()
