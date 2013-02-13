@@ -157,7 +157,7 @@ def test_can_read_a_differential_pin():
     assert is_read(m2)
     assert m2.len == 1
     
-    assert_is_approx(-0.5, sample)
+    assert_is_approx(-0.25, sample)
 
 
 def test_sends_correct_mode_bits_for_four_single_ended_mode():

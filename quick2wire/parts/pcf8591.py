@@ -81,7 +81,6 @@ physical AOUT pin:
 
 """
 
-from ctypes import c_int8
 from quick2wire.i2c import writing_bytes, reading
 from quick2wire.gpio import Out, In
 
@@ -189,7 +188,9 @@ class PCF8591(object):
         return self.read_raw(channel) / 255.0
     
     def read_differential(self, channel):
-        return c_int8(self.read_raw(channel)).value / 128.0
+        unsigned = self.read_raw(channel)
+        signed =  (unsigned & 127) - (unsigned & 128)
+        return signed / 256.0
     
     def read_raw(self, channel):
         if channel != self._last_channel_read:
