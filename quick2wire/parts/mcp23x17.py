@@ -156,7 +156,7 @@ class PinBanks(object):
     
     __getitem__ = bank
     
-    def reset(self, interrupt_polarity=0, interrupt_open_drain=False, interrupt_mirror=False):
+    def reset(self, interrupt_polarity=0, interrupt_open_drain=False, interrupt_mirror=True):
         """Resets the chip to power-on state and sets configuration flags in the IOCON register
         
         Parameters:
@@ -174,7 +174,10 @@ class PinBanks(object):
                                 internally connected.
                                 False = the interrupt output pins are 
                                 not connected, INTA is associated with
-                                PortA and INTB is associated with PortB
+                                PortA and INTB is associated with PortB.
+                                Should be set to True (the default) if 
+                                using the Quick2Wire MCP23017 expander 
+                                board.
         """
         
         self.registers.reset((interrupt_polarity << IOCON_INTPOL)
