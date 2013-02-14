@@ -1,19 +1,20 @@
 """
 API for the PCF8591 I2C A/D D/A converter.
 
-The PCF8591 has four physical input pins, named AIN0 to AIN3, at which
-it measures voltage, and a single physical output pin, named AOUT, at
-which it generates analogue output.
+The PCF8591 chip has four physical input pins, named AIN0 to AIN3, at
+which it measures voltage, and a single physical output pin, named
+AOUT, at which it generates analogue output.
 
-Applications control the chip by setting the state of logical channels
-that the chip maps to its physical pins. There is one output channel
-and up to four input channels, depending on the mode.  Input channels
-are either _single-ended_, measuring the voltage on a input pin, or
-_differential_, measuring the voltage difference between two input
-pins.
+Applications  control the  chip by  setting  or getting  the state  of
+logical channels that the chip maps to its physical pins. There is one
+output channel and  up to four input channels,  depending on the mode.
+Input channels  are either _single-ended_, measuring the  voltage on a
+input pin, or _differential_, measuring the voltage difference between
+two input pins.
 
-A PCF8591 is created with an I2CMaster, through which it communicates
-with the chip, and a mode, one of:
+Applications talk to the chip via objects of the PCF8591 class. A
+PCF8591 object is created with an I2CMaster, through which it
+communicates with the chip, and a mode, one of:
 
 FOUR_SINGLE_ENDED -- four single-ended channels reporting voltage at
                      AIN0 to AIN3, no differential inputs.
@@ -54,7 +55,9 @@ methods.
 
 The analogue signal of a channel is obtained by querying its `value`
 property.  For single-ended channels the value varies between 0 and 1.
-For differential channels the value varies between -1 and 1.
+For differential channels the value varies between -0.5 and 0.5,
+because the PCF8591 chip can only detect voltage differences of half
+that between its reference voltage and ground.
 
 The PCF8591 uses the successive approximation conversion technique.
 The initial sample returned from the chip will be inaccurate and
