@@ -84,7 +84,7 @@ physical AOUT pin:
 
 """
 
-from quick2wire.i2c import writing_bytes, reading
+from quick2wire.i2c import writing_bytes, reading_into
 from quick2wire.gpio import Out, In
 
 BASE_ADDRESS = 0x48
@@ -200,10 +200,12 @@ class PCF8591(object):
             self.master.transaction(writing_bytes(self.address, self._control_flags|channel))
             self._last_channel_read = channel
         
-        for i in range(self.samples):
-            results = self.master.transaction(reading(self.address, 1))
+        buf = bytearray(1)
         
-        return results[0][0]
+        for i in range(self.samples):
+            self.master.transaction(reading_into(self.address, buf))
+        
+        return buf[0]
 
 
 class _OutputChannel(object):

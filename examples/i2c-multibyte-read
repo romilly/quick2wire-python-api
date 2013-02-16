@@ -22,16 +22,18 @@ with i2c.I2CMaster() as bus:
         i2c.writing_bytes(address, iopol_register, 0b10101010))
     
     # Read a single byte (the GPIO register)
-    gpio_state = bus.transaction(
+    gpio_buf = bytearray(1)
+    bus.transaction(
         i2c.writing_bytes(address, gpio_register),
-        i2c.reading(address, 1))[0][0]
+        i2c.reading_into(address, gpio_buf))
     
     # Read two bytes, the IODIR register and, thanks to sequential
     # addressing mode, the next register, which is IOPOL
-    iodir_state, iopol_state = bus.transaction(
+    iodir_iopol_buf = bytearray(2)
+    bus.transaction(
         i2c.writing_bytes(address, iodir_register),
-        i2c.reading(address, 2))[0]
+        i2c.reading_into(address, iodir_iopol_buf))
     
-    print("GPIO: ", bin(gpio_state)[2:])
-    print("IODIR:", bin(iodir_state)[2:])
-    print("IOPOL:", bin(iopol_state)[2:])
+    print("GPIO: ", bin(gpio_buf[0])[2:])
+    print("IODIR:", bin(iodir_iopol_buf[0])[2:])
+    print("IOPOL:", bin(iodir_iopol_buf[1])[2:])

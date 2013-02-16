@@ -3,7 +3,7 @@ Low-level register access and a high-level application-programming
 interface for the MCP23017 I2C GPIO expander.
 """
 
-from quick2wire.i2c import writing_bytes, reading
+from quick2wire.i2c import writing_bytes, reading_into
 import quick2wire.parts.mcp23x17 as mcp23x17
 from quick2wire.parts.mcp23x17 import deferred_read, immediate_read, deferred_write, immediate_write, In, Out
 
@@ -56,8 +56,10 @@ class Registers(mcp23x17.Registers):
         
         Returns: the value of the register.
         """
-        return self.master.transaction(
+        buf = bytearray(1)
+        self.master.transaction(
             writing_bytes(self.address, register_id),
-            reading(self.address, 1))[0][0]
+            reading_into(self.address, buf))
+        return buf[0]
 
 
