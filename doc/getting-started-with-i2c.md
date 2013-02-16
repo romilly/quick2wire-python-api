@@ -5,13 +5,15 @@ Getting Started With I2C
 Warning:
 -------
 
-[Revision 2.0](http://www.raspberrypi.org/archives/1929) of the Raspberry Pi swaps the connections to I2C buses 0 and 1.
+[Revision 2.0](http://www.raspberrypi.org/archives/1929) of the
+Raspberry Pi swaps the connections to I2C buses 0 and 1.
 
-With a revision 2.0 board, if you connect an I2C device to the appropriate header,
-you will see it when you run `i2cdetect 1` instead of `i2cdetect 0`.
+With a revision 2.0 board, if you connect an I2C device to the
+appropriate header, you will see it when you run `i2cdetect 1` instead
+of `i2cdetect 0`.
 
-The library now auto-detects whether you are running version 1.0 or 2.0 of the board, so the same code will work on
-either.
+The library now auto-detects whether you are running version 1.0 or
+2.0 of the board, so the same code will work on either.
 
 The example:
 ------------
@@ -99,22 +101,23 @@ write to and the value of the register.
 Then we'll read the value of the chip's GPIO register by performing a
 transaction containing two operations: a write operation that tells
 the chip which register we want to read, and a read operation that
-reads a single byte from that register.
+reads a single byte from that register.  To issue a read operation we
+must allocate a buffer (of type bytearray) for the data to be read
+into and use that buffer to create a i2c.reading_into operation.  We
+only want to read a single byte, so we'll create a bytearray of size
+1.
 
+        buf = bytearray(1)
+        
         read_results = bus.transaction(
             i2c.writing_bytes(address, gpio_register),
-            i2c.reading(address, 1))
+            i2c.reading_into(address, buf))
 
-The I2CMaster' transaction method returns a list of byte sequences, one
-for each read operation performed.  Each result is an array of bytes
-read from the device.  So the state of the GPIO pins is the first and
-only byte of the first and only byte sequence returned.
+After the transaction has completed, we print out the state of the
+gpio_register, which has been read into the first and only byte in our
+byte buffer.
 
-        gpio_state = read_results[0][0]
-
-We finally print that in hexadecimal:
-
-        print("%02x" % gpio_state)
+        print("%02x" % buf[0])
 
 Putting it all together:
 
@@ -129,11 +132,11 @@ Putting it all together:
     with i2c.I2CMaster() as bus:    
         bus.transaction(
             i2c.writing_bytes(address, iodir_register, 0xFF))
-        
+
+	buf = bytearray(1)        
+
         read_results = bus.transaction(
             i2c.writing_bytes(address, gpio_register),
-            i2c.reading(address, 1))
+            i2c.reading_into(address, buf))
         
-        gpio_state = read_results[0][0]
-        
-        print("%02x" % gpio_state)
+        print("%02x" % buf[0])
