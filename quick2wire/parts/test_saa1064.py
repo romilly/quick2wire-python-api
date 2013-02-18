@@ -51,7 +51,7 @@ def test_static_display_brightest_by_default():
     controlMessage = i2c.request(0)[0]
     assert controlMessage.len == 2
     assert controlMessage.buf[0][0] == 0b00000000
-    assert controlMessage.buf[1][0] == 0b00000111
+    assert controlMessage.buf[1][0] == 0b11100110
 
 
 def test_dynamic_display_brightest_by_default():
@@ -64,12 +64,12 @@ def test_dynamic_display_brightest_by_default():
     controlMessage = i2c.request(0)[0]
     assert controlMessage.len == 2
     assert controlMessage.buf[0][0] == 0b00000000
-    assert controlMessage.buf[1][0] == 0b01000111
+    assert controlMessage.buf[1][0] == 0b11100111
 
 def test_display_brightness():
     saa1064 = SAA1064(i2c)
     saa1064.mode=DYNAMIC_MODE
-    saa1064.brightness=5
+    saa1064.brightness=0b01100000
     saa1064.configure()
 
     assert i2c.request_count == 1
@@ -77,7 +77,7 @@ def test_display_brightness():
     controlMessage = i2c.request(0)[0]
     assert controlMessage.len == 2
     assert controlMessage.buf[0][0] == 0b00000000
-    assert controlMessage.buf[1][0] == 0b01000101
+    assert controlMessage.buf[1][0] == 0b01100111
 
 def test_setting_pins_and_writing_outputs_to_i2c():
     saa1064 = SAA1064(i2c)

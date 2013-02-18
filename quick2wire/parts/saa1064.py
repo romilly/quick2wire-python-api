@@ -7,13 +7,14 @@ from quick2wire.i2c import writing_bytes
 
 displayController = 0x38
 STATIC_MODE = 0b00000000
-DYNAMIC_MODE = 0b01000000
+DYNAMIC_MODE = 0b00000001
+CONTINUOUS_DISPLAY = 0b00000110
 
 class SAA1064(object):
     def __init__(self, master):
         self.master = master
         self._mode = STATIC_MODE
-        self._brightness = 7
+        self._brightness = 0b11100000
         self._segment_output = tuple(_OutputPin(i) for i in range(8))
 
     def display(self, digits):
@@ -21,7 +22,7 @@ class SAA1064(object):
 
     def configure(self):
         self.master.transaction(
-            writing_bytes(displayController, 0b00000000, self.mode | self.brightness)
+            writing_bytes(displayController, 0b00000000, self.mode | self.brightness | CONTINUOUS_DISPLAY)
         )
 
     def write(self):
