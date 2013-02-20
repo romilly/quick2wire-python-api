@@ -142,3 +142,36 @@ def test_writing_two_digit_segment_outputs_to_i2c():
     assert message2.len == 2
     assert message2.byte(0) == 0b00000010
     assert message2.byte(1) == 0b01010000
+
+def test_writing_four_digit_segment_outputs_to_i2c():
+    saa1064 = SAA1064(i2c, digits=4)
+
+    saa1064.pin_bank(0).value=255
+    saa1064.pin_bank(1).value=127
+    saa1064.pin_bank(2).value=63
+    saa1064.pin_bank(3).value=31
+    saa1064.write()
+
+    assert i2c.request_count == 1
+
+    message1 = i2c.message(0, 0)
+    assert message1.len == 2
+    assert message1.byte(0) == 1
+    assert message1.byte(1) == 255
+
+    message2 = i2c.message(0, 1)
+    assert message2.len == 2
+    assert message2.byte(0) == 2
+    assert message2.byte(1) == 127
+
+    message3 = i2c.message(0, 2)
+    assert message3.len == 2
+    assert message3.byte(0) == 3
+    assert message3.byte(1) == 63
+
+    message4 = i2c.message(0, 3)
+    assert message4.len == 2
+    assert message4.byte(0) == 4
+    assert message4.byte(1) == 31
+
+
