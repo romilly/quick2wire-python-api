@@ -61,17 +61,24 @@ class SAA1064(object):
 
 class _PinBank(object):
     def __init__(self, index):
-        self._segment_output = tuple(_OutputPin(i) for i in range(8))
+        self._value = 0
+        self._segment_output = tuple(_OutputPin(self, i) for i in range(8))
         self.segment_address = index+1
 
     def segment_output(self, index):
         return self._segment_output[index]
 
     @property
+    def value(self):
+        return self._value
+
+    @value.setter
+    def value(self, value):
+        self._value = value
+
+    @property
     def i2c_message(self):
-        bits_to_write = [output.bit_value for output in self._segment_output]
-        byte_to_write = reduce(or_, bits_to_write)
-        return writing_bytes(displayController, self.segment_address, byte_to_write)
+        return writing_bytes(displayController, self.segment_address, self._value)
 
     def __getitem__(self, n):
         if 0 < n < len(self):
@@ -82,18 +89,14 @@ class _PinBank(object):
         return len(self._segment_output)
 
 class _OutputPin(object):
-    def __init__(self, index):
-        self._value = 0
+    def __init__(self, pin_bank, index):
+        self._pin_bank = pin_bank
         self._binary = 2 ** index
 
     @property
-    def bit_value(self):
-        return self._value * self._binary
-
-    @property
     def value(self):
-        return self._value
+        return self._pin_bank.value & self._binary
 
     @value.setter
     def value(self, value):
-        self._value = value
+        self._pin_bank.value = self._pin_bank.value | (self._binary * value)
