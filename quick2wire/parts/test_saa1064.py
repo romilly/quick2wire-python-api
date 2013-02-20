@@ -42,7 +42,7 @@ i2c = FakeI2CMaster()
 def setup_function(f):
     i2c.clear()
 
-def test_static_display_brightest_by_default():
+def test_static_non_blanked_brightest_display_by_default():
     saa1064 = SAA1064(i2c)
     saa1064.configure()
 
@@ -54,7 +54,7 @@ def test_static_display_brightest_by_default():
     assert controlMessage.buf[1][0] == 0b11100110
 
 
-def test_dynamic_display_brightest_by_default():
+def test_configuring_dynamic_display():
     saa1064 = SAA1064(i2c)
     saa1064.mode=DYNAMIC_MODE
     saa1064.configure()
@@ -66,7 +66,7 @@ def test_dynamic_display_brightest_by_default():
     assert controlMessage.buf[0][0] == 0b00000000
     assert controlMessage.buf[1][0] == 0b11100111
 
-def test_display_brightness():
+def test_configuring_display_brightness():
     saa1064 = SAA1064(i2c)
     saa1064.mode=DYNAMIC_MODE
     saa1064.brightness=0b01100000
@@ -79,25 +79,21 @@ def test_display_brightness():
     assert controlMessage.buf[0][0] == 0b00000000
     assert controlMessage.buf[1][0] == 0b01100111
 
-def test_setting_pins_and_writing_outputs_to_i2c():
+def test_writing_first_bank_segment_outputs_to_i2c():
     saa1064 = SAA1064(i2c)
-    saa1064.mode=STATIC_MODE
-    saa1064.brightness=5
-    saa1064.configure()
 
-    saa1064.segment_output(0).value=1
-    saa1064.segment_output(1).value=0
-    saa1064.segment_output(2).value=0
-    saa1064.segment_output(3).value=1
-    saa1064.segment_output(4).value=1
-    saa1064.segment_output(5).value=1
-    saa1064.segment_output(6).value=0
-    saa1064.segment_output(7).value=1
-
+    saa1064.pin_bank(0).segment_output(0).value=1
+    saa1064.pin_bank(0).segment_output(1).value=0
+    saa1064.pin_bank(0).segment_output(2).value=0
+    saa1064.pin_bank(0).segment_output(3).value=1
+    saa1064.pin_bank(0).segment_output(4).value=1
+    saa1064.pin_bank(0).segment_output(5).value=1
+    saa1064.pin_bank(0).segment_output(6).value=0
+    saa1064.pin_bank(0).segment_output(7).value=1
     saa1064.write()
 
-    assert i2c.request_count == 2
-    dataMessage = i2c.request(1)[0]
-    assert dataMessage.len == 2
-    assert dataMessage.buf[0][0] == 0b00000001
-    assert dataMessage.buf[1][0] == 0b10111001
+    assert i2c.request_count == 1
+    dataMessage = i2c.request(0)[0]
+    # assert dataMessage.len == 2
+    assert dataMessage[0].buf[0][0] == 0b00000001
+    assert dataMessage[0].buf[1][0] == 0b10111001
