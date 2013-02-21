@@ -17,6 +17,8 @@ class SAA1064(object):
         self.master = master
         self._mode = STATIC_MODE
         self._brightness = 0b11100000
+        if(digits > 4):
+            raise ValueError('SAA1064 only supports driving up to 4 digits')
         self._pin_bank = tuple(self.createPinBank(i) for i in range(digits))
 
     def display(self, digits):
@@ -29,30 +31,32 @@ class SAA1064(object):
 
     def write(self):
         i2c_messages = [pin_bank.i2c_message for pin_bank in self._pin_bank]
-        self.master.transaction(i2c_messages)
+        self.master.transaction(*i2c_messages)
 
     @property
     def mode(self):
         return self._mode
 
     @mode.setter
-    def mode(self, value):
-        self._mode = value
+    def mode(self, mode):
+        if(mode > 1):
+            raise ValueError('invalid mode ' + str(mode) + ' only STATIC_MODE and DYNAMIC_MODE are supported')
+        self._mode = mode
 
     @property
     def brightness(self):
         return self._brightness
 
     @brightness.setter
-    def brightness(self, value):
-        self._brightness = value
+    def brightness(self, brightness):
+        self._brightness = brightness
 
     def pin_bank(self, index):
         return self._pin_bank[index]
 
     def __getitem__(self, n):
         if 0 < n < len(self):
-            raise ValueError("no pin bank index {n} out of range", n=n)
+            raise ValueError('no pin bank index {n} out of range', n=n)
         return self._pin_bank[n]
 
     def __len__(self):
@@ -82,7 +86,7 @@ class _PinBank(object):
 
     def __getitem__(self, n):
         if 0 < n < len(self):
-            raise ValueError("no segment output index {n} out of range", n=n)
+            raise ValueError('no segment output index {n} out of range', n=n)
         return self._segment_output[n]
 
     def __len__(self):
