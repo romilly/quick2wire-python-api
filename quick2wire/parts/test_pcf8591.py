@@ -140,7 +140,64 @@ def test_can_read_a_single_ended_pin():
     assert_is_approx(0.25, sample)
 
 
+def test_can_read_raw_value_of_a_single_ended_pin():
+    adc = create_pcf8591(i2c, FOUR_SINGLE_ENDED)
+    
+    pin = adc.single_ended_input(2)
+    
+    i2c.add_response(bytes([0x80]))
+    i2c.add_response(bytes([0x40]))
+    
+    sample = pin.raw_value
+    
+    assert i2c.request_count == 2
+    
+    m1a,m1b = i2c.request(0)
+    assert is_write(m1a)
+    assert m1a.len == 1
+    assert m1a.buf[0][0] == 0b00000010
+    
+    assert is_read(m1b)
+    assert m1b.len == 1
+    
+    m2, = i2c.request(1)
+    assert is_read(m2)
+    assert m2.len == 1
+    
+    assert sample == 0x40
+
+
 def test_can_read_a_differential_pin():
+    adc = create_pcf8591(i2c, THREE_DIFFERENTIAL)
+    
+    pin = adc.differential_input(1)
+    
+
+    i2c.add_response(bytes([0x80]))
+    
+    # -64 in 8-bit 2's complement representation
+    i2c.add_response(bytes([0xC0]))
+    
+    sample = pin.raw_value
+    
+    assert i2c.request_count == 2
+    
+    m1a,m1b = i2c.request(0)
+    assert is_write(m1a)
+    assert m1a.len == 1
+    assert m1a.buf[0][0] == 0b00010001
+    
+    assert is_read(m1b)
+    assert m1b.len == 1
+    
+    m2, = i2c.request(1)
+    assert is_read(m2)
+    assert m2.len == 1
+    
+    assert sample == -64
+
+
+def test_can_read_raw_value_of_a_differential_pin():
     adc = create_pcf8591(i2c, THREE_DIFFERENTIAL)
     
     pin = adc.differential_input(1)
