@@ -113,19 +113,25 @@ class PCF8591(object):
         self._output = _OutputChannel(self)
         
         if mode == FOUR_SINGLE_ENDED:
-            self._single_ended_inputs = tuple(_InputChannel(self,i,self.read_single_ended) for i in range(4))
+            self._single_ended_inputs = tuple(self._create_single_ended_channel(i) for i in range(4))
             self._differential_inputs = ()
         elif mode == TWO_DIFFERENTIAL:
             self._single_ended_inputs = ()
-            self._differential_inputs = tuple(_InputChannel(self,i,self.read_differential) for i in range(2))
+            self._differential_inputs = tuple(self._create_differential_channel(i) for i in range(2))
         elif mode == SINGLE_ENDED_AND_DIFFERENTIAL:
-            self._single_ended_inputs = tuple(_InputChannel(self,i,self.read_single_ended) for i in (0,1))
-            self._differential_inputs = (_InputChannel(self,2,self.read_differential),)
+            self._single_ended_inputs = tuple(self._create_single_ended_channel(i) for i in (0,1))
+            self._differential_inputs = (self._create_differential_channel(2),)
         elif mode == THREE_DIFFERENTIAL:
             self._single_ended_inputs = ()
-            self._differential_inputs = tuple(_InputChannel(self,i,self.read_differential) for i in range(3))
+            self._differential_inputs = tuple(self._create_differential_channel(i) for i in range(3))
         else:
             raise ValueError("invalid mode " + str(mode))
+    
+    def _create_single_ended_channel(self, i):
+        return _InputChannel(self, i, self.read_single_ended, 255.0)
+    
+    def _create_differential_channel(self, i):
+        return _InputChannel(self, i, self.read_differential, 256.0)
     
     @property
     def output(self):
@@ -176,12 +182,13 @@ class PCF8591(object):
             writing_bytes(self.address, self._control_flags|self._last_channel_read, int_value))
     
     def read_single_ended(self, channel):
-        return self.read_raw(channel) / 255.0
+        """Read the 8-bit value of a single-ended input channel."""
+        return self.read_raw(channel)
     
     def read_differential(self, channel):
+        """Read the 8-bit value of a differential input channel."""
         unsigned = self.read_raw(channel)
-        signed =  (unsigned & 127) - (unsigned & 128)
-        return signed / 256.0
+        return (unsigned & 127) - (unsigned & 128)
     
     def read_raw(self, channel):
         if channel != self._last_channel_read:
@@ -228,19 +235,25 @@ class _OutputChannel(object):
 
 
 class _InputChannel(object):
-    def __init__(self, bank, index, read_fn):
+    def __init__(self, bank, index, read_fn, scale):
         self.bank = bank
         self.index = index
         self._read = read_fn
+        self._scale = scale
     
     @property
     def direction(self):
         return In
     
     def get(self):
-        return self._read(self.index)
+        return self.get_raw() / self._scale
     
     value = property(get)
+    
+    def get_raw(self):
+        return self._read(self.index)
+    
+    raw_value = property(get_raw)
     
     # No-op implementations of Pin resource management API
     
