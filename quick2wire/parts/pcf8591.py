@@ -59,15 +59,6 @@ For differential channels the value varies between -0.5 and 0.5,
 because the PCF8591 chip can only detect voltage differences of half
 that between its reference voltage and ground.
 
-The PCF8591 uses the successive approximation conversion technique.
-The initial sample returned from the chip will be inaccurate and
-successive samples will return increasingly accurate measurements.
-Thus there is a trade-off between speed and accuracy.  The PCF8591
-class lets you tune this trade off by setting the number of samples
-that are made every time the `value` property is queried by specifying
-the `samples` parameter when instantiating the PCF8591 and by
-assigning to the `samples` property after construction.
-
 The output channel must be opened before use, to turn on the chip's
 D/A converter, and closed when no longer required, to turn it off
 again and conserve power. It's easiest to do this with a context
@@ -104,7 +95,7 @@ class PCF8591(object):
     See module documentation for details on how to use this class.
     """
     
-    def __init__(self, master, mode, address=BASE_ADDRESS, samples=3):
+    def __init__(self, master, mode, address=BASE_ADDRESS):
         """Initialises a PCF8591.
         
         Parameters:
@@ -114,12 +105,9 @@ class PCF8591(object):
                 THREE_DIFFERENTIAL or SINGLE_ENDED_AND_DIFFERENTIAL.
         address -- the I2C address of the PCF8591 chip.
                    (optional, default = BASE_ADDRESS)
-        samples -- the number of samples made per query.
-                   (optional, default = 3)
         """
         self.master = master
         self.address = address
-        self.samples = samples
         self._control_flags = (mode << 4)
         self._last_channel_read = None
         self._output = _OutputChannel(self)
@@ -197,12 +185,12 @@ class PCF8591(object):
     
     def read_raw(self, channel):
         if channel != self._last_channel_read:
-            self.master.transaction(writing_bytes(self.address, self._control_flags|channel))
+            self.master.transaction(
+                writing_bytes(self.address, self._control_flags|channel),
+                reading(self.address, 1))
             self._last_channel_read = channel
         
-        for i in range(self.samples):
-            results = self.master.transaction(reading(self.address, 1))
-        
+        results = self.master.transaction(reading(self.address, 1))
         return results[0][0]
 
 

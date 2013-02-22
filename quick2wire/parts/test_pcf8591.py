@@ -114,20 +114,24 @@ def test_cannot_be_created_with_an_invalid_mode():
         PCF8591(i2c, 999)
 
 def test_can_read_a_single_ended_pin():
-    adc = create_pcf8591(i2c, FOUR_SINGLE_ENDED, samples=1)
-
+    adc = create_pcf8591(i2c, FOUR_SINGLE_ENDED)
+    
     pin = adc.single_ended_input(2)
     
-    i2c.add_response(bytes([64]))
+    i2c.add_response(bytes([0x80]))
+    i2c.add_response(bytes([0x40]))
     
     sample = pin.value
     
     assert i2c.request_count == 2
     
-    m1, = i2c.request(0)
-    assert is_write(m1)
-    assert m1.len == 1
-    assert m1.buf[0][0] == 0b00000010
+    m1a,m1b = i2c.request(0)
+    assert is_write(m1a)
+    assert m1a.len == 1
+    assert m1a.buf[0][0] == 0b00000010
+    
+    assert is_read(m1b)
+    assert m1b.len == 1
     
     m2, = i2c.request(1)
     assert is_read(m2)
@@ -137,9 +141,12 @@ def test_can_read_a_single_ended_pin():
 
 
 def test_can_read_a_differential_pin():
-    adc = create_pcf8591(i2c, THREE_DIFFERENTIAL, samples=1)
+    adc = create_pcf8591(i2c, THREE_DIFFERENTIAL)
     
     pin = adc.differential_input(1)
+    
+
+    i2c.add_response(bytes([0x80]))
     
     # -64 in 8-bit 2's complement representation
     i2c.add_response(bytes([0xC0]))
@@ -148,10 +155,13 @@ def test_can_read_a_differential_pin():
     
     assert i2c.request_count == 2
     
-    m1, = i2c.request(0)
-    assert is_write(m1)
-    assert m1.len == 1
-    assert m1.buf[0][0] == 0b00010001
+    m1a,m1b = i2c.request(0)
+    assert is_write(m1a)
+    assert m1a.len == 1
+    assert m1a.buf[0][0] == 0b00010001
+    
+    assert is_read(m1b)
+    assert m1b.len == 1
     
     m2, = i2c.request(1)
     assert is_read(m2)
@@ -200,32 +210,29 @@ def test_sends_correct_mode_bits_for_single_ended_and_differential_mode():
     assert i2c.request(0)[0].buf[0][0] == 0b00100001
     
 
-def test_can_be_configured_to_perform_multiple_samples_and_reports_last_one():
-    adc = create_pcf8591(i2c, FOUR_SINGLE_ENDED, samples=3)
+def test_does_not_switch_channel_and_only_reads_once_for_subsequent_reads_from_same_pin():
+    adc = create_pcf8591(i2c, FOUR_SINGLE_ENDED)
     
-    pin = adc.single_ended_input(1)
+    pin0 = adc.single_ended_input(0)
     
-    i2c.add_response(bytes([32]))
-    i2c.add_response(bytes([64]))
-    i2c.add_response(bytes([128]))
+    sample = pin0.value
+    assert i2c.request_count == 2
     
-    sample = pin.value
+    sample = pin0.value
+    assert i2c.request_count == 3
     
-    assert_is_approx(0.5, sample)
+    sample = pin0.value
+    assert i2c.request_count == 4
 
 
-def test_does_not_write_control_byte_to_switch_channel_if_multiple_reads_from_same_pin():
-    adc = create_pcf8591(i2c, FOUR_SINGLE_ENDED, samples=1)
+def test_switches_channel_and_reads_twice_when_reading_from_different_pin():
+    adc = create_pcf8591(i2c, FOUR_SINGLE_ENDED)
     
     pin0 = adc.single_ended_input(0)
     pin1 = adc.single_ended_input(1)
     
     sample = pin0.value
     assert i2c.request_count == 2
-    ctl1, = i2c.request(0)
-    assert is_write(ctl1)
-    assert ctl1.len == 1
-    assert ctl1.buf[0][0] == 0b00000000
     
     sample = pin0.value
     assert i2c.request_count == 3
@@ -233,11 +240,13 @@ def test_does_not_write_control_byte_to_switch_channel_if_multiple_reads_from_sa
     sample = pin1.value
     assert i2c.request_count == 5
     
-    ctl2, = i2c.request(3)
-    assert is_write(ctl2)
-    assert ctl2.len == 1
-    assert ctl2.buf[0][0] == 0b00000001
-
+    ma,mb = i2c.request(3)
+    assert is_write(ma)
+    assert ma.len == 1
+    assert ma.buf[0][0] == 0b00000001
+    assert is_read(mb)
+    assert mb.len == 1
+    
 
 def test_opening_and_closing_the_output_pin_turns_the_digital_to_analogue_converter_on_and_off():
     adc = create_pcf8591(i2c, FOUR_SINGLE_ENDED)
@@ -267,7 +276,7 @@ def test_output_pin_opens_and_closes_itself_when_used_as_a_context_manager():
 
 
 def test_setting_value_of_output_pin_sends_value_as_second_written_byte():
-    adc = create_pcf8591(i2c, FOUR_SINGLE_ENDED, samples=1)
+    adc = create_pcf8591(i2c, FOUR_SINGLE_ENDED)
     
     with adc.output as pin:
         pin.value = 0.5
@@ -289,7 +298,7 @@ def test_setting_value_of_output_pin_sends_value_as_second_written_byte():
 
 
 def test_setting_value_of_output_pin_does_not_affect_currently_selected_input_pin():
-    adc = create_pcf8591(i2c, FOUR_SINGLE_ENDED, samples=1)
+    adc = create_pcf8591(i2c, FOUR_SINGLE_ENDED)
     
     with adc.output as opin:
         assert i2c.request_count == 1
