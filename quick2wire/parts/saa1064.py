@@ -9,6 +9,32 @@ STATIC_MODE = 0b00000000
 DYNAMIC_MODE = 0b00000001
 CONTINUOUS_DISPLAY = 0b00000110
 
+"""
+    Value conversions for the display segments
+
+         --64--
+        |      |
+        2      32
+        |      |
+         -- 1--
+        |      |
+        4      16
+        |      |
+         -- 8--   DP-128
+    """
+digit_map = {
+    '0':126,
+    '1':48,
+    '2':109,
+    '3':121,
+    '4':51,
+    '5':91,
+    '6':95,
+    '7':112,
+    '8':127,
+    '9':123
+}
+
 class SAA1064(object):
     def createPinBank(self, i):
         return _PinBank(i)
@@ -51,6 +77,9 @@ class SAA1064(object):
     def brightness(self, brightness):
         self._brightness = brightness
 
+    def digit(self, index):
+        return Digit(self._pin_bank[index])
+
     def pin_bank(self, index):
         return self._pin_bank[index]
 
@@ -62,6 +91,15 @@ class SAA1064(object):
     def __len__(self):
         return len(self._pin_bank)
 
+class Digit(object):
+    def __init__(self, pin_bank):
+        self._pin_bank = pin_bank
+
+    def value(self, value):
+        try:
+            self._pin_bank.value=digit_map[str(value)]
+        except:
+            raise ValueError('cannot display digit ' + value)
 
 class _PinBank(object):
     def __init__(self, index):

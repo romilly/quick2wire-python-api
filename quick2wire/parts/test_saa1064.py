@@ -140,4 +140,38 @@ def test_writing_four_digit_segment_outputs_to_i2c():
     assert message4.byte(0) == 4
     assert message4.byte(1) == 31
 
+def test_digits_are_mapped_into_correct_i2c_message():
+    saa1064 = SAA1064(i2c, digits=2)
 
+    saa1064.digit(0).value('9')
+    saa1064.digit(1).value('5')
+    saa1064.write()
+
+    assert i2c.request_count == 1
+    message1 = i2c.message(0)
+    assert message1.len == 2
+    assert message1.byte(0) == 1
+    assert message1.byte(1) == 123
+
+    message2 = i2c.message(1)
+    assert message2.len == 2
+    assert message2.byte(0) == 2
+    assert message2.byte(1) == 91
+
+def test_digits_can_be_set_using_integer_value():
+    saa1064 = SAA1064(i2c, digits=2)
+
+    saa1064.digit(0).value(9)
+    saa1064.write()
+
+    assert i2c.request_count == 1
+    message1 = i2c.message(0)
+    assert message1.len == 2
+    assert message1.byte(0) == 1
+    assert message1.byte(1) == 123
+
+def test_does_not_accept_invalid_digit_values():
+    saa1064 = SAA1064(i2c, digits=2)
+
+    with pytest.raises(ValueError):
+        saa1064.digit(0).value('@')
