@@ -32,7 +32,14 @@ digit_map = {
     '6':95,
     '7':112,
     '8':127,
-    '9':123
+    '9':123,
+    'A':119,
+    'B':31,
+    'C':78,
+    'D':61,
+    'E':79,
+    'F':71,
+    'R':5
 }
 
 class SAA1064(object):
@@ -51,8 +58,11 @@ class SAA1064(object):
         pass
 
     def configure(self):
+        self.write_control(self.mode|self._brightness|CONTINUOUS_DISPLAY)
+
+    def write_control(self, control_byte):
         self.master.transaction(
-            writing_bytes(displayController, 0b00000000, self.mode | self.brightness | CONTINUOUS_DISPLAY)
+            writing_bytes(displayController, 0b00000000, control_byte)
         )
 
     def write(self):
@@ -71,11 +81,13 @@ class SAA1064(object):
 
     @property
     def brightness(self):
-        return self._brightness
+        return self._brightness >> 5
 
     @brightness.setter
     def brightness(self, brightness):
-        self._brightness = brightness
+        if(brightness > 7):
+            raise ValueError('invalid brightness, valid between 0-7.')
+        self._brightness = brightness << 5
 
     def digit(self, index):
         return Digit(self._pin_bank[index])

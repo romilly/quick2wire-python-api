@@ -41,7 +41,7 @@ def test_configuring_dynamic_display():
 def test_configuring_display_brightness():
     saa1064 = SAA1064(i2c)
     saa1064.mode=DYNAMIC_MODE
-    saa1064.brightness=0b01100000
+    saa1064.brightness=3
     saa1064.configure()
 
     assert i2c.request_count == 1
@@ -55,6 +55,14 @@ def test_cannot_be_configured_with_invalid_mode():
     saa1064 = SAA1064(i2c)
     with pytest.raises(ValueError):
         saa1064.mode=99
+
+def test_cannot_be_configured_with_invalid_brightness():
+    saa1064 = SAA1064(i2c)
+    for x in range(8):
+        saa1064.brightness = x
+
+    with pytest.raises(ValueError):
+        saa1064.brightness=8
 
 def test_writing_single_digit_segment_outputs_to_i2c():
     saa1064 = SAA1064(i2c, digits=1)
