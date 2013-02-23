@@ -100,6 +100,8 @@ def writing(addr, byte_seq):
     ptr = (c_char*len(buf)).from_buffer(buf)
     return _new_i2c_msg(addr, 0, ptr)
 
+writing_from = writing
+
 
 def _new_i2c_msg(addr, flags, buf):
     return i2c_msg(addr=addr, flags=flags, len=sizeof(buf), buf=buf)
