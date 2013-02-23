@@ -59,15 +59,6 @@ For differential channels the value varies between -0.5 and 0.5,
 because the PCF8591 chip can only detect voltage differences of half
 that between its reference voltage and ground.
 
-The PCF8591 uses the successive approximation conversion technique.
-The initial sample returned from the chip will be inaccurate and
-successive samples will return increasingly accurate measurements.
-Thus there is a trade-off between speed and accuracy.  The PCF8591
-class lets you tune this trade off by setting the number of samples
-that are made every time the `value` property is queried by specifying
-the `samples` parameter when instantiating the PCF8591 and by
-assigning to the `samples` property after construction.
-
 The output channel must be opened before use, to turn on the chip's
 D/A converter, and closed when no longer required, to turn it off
 again and conserve power. It's easiest to do this with a context
@@ -104,7 +95,7 @@ class PCF8591(object):
     See module documentation for details on how to use this class.
     """
     
-    def __init__(self, master, mode, address=BASE_ADDRESS, samples=3):
+    def __init__(self, master, mode, address=BASE_ADDRESS):
         """Initialises a PCF8591.
         
         Parameters:
@@ -114,30 +105,33 @@ class PCF8591(object):
                 THREE_DIFFERENTIAL or SINGLE_ENDED_AND_DIFFERENTIAL.
         address -- the I2C address of the PCF8591 chip.
                    (optional, default = BASE_ADDRESS)
-        samples -- the number of samples made per query.
-                   (optional, default = 3)
         """
         self.master = master
         self.address = address
-        self.samples = samples
         self._control_flags = (mode << 4)
         self._last_channel_read = None
         self._output = _OutputChannel(self)
         
         if mode == FOUR_SINGLE_ENDED:
-            self._single_ended_inputs = tuple(_InputChannel(self,i,self.read_single_ended) for i in range(4))
+            self._single_ended_inputs = tuple(self._create_single_ended_channel(i) for i in range(4))
             self._differential_inputs = ()
         elif mode == TWO_DIFFERENTIAL:
             self._single_ended_inputs = ()
-            self._differential_inputs = tuple(_InputChannel(self,i,self.read_differential) for i in range(2))
+            self._differential_inputs = tuple(self._create_differential_channel(i) for i in range(2))
         elif mode == SINGLE_ENDED_AND_DIFFERENTIAL:
-            self._single_ended_inputs = tuple(_InputChannel(self,i,self.read_single_ended) for i in (0,1))
-            self._differential_inputs = (_InputChannel(self,2,self.read_differential),)
+            self._single_ended_inputs = tuple(self._create_single_ended_channel(i) for i in (0,1))
+            self._differential_inputs = (self._create_differential_channel(2),)
         elif mode == THREE_DIFFERENTIAL:
             self._single_ended_inputs = ()
-            self._differential_inputs = tuple(_InputChannel(self,i,self.read_differential) for i in range(3))
+            self._differential_inputs = tuple(self._create_differential_channel(i) for i in range(3))
         else:
             raise ValueError("invalid mode " + str(mode))
+    
+    def _create_single_ended_channel(self, i):
+        return _InputChannel(self, i, self.read_single_ended, 255.0)
+    
+    def _create_differential_channel(self, i):
+        return _InputChannel(self, i, self.read_differential, 256.0)
     
     @property
     def output(self):
@@ -188,24 +182,24 @@ class PCF8591(object):
             writing_bytes(self.address, self._control_flags|self._last_channel_read, int_value))
     
     def read_single_ended(self, channel):
-        return self.read_raw(channel) / 255.0
+        """Read the 8-bit value of a single-ended input channel."""
+        return self.read_raw(channel)
     
     def read_differential(self, channel):
+        """Read the 8-bit value of a differential input channel."""
         unsigned = self.read_raw(channel)
-        signed =  (unsigned & 127) - (unsigned & 128)
-        return signed / 256.0
+        return (unsigned & 127) - (unsigned & 128)
     
     def read_raw(self, channel):
+        buf = bytearray(2)
         if channel != self._last_channel_read:
-            self.master.transaction(writing_bytes(self.address, self._control_flags|channel))
+            self.master.transaction(writing_bytes(self.address, self._control_flags|channel),
+                                    reading_into(self.address, buf))
             self._last_channel_read = channel
         
-        buf = bytearray(1)
-        
-        for i in range(self.samples):
-            self.master.transaction(reading_into(self.address, buf))
-        
-        return buf[0]
+        results = self.master.transaction(
+            reading_into(self.address, buf))
+        return buf[-1]
 
 
 class _OutputChannel(object):
@@ -242,19 +236,25 @@ class _OutputChannel(object):
 
 
 class _InputChannel(object):
-    def __init__(self, bank, index, read_fn):
+    def __init__(self, bank, index, read_fn, scale):
         self.bank = bank
         self.index = index
         self._read = read_fn
+        self._scale = scale
     
     @property
     def direction(self):
         return In
     
     def get(self):
-        return self._read(self.index)
+        return self.get_raw() / self._scale
     
     value = property(get)
+    
+    def get_raw(self):
+        return self._read(self.index)
+    
+    raw_value = property(get_raw)
     
     # No-op implementations of Pin resource management API
     

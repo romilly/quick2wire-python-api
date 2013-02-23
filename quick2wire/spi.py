@@ -1,9 +1,12 @@
+import sys
 from ctypes import addressof, create_string_buffer, sizeof, string_at
 import struct
 import posix
 from fcntl import ioctl
 from quick2wire.spi_ctypes import *
 from quick2wire.spi_ctypes import spi_ioc_transfer, SPI_IOC_MESSAGE
+
+assert sys.version_info.major >= 3, __name__ + " is only supported on Python 3"
 
 
 class SPIDevice:
