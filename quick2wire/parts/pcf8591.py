@@ -192,13 +192,13 @@ class PCF8591(object):
     
     def read_raw(self, channel):
         if channel != self._last_channel_read:
-            self.master.transaction(
-                writing_bytes(self.address, self._control_flags|channel),
-                reading(self.address, 1))
+            self.master.transaction(writing_bytes(self.address, self._control_flags|channel),
+                                    reading(self.address, 2))
             self._last_channel_read = channel
         
-        results = self.master.transaction(reading(self.address, 1))
-        return results[0][0]
+        results = self.master.transaction(
+            reading(self.address, 2))
+        return results[0][-1]
 
 
 class _OutputChannel(object):

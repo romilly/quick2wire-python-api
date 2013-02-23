@@ -61,12 +61,7 @@ def correct_message_for(adc):
     def check(m):
         assert m.addr == adc.address
         assert m.flags in (0, I2C_M_RD)
-        
-        if is_write(m):
-            assert m.len == 1 or m.len == 2
-        
-        if is_read(m):
-            assert m.len == 1, "only ever read single bytes"
+        assert m.len == 1 or m.len == 2
     
     return check
 
@@ -118,8 +113,8 @@ def test_can_read_a_single_ended_pin():
     
     pin = adc.single_ended_input(2)
     
-    i2c.add_response(bytes([0x80]))
-    i2c.add_response(bytes([0x40]))
+    i2c.add_response(bytes([0x80, 0x60]))
+    i2c.add_response(bytes([0x40, 0x40]))
     
     sample = pin.value
     
@@ -131,11 +126,11 @@ def test_can_read_a_single_ended_pin():
     assert m1a.buf[0][0] == 0b00000010
     
     assert is_read(m1b)
-    assert m1b.len == 1
+    assert m1b.len == 2
     
     m2, = i2c.request(1)
     assert is_read(m2)
-    assert m2.len == 1
+    assert m2.len == 2
     
     assert_is_approx(0.25, sample)
 
@@ -145,8 +140,8 @@ def test_can_read_raw_value_of_a_single_ended_pin():
     
     pin = adc.single_ended_input(2)
     
-    i2c.add_response(bytes([0x80]))
-    i2c.add_response(bytes([0x40]))
+    i2c.add_response(bytes([0x80, 0x60]))
+    i2c.add_response(bytes([0x40, 0x40]))
     
     sample = pin.raw_value
     
@@ -158,11 +153,11 @@ def test_can_read_raw_value_of_a_single_ended_pin():
     assert m1a.buf[0][0] == 0b00000010
     
     assert is_read(m1b)
-    assert m1b.len == 1
+    assert m1b.len == 2
     
     m2, = i2c.request(1)
     assert is_read(m2)
-    assert m2.len == 1
+    assert m2.len == 2
     
     assert sample == 0x40
 
@@ -173,10 +168,10 @@ def test_can_read_a_differential_pin():
     pin = adc.differential_input(1)
     
 
-    i2c.add_response(bytes([0x80]))
+    i2c.add_response(bytes([0x80, 0x60]))
     
     # -64 in 8-bit 2's complement representation
-    i2c.add_response(bytes([0xC0]))
+    i2c.add_response(bytes([0xC0, 0xC0]))
     
     sample = pin.raw_value
     
@@ -188,11 +183,11 @@ def test_can_read_a_differential_pin():
     assert m1a.buf[0][0] == 0b00010001
     
     assert is_read(m1b)
-    assert m1b.len == 1
+    assert m1b.len == 2
     
     m2, = i2c.request(1)
     assert is_read(m2)
-    assert m2.len == 1
+    assert m2.len == 2
     
     assert sample == -64
 
@@ -202,11 +197,10 @@ def test_can_read_raw_value_of_a_differential_pin():
     
     pin = adc.differential_input(1)
     
-
-    i2c.add_response(bytes([0x80]))
+    i2c.add_response(bytes([0x80, 0x60]))
     
     # -64 in 8-bit 2's complement representation
-    i2c.add_response(bytes([0xC0]))
+    i2c.add_response(bytes([0xC0, 0xC0]))
     
     sample = pin.value
     
@@ -218,11 +212,11 @@ def test_can_read_raw_value_of_a_differential_pin():
     assert m1a.buf[0][0] == 0b00010001
     
     assert is_read(m1b)
-    assert m1b.len == 1
+    assert m1b.len == 2
     
     m2, = i2c.request(1)
     assert is_read(m2)
-    assert m2.len == 1
+    assert m2.len == 2
     
     assert_is_approx(-0.25, sample)
 
@@ -302,7 +296,7 @@ def test_switches_channel_and_reads_twice_when_reading_from_different_pin():
     assert ma.len == 1
     assert ma.buf[0][0] == 0b00000001
     assert is_read(mb)
-    assert mb.len == 1
+    assert mb.len == 2
     
 
 def test_opening_and_closing_the_output_pin_turns_the_digital_to_analogue_converter_on_and_off():
