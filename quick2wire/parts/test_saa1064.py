@@ -178,6 +178,18 @@ def test_digits_can_be_set_using_integer_value():
     assert message1.byte(0) == 1
     assert message1.byte(1) == 123
 
+def test_digit_with_decimal_point_sets_bit_for_decimal_point():
+    saa1064 = SAA1064(i2c, digits=2)
+
+    saa1064.digit(0).value('9.')
+    saa1064.write()
+
+    assert i2c.request_count == 1
+    message1 = i2c.message(0)
+    assert message1.len == 2
+    assert message1.byte(0) == 1
+    assert message1.byte(1) == 251
+
 def test_does_not_accept_invalid_digit_values():
     saa1064 = SAA1064(i2c, digits=2)
 

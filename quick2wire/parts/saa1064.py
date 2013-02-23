@@ -9,6 +9,8 @@ STATIC_MODE = 0b00000000
 DYNAMIC_MODE = 0b00000001
 CONTINUOUS_DISPLAY = 0b00000110
 
+DECIMAL_POINT = 0b10000000
+
 """
     Value conversions for the display segments
 
@@ -48,10 +50,14 @@ class SAA1064(object):
 
     def __init__(self, master, digits=1):
         self.master = master
-        self._mode = STATIC_MODE
         self._brightness = 0b11100000
-        if(digits > 4):
-            raise ValueError('SAA1064 only supports driving up to 4 digits')
+        if digits <= 0 or digits > 4:
+            raise ValueError('SAA1064 only supports driving 1 to 4 digits')
+        elif digits <= 2:
+            self._mode = STATIC_MODE
+        else:
+            self._mode = DYNAMIC_MODE
+
         self._pin_bank = tuple(self.createPinBank(i) for i in range(digits))
 
     def display(self, digits):
@@ -75,7 +81,7 @@ class SAA1064(object):
 
     @mode.setter
     def mode(self, mode):
-        if(mode > 1):
+        if mode > 1 or mode < 0:
             raise ValueError('invalid mode ' + str(mode) + ' only STATIC_MODE and DYNAMIC_MODE are supported')
         self._mode = mode
 
@@ -85,7 +91,7 @@ class SAA1064(object):
 
     @brightness.setter
     def brightness(self, brightness):
-        if(brightness > 7):
+        if brightness > 7:
             raise ValueError('invalid brightness, valid between 0-7.')
         self._brightness = brightness << 5
 
@@ -108,8 +114,12 @@ class Digit(object):
         self._pin_bank = pin_bank
 
     def value(self, value):
+        digit = str(value)
         try:
-            self._pin_bank.value=digit_map[str(value)]
+            byte_value = digit_map[digit[:1]]
+            if digit.find(".") > -1:
+                byte_value |= DECIMAL_POINT
+            self._pin_bank.value=byte_value
         except:
             raise ValueError('cannot display digit ' + value)
 
