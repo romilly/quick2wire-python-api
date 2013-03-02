@@ -67,14 +67,14 @@ def test_cannot_be_configured_with_invalid_brightness():
 def test_writing_single_digit_segment_outputs_to_i2c():
     saa1064 = SAA1064(i2c, digits=1)
 
-    saa1064.pin_bank(0).segment_output(0).value=1
-    saa1064.pin_bank(0).segment_output(1).value=0
-    saa1064.pin_bank(0).segment_output(2).value=0
-    saa1064.pin_bank(0).segment_output(3).value=1
-    saa1064.pin_bank(0).segment_output(4).value=1
-    saa1064.pin_bank(0).segment_output(5).value=1
-    saa1064.pin_bank(0).segment_output(6).value=0
-    saa1064.pin_bank(0).segment_output(7).value=1
+    saa1064.bank(0).segment_output(0).value=1
+    saa1064.bank(0).segment_output(1).value=0
+    saa1064.bank(0).segment_output(2).value=0
+    saa1064.bank(0).segment_output(3).value=1
+    saa1064.bank(0).segment_output(4).value=1
+    saa1064.bank(0).segment_output(5).value=1
+    saa1064.bank(0).segment_output(6).value=0
+    saa1064.bank(0).segment_output(7).value=1
     saa1064.write()
 
     assert i2c.request_count == 1
@@ -86,23 +86,23 @@ def test_writing_single_digit_segment_outputs_to_i2c():
 def test_writing_two_digit_segment_outputs_to_i2c():
     saa1064 = SAA1064(i2c, digits=2)
 
-    saa1064.pin_bank(0).segment_output(0).value=1
-    saa1064.pin_bank(0).segment_output(1).value=0
-    saa1064.pin_bank(0).segment_output(2).value=1
-    saa1064.pin_bank(0).segment_output(3).value=0
-    saa1064.pin_bank(0).segment_output(4).value=0
-    saa1064.pin_bank(0).segment_output(5).value=0
-    saa1064.pin_bank(0).segment_output(6).value=0
-    saa1064.pin_bank(0).segment_output(7).value=0
+    saa1064.bank(0).segment_output(0).value=1
+    saa1064.bank(0).segment_output(1).value=0
+    saa1064.bank(0).segment_output(2).value=1
+    saa1064.bank(0).segment_output(3).value=0
+    saa1064.bank(0).segment_output(4).value=0
+    saa1064.bank(0).segment_output(5).value=0
+    saa1064.bank(0).segment_output(6).value=0
+    saa1064.bank(0).segment_output(7).value=0
 
-    saa1064.pin_bank(1).segment_output(0).value=0
-    saa1064.pin_bank(1).segment_output(1).value=0
-    saa1064.pin_bank(1).segment_output(2).value=0
-    saa1064.pin_bank(1).segment_output(3).value=0
-    saa1064.pin_bank(1).segment_output(4).value=1
-    saa1064.pin_bank(1).segment_output(5).value=0
-    saa1064.pin_bank(1).segment_output(6).value=1
-    saa1064.pin_bank(1).segment_output(7).value=0
+    saa1064.bank(1).segment_output(0).value=0
+    saa1064.bank(1).segment_output(1).value=0
+    saa1064.bank(1).segment_output(2).value=0
+    saa1064.bank(1).segment_output(3).value=0
+    saa1064.bank(1).segment_output(4).value=1
+    saa1064.bank(1).segment_output(5).value=0
+    saa1064.bank(1).segment_output(6).value=1
+    saa1064.bank(1).segment_output(7).value=0
     saa1064.write()
 
     assert i2c.request_count == 1
@@ -120,10 +120,10 @@ def test_writing_two_digit_segment_outputs_to_i2c():
 def test_writing_four_digit_segment_outputs_to_i2c():
     saa1064 = SAA1064(i2c, digits=4)
 
-    saa1064.pin_bank(0).value=255
-    saa1064.pin_bank(1).value=127
-    saa1064.pin_bank(2).value=63
-    saa1064.pin_bank(3).value=31
+    saa1064.bank(0).value=255
+    saa1064.bank(1).value=127
+    saa1064.bank(2).value=63
+    saa1064.bank(3).value=31
     saa1064.write()
 
     assert i2c.request_count == 1

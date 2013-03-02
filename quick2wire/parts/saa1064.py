@@ -71,7 +71,6 @@ CONTINUOUS_DISPLAY = 0b00000110
 
 DECIMAL_POINT = 0b10000000
 
-
 digit_map = {
     '0':126,
     '1':48,
@@ -93,7 +92,7 @@ digit_map = {
 }
 
 class SAA1064(object):
-    def createPinBank(self, i):
+    def create_pin_bank(self, i):
         return _PinBank(i)
 
     def __init__(self, master, digits=1, brightness=7):
@@ -106,7 +105,7 @@ class SAA1064(object):
         else:
             self._mode = DYNAMIC_MODE
 
-        self._pin_bank = tuple(self.createPinBank(i) for i in range(digits))
+        self._pin_bank = tuple(self.create_pin_bank(i) for i in range(digits))
 
     def configure(self):
         """Writes the configured control byte to the chip."""
@@ -147,11 +146,12 @@ class SAA1064(object):
             raise ValueError('invalid brightness, valid between 0-7.')
         self._brightness = brightness << 5
 
+    #TODO: ditch this for write_digit
     def digit(self, index):
         """Returns a Digit object for the display at given 'index'."""
         return Digit(self._pin_bank[index])
 
-    def pin_bank(self, index):
+    def bank(self, index):
         """Returns a PinBank object for the display at given 'index'."""
         return self._pin_bank[index]
 
@@ -168,6 +168,7 @@ class Digit(object):
     def __init__(self, pin_bank):
         self._pin_bank = pin_bank
 
+    #convert to property
     def value(self, value):
         digit = str(value)
         try:
@@ -179,6 +180,7 @@ class Digit(object):
             raise ValueError('cannot display digit ' + value)
 
 class _PinBank(object):
+    #extends pinbankapi
     def __init__(self, index):
         self._value = 0
         self._segment_output = tuple(_OutputPin(self, i) for i in range(8))
@@ -186,6 +188,8 @@ class _PinBank(object):
 
     def segment_output(self, index):
         return self._segment_output[index]
+
+    pin = segment_output
 
     @property
     def value(self):
@@ -208,6 +212,7 @@ class _PinBank(object):
         return len(self._segment_output)
 
 class _OutputPin(object):
+    #extend pinapi
     def __init__(self, pin_bank, index):
         self._pin_bank = pin_bank
         self._binary = 2 ** index
