@@ -12,7 +12,7 @@ class SevenSegmentDisplay(object):
 
         #TODO: Replace with zip with index.
         for digit_value in digit_values:
-            self._driver_chip.digit(digit_index).value(digit_value)
+            self._driver_chip.digit(digit_index).value=digit_value
             digit_index += 1
         self._driver_chip.write()
 

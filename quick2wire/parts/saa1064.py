@@ -56,6 +56,7 @@ The displays are configured using the following value conversions for the displa
          -- 8--   DP-128
 
 """
+from quick2wire.pin import PinAPI, PinBankAPI
 
 
 __author__ = 'stuartervine'
@@ -168,20 +169,28 @@ class Digit(object):
     def __init__(self, pin_bank):
         self._pin_bank = pin_bank
 
-    #convert to property
-    def value(self, value):
-        digit = str(value)
+    value = property(lambda p: p.get(),
+                     lambda p,v: p.set(v),
+                     doc="""The value represented by the digit""")
+
+    def get(self):
+        return self._pin_bank.value
+
+    def set(self, new_value):
+        digit = str(new_value)
         try:
             byte_value = digit_map[digit[:1]]
             if digit.find(".") > -1:
                 byte_value |= DECIMAL_POINT
             self._pin_bank.value=byte_value
         except:
-            raise ValueError('cannot display digit ' + value)
+            raise ValueError('cannot display digit ' + new_value)
 
-class _PinBank(object):
-    #extends pinbankapi
+
+class _PinBank(PinBankAPI):
+
     def __init__(self, index):
+        super(_PinBank,self).__init__()
         self._value = 0
         self._segment_output = tuple(_OutputPin(self, i) for i in range(8))
         self.segment_address = index+1
@@ -211,16 +220,20 @@ class _PinBank(object):
     def __len__(self):
         return len(self._segment_output)
 
-class _OutputPin(object):
-    #extend pinapi
+class _OutputPin(PinAPI):
     def __init__(self, pin_bank, index):
-        self._pin_bank = pin_bank
-        self._binary = 2 ** index
+        super(_OutputPin,self).__init__(pin_bank, index)
+        self._binary = 1 << index
 
-    @property
-    def value(self):
-        return self._pin_bank.value & self._binary
+    def open(self):
+        pass
 
-    @value.setter
-    def value(self, value):
-        self._pin_bank.value = self._pin_bank.value | (self._binary * value)
+    def close(self):
+        pass
+
+    def get(self):
+        """The current value of the pin: 1 if the pin is high or 0 if the pin is low."""
+        return (self._bank.value & (1 << self._index)) >> self._index
+
+    def set(self, new_value):
+        self._bank.value = self._bank.value | (self._binary * new_value)
