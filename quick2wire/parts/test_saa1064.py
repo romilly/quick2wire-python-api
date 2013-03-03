@@ -21,10 +21,10 @@ def test_static_non_blanked_brightest_display_single_digit_by_default():
     saa1064.configure()
     assert i2c.request_count == 1
 
-    controlMessage = i2c.request(0)[0]
+    controlMessage = i2c.request_at(0).message(0)
     assert controlMessage.len == 2
-    assert controlMessage.buf[0][0] == 0b00000000
-    assert controlMessage.buf[1][0] == 0b11100110
+    assert controlMessage.byte(0) == 0b00000000
+    assert controlMessage.byte(1) == 0b11100110
 
 def test_configuring_dynamic_display():
     saa1064 = SAA1064(i2c)
@@ -33,10 +33,10 @@ def test_configuring_dynamic_display():
 
     assert i2c.request_count == 1
 
-    controlMessage = i2c.request(0)[0]
+    controlMessage = i2c.request_at(0).message(0)
     assert controlMessage.len == 2
-    assert controlMessage.buf[0][0] == 0b00000000
-    assert controlMessage.buf[1][0] == 0b11100111
+    assert controlMessage.byte(0) == 0b00000000
+    assert controlMessage.byte(1) == 0b11100111
 
 def test_configuring_display_brightness():
     saa1064 = SAA1064(i2c)
@@ -46,10 +46,10 @@ def test_configuring_display_brightness():
 
     assert i2c.request_count == 1
 
-    controlMessage = i2c.request(0)[0]
+    controlMessage = i2c.request_at(0).message(0)
     assert controlMessage.len == 2
-    assert controlMessage.buf[0][0] == 0b00000000
-    assert controlMessage.buf[1][0] == 0b01100111
+    assert controlMessage.byte(0) == 0b00000000
+    assert controlMessage.byte(1) == 0b01100111
 
 def test_cannot_be_configured_with_invalid_mode():
     saa1064 = SAA1064(i2c)
@@ -64,8 +64,30 @@ def test_cannot_be_configured_with_invalid_brightness():
     with pytest.raises(ValueError):
         saa1064.brightness=8
 
+def test_first_write_sends_configuration_to_chip():
+    saa1064 = SAA1064(i2c, digits=1)
+    saa1064.write()
+
+    assert i2c.request_count == 2
+    dataMessage = i2c.message(0)
+    assert dataMessage.len == 2
+    assert dataMessage.byte(0) == 0b00000000
+    assert dataMessage.byte(1) == 0b11100110
+
+def test_second_write_only_writes_data_to_chip():
+    saa1064 = SAA1064(i2c, digits=1)
+    saa1064.write()
+    saa1064.write()
+
+    assert i2c.request_count == 3
+    dataMessage = i2c.request_at(2).message(0)
+    assert dataMessage.len == 2
+    assert dataMessage.byte(0) == 0b00000001
+    assert dataMessage.byte(1) == 0b00000000
+
 def test_writing_single_digit_segment_outputs_to_i2c():
     saa1064 = SAA1064(i2c, digits=1)
+    saa1064.configured = True
 
     saa1064.bank(0).segment_output(0).value=1
     saa1064.bank(0).segment_output(1).value=0
@@ -78,7 +100,7 @@ def test_writing_single_digit_segment_outputs_to_i2c():
     saa1064.write()
 
     assert i2c.request_count == 1
-    dataMessage = i2c.message(0)
+    dataMessage = i2c.request_at(0).message(0)
     assert dataMessage.len == 2
     assert dataMessage.byte(0) == 0b00000001
     assert dataMessage.byte(1) == 0b10111001
@@ -98,6 +120,7 @@ def test_individual_pin_values_can_be_read():
 
 def test_writing_two_digit_segment_outputs_to_i2c():
     saa1064 = SAA1064(i2c, digits=2)
+    saa1064.configured = True
 
     saa1064.bank(0).segment_output(0).value=1
     saa1064.bank(0).segment_output(1).value=0
@@ -120,18 +143,19 @@ def test_writing_two_digit_segment_outputs_to_i2c():
 
     assert i2c.request_count == 1
 
-    message1 = i2c.message(0)
+    message1 = i2c.request_at(0).message(0)
     assert message1.len == 2
     assert message1.byte(0) == 0b00000001
     assert message1.byte(1) == 0b00000101
 
-    message2 = i2c.message(1)
+    message2 = i2c.request_at(0).message(1)
     assert message2.len == 2
     assert message2.byte(0) == 0b00000010
     assert message2.byte(1) == 0b01010000
 
 def test_writing_four_digit_segment_outputs_to_i2c():
     saa1064 = SAA1064(i2c, digits=4)
+    saa1064.configured = True
 
     saa1064.bank(0).value=255
     saa1064.bank(1).value=127
@@ -141,7 +165,7 @@ def test_writing_four_digit_segment_outputs_to_i2c():
 
     assert i2c.request_count == 1
 
-    message1 = i2c.message(0)
+    message1 = i2c.request_at(0).message(0)
     assert message1.len == 2
     assert message1.byte(0) == 1
     assert message1.byte(1) == 255
@@ -163,6 +187,7 @@ def test_writing_four_digit_segment_outputs_to_i2c():
 
 def test_digits_are_mapped_into_correct_i2c_message():
     saa1064 = SAA1064(i2c, digits=2)
+    saa1064.configured = True
 
     saa1064.digit(0).value='9'
     saa1064.digit(1).value='5'
@@ -181,6 +206,7 @@ def test_digits_are_mapped_into_correct_i2c_message():
 
 def test_digits_can_be_set_using_integer_value():
     saa1064 = SAA1064(i2c, digits=2)
+    saa1064.configured = True
 
     saa1064.digit(0).value=9
     saa1064.write()
@@ -193,6 +219,7 @@ def test_digits_can_be_set_using_integer_value():
 
 def test_digit_with_decimal_point_sets_bit_for_decimal_point():
     saa1064 = SAA1064(i2c, digits=2)
+    saa1064.configured = True
 
     saa1064.digit(0).value='9.'
     saa1064.write()

@@ -99,6 +99,8 @@ class SAA1064(object):
     def __init__(self, master, digits=1, brightness=7):
         self.master = master
         self.brightness = brightness
+        self.configured = False
+
         if digits <= 0 or digits > 4:
             raise ValueError('SAA1064 only supports driving 1 to 4 digits')
         elif digits <= 2:
@@ -112,14 +114,22 @@ class SAA1064(object):
         """Writes the configured control byte to the chip."""
         self.write_control(self.mode|self._brightness|CONTINUOUS_DISPLAY)
 
+    def reset(self):
+        for pin_bank in self:
+            pin_bank.value = 0
+
     def write_control(self, control_byte):
         """Writes a raw control byte to the chip."""
         self.master.transaction(
             writing_bytes(displayController, 0b00000000, control_byte)
         )
+        self.configured = True
 
     def write(self):
         """Writes the segment outputs to the chip."""
+        if(not self.configured):
+            self.configure()
+
         i2c_messages = [pin_bank.i2c_message for pin_bank in self._pin_bank]
         self.master.transaction(*i2c_messages)
 
@@ -147,7 +157,6 @@ class SAA1064(object):
             raise ValueError('invalid brightness, valid between 0-7.')
         self._brightness = brightness << 5
 
-    #TODO: ditch this for write_digit
     def digit(self, index):
         """Returns a Digit object for the display at given 'index'."""
         return Digit(self._pin_bank[index])

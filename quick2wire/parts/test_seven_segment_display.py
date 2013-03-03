@@ -11,6 +11,10 @@ class FakeSAA1064(object):
     def __init__(self):
         self._fake_digits = [FakeDigit() for x in range(4)]
 
+    def reset(self):
+        for digit in self._fake_digits:
+            digit.value = 0
+
     def digit(self, index):
         return self._fake_digits[index]
 
@@ -41,4 +45,13 @@ def test_shows_decimal_point():
 def test_hands_through_potentially_undisplayable_values():
     display = SevenSegmentDisplay(saa1064)
     display.display('@')
-    assert saa1064.digit(0).value == '@'
+    assert saa1064.digit(3).value == '@'
+
+def test_pads_unused_digits_when_not_all_are_used():
+    display = SevenSegmentDisplay(saa1064)
+    display.display('12')
+    assert saa1064.digit(0).value == 0
+    assert saa1064.digit(1).value == 0
+    assert saa1064.digit(2).value == '1'
+    assert saa1064.digit(3).value == '2'
+

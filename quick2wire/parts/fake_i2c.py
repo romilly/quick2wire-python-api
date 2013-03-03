@@ -28,13 +28,23 @@ class FakeI2CMaster:
     def request_count(self):
         return len(self._requests)
 
-
     def request(self, n):
         return self._requests[n]
+
+    def request_at(self, n):
+        return I2CRequestWrapper(self._requests[n])
 
     def message(self, message_index):
         request = self.request(0)
         return I2CMessageWrapper(request[message_index])
+
+class I2CRequestWrapper:
+    def __init__(self, i2c_request):
+            self._i2c_request = i2c_request
+
+    def message(self, index):
+        return I2CMessageWrapper(self._i2c_request[index])
+
 
 class I2CMessageWrapper:
     def __init__(self, i2_message):

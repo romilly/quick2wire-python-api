@@ -7,12 +7,11 @@ class SevenSegmentDisplay(object):
         self._driver_chip = driver_chip
 
     def display(self, value):
-        digit_values = re.findall(".\.?", str(value))
-        digit_index=0
+        self._driver_chip.reset()
 
-        #TODO: Replace with zip with index.
-        for digit_value in digit_values:
-            self._driver_chip.digit(digit_index).value=digit_value
-            digit_index += 1
+        digit_values = re.findall(".\.?", str(value))
+        for i, digit_value in zip(reversed(range(len(self._driver_chip))), reversed(digit_values)):
+            self._driver_chip.digit(i).value=digit_value
+
         self._driver_chip.write()
 
