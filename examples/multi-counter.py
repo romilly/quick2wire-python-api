@@ -35,9 +35,9 @@ with i2c.I2CMaster() as bus:
     pe.set_iodir_b(0x00)
     pe.set_gpio_b(0x00)
     try:
-        for count in cycle(range(256)):
-            pe.set_gpio_b(count)
-            sleep(0.1)
+      for count in cycle(range(256)):
+        pe.set_gpio_b(count)
+        sleep(0.1)
 
-    except KeyboardInterrupt:
-        pe.set_gpio_b(0x00)
+    finally:
+      pe.set_gpio_b(0x00)

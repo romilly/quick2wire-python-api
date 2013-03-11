@@ -1,0 +1,23 @@
+#!/usr/bin/python3
+
+from contextlib import closing
+from quick2wire.gpio import pins, Out
+from quick2wire.helpers.display import AnalogueDisplay
+import quick2wire.i2c as i2c
+from quick2wire.parts.pcf8591 import PCF8591, FOUR_SINGLE_ENDED
+
+with closing(i2c.I2CMaster()) as master:
+    pcf = PCF8591(master, FOUR_SINGLE_ENDED)
+    gpio_pins = [pins.pin(i, Out) for i in range(8)]
+    
+    for pin in gpio_pins: pin.open()
+    display = AnalogueDisplay(1.0, *gpio_pins)
+    ain3 = pcf.single_ended_input(3)
+    try:
+      while(True):
+        display.display(ain3.value)
+    except KeyboardInterrupt:
+      display.display(63)
+    finally:
+      for pin in gpio_pins: pin.close()
+
