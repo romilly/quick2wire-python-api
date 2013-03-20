@@ -14,7 +14,7 @@ ARCHITECTURE:=$(shell uname -m)
 
 PYTHON_ENV=$(PWD)/python$(python)-$(ARCHITECTURE)
 PYTHON_EXE=$(PYTHON_ENV)/bin/python
-PIP=$(PYTHON_ENV)/bin/pip
+PIP=$(PYTHON_EXE) $(PYTHON_ENV)/bin/pip
 
 PROJECT:=$(shell $(PYTHON_EXE) setup.py --name)
 VERSION:=$(shell $(PYTHON_EXE) setup.py --version)
@@ -56,7 +56,7 @@ check-install: dist
 	$(TESTENV)/bin/python setup.py test
 .PHONY: check-install
 
-dist/$(PROJECT)-$(VERSION).tar.gz: setup.py Makefile README.rst
+dist/$(PROJECT)-$(VERSION).tar.gz: env setup.py Makefile README.rst
 	$(PYTHON_EXE) setup.py sdist
 
 README.rst: README.md
