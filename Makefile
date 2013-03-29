@@ -56,11 +56,11 @@ check-install: dist
 	$(TESTENV)/bin/python setup.py test
 .PHONY: check-install
 
-dist/$(PROJECT)-$(VERSION).tar.gz: env setup.py Makefile README.rst
-	$(PYTHON_EXE) setup.py sdist
-
 README.rst: README.md
-	pandoc --from=markdown --to=rst $^ > $@
+	pandoc --output=$@ $<
+
+dist/$(PROJECT)-$(VERSION).tar.gz: setup.py Makefile README.rst
+	$(PYTHON_EXE) setup.py sdist
 
 dist: dist/$(PROJECT)-$(VERSION).tar.gz
 .PHONY: dist
