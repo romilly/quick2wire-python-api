@@ -9,14 +9,17 @@ Ensure you have installed gpio-admin and are in the gpio group.  Run
 the `groups` command to list your group membership. For example:
 
     $ groups
-    nat fuse i2c gpio
+    pi adm dialout cdrom sudo audio video plugdev games users netdev input indiecity 
 
-You can add yourself to the gpio group with the command:
+If you don't see `gpio` in the list, you can add yourself to the gpio group with the command:
 
     sudo adduser $USER gpio
 
 You must then log out and in again for Linux to apply the change in
 group membership.
+
+    $ groups
+    pi adm dialout cdrom sudo audio video plugdev games users netdev input indiecity gpio 
 
 
 Now Let's Write Some Code!
