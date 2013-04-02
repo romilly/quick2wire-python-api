@@ -20,7 +20,7 @@ def devices():
     return os.environ.get('devices','').split()
 
 
-_version = "1.0.0.0"
+_version = "0.0.0.1"
 
 def version_tagged_in_git():
     try:
