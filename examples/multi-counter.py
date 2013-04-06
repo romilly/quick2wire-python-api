@@ -24,6 +24,6 @@ with i2c.I2CMaster() as bus:
     try:
         for count in cycle(range(256)):
             chip.write_banked_register(1, GPIO, count)
-        sleep(0.1)
+            sleep(0.1)
     finally:
         chip.reset()
