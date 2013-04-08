@@ -38,10 +38,8 @@ def assert_outputs_seen_at_corresponding_inputs(pin_bank, topology):
 
 
 def assert_output_seen_at_input(pin_bank, op, ip):
-    output_pin = pin_bank.pin(op, direction=Out)
-    input_pin = pin_bank.pin(ip, direction=In)
-    
-    with output_pin, input_pin:
-        for value in [1, 0, 1, 0]:
-            output_pin.value = value
-            assert input_pin.value == value
+  with pin_bank.pin(op, direction=Out) as output_pin,\
+       pin_bank.pin(ip, direction=In) as input_pin:
+    for value in [1, 0, 1, 0]:
+      output_pin.value = value
+      assert input_pin.value == value

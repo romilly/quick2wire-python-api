@@ -1,6 +1,6 @@
 import quick2wire.i2c as i2c
 from quick2wire.parts.mcp23017 import Registers as MCP23017Registers, MCP23017
-from quick2wire.parts.mcp23017 import deferred_read, deferred_write, immediate_read, immediate_write, In, Out
+from quick2wire.parts.mcp23017 import deferred_read, deferred_write, In, Out
 from quick2wire.parts.mcp23x17 import IODIRA, IODIRB, GPIO
 import pytest
 
