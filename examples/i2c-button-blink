@@ -29,7 +29,7 @@ with closing(i2c.I2CMaster()) as bus:
 
     try:
         while True:
-            led.value = (not led.value) and button_pin.value
+            led.value = (not led.value) and button.value
             sleep(0.5)
     finally:
         chip.reset()
