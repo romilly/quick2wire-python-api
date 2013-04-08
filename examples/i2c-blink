@@ -7,8 +7,8 @@ import quick2wire.i2c as i2c
 from quick2wire.parts.mcp23017 import MCP23017
 from quick2wire.parts.mcp23x17 import Out
 
-# usage: i2c-blank [pin_number]
-# pin_number defaults to 1
+# usage: i2c-blink [led_pin]
+# led_pin defaults to 1
 def the_pin_number():
     if len(sys.argv) < 2:
         return 1

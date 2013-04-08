@@ -11,5 +11,5 @@ with button, led:
     print("ready")
     
     for v in cycle([1,0]):
-        led.value = v * button.value
+        led.value = v and button.value
         sleep(0.5)
