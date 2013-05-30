@@ -1,15 +1,44 @@
 #!/usr/bin/env python3
+#|| Button Blink
+#|| ============
+#|| 
+#|| This program adds user-input to the [blink](blink) program.  The
+#|| LED only blinks while the user holds down the push-button on the
+#|| Quick2Wire interface board. The push-button is connected to GPIO
+#|| pin P0 by a jumper.
 
+#| [2] The program needs to import the `In` constant from the quick2wire.gpio module.
+from quick2wire.gpio import pins, In, Out
+#|.
 from itertools import cycle
 from time import sleep
-from quick2wire.gpio import pins, In, Out
 
+#| [1] To read input from GPIO pin P0 the program also gets hold of pin 0
+#| for input by passing the `In` as the direction parameter.
 button = pins.pin(0, direction=In)
+#|.
 led = pins.pin(1, direction=Out)
 
+#| [3] The program must open both pins before using them.
 with button, led:
-    print("ready")
-    
+#|.
     for v in cycle([1,0]):
-        led.value = v and button.value
+        #| [4] Within the loop the value property of the _led_ pin is
+        #| set to _v_ multiplied by the value property of the _button_
+        #| pin. When the button is pressed, button.value = 1, and
+        #| therefore led.value = v * 1 = v, which the main loop cycles
+        #| between 0 and 1.  When the button is released, button.value
+        #| = 0 and therefore led.value = v * 0 = 0.  As a result the
+        #| LED blinks while the button is pressed and stays off while
+        #| the button is released.
+        led.value = v * button.value
+        #|.
         sleep(0.5)
+
+#|| However, there's a flaw in this program. If you repeatedly press
+#|| and release the button you can see that the program can take up to
+#|| half a second to react. The program should react to the button
+#|| immediately. To do so it must handle GPIO interrupts in an _event
+#|| loop_. That's what we'll look at in the 
+#|| [selector-button-blink](selector-button-blink) example.
+

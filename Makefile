@@ -19,6 +19,8 @@ PIP=$(PYTHON_EXE) $(PYTHON_ENV)/bin/pip
 PROJECT:=$(shell $(PYTHON_EXE) setup.py --name)
 VERSION:=$(shell $(PYTHON_EXE) setup.py --version)
 
+EXAMPLES:=$(wildcard examples/*)
+EXAMPLE_DOCS:=$(EXAMPLES:%=docs/%.html)
 
 all: check dist
 .PHONY: all
@@ -65,8 +67,19 @@ dist/$(PROJECT)-$(VERSION).tar.gz: setup.py Makefile README.rst
 dist: dist/$(PROJECT)-$(VERSION).tar.gz
 .PHONY: dist
 
+docs: $(EXAMPLE_DOCS) docs/examples/code-guide.css
+.PHONY: docs
+
+docs/examples/%.html: examples/%
+	@mkdir -p $(dir $@)
+	code-guide $< -o $@ -r . -l python -c "#" -t '(.+)' '\1.html'
+
+docs/examples/code-guide.css:
+	@mkdir -p $(dir $@)
+	code-guide --extract-resources --resource-dir=$(dir $@)
+
 clean:
-	rm -rf output/ dist/ build/ MANIFEST README.rst quick2wire_api.egg-info README.rst
+	rm -rf output/ dist/ build/ docs/ MANIFEST README.rst quick2wire_api.egg-info README.rst
 	find . -name '*.pyc' -o -name '*~' | xargs -r rm -f
 .PHONY: clean
 
