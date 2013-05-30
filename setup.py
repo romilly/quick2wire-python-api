@@ -20,24 +20,6 @@ def devices():
     return os.environ.get('devices','').split()
 
 
-_version = "0.0.0.2"
-
-def version_tagged_in_git():
-    try:
-        return str(subprocess.check_output(["git", "describe", "--always", "--tags", "--match", "*.*.*.*"]), 'utf8').strip()
-    except:
-        return _version
-
-def version():
-    git_version = version_tagged_in_git()
-    
-    if git_version == _version:
-        return _version
-    else:
-        raise ValueError("invalid version in setup.py, was {v} but version tagged in git is {gitv}".format(
-                v=_version, gitv=git_version))
-
-
 class PyTest(TestCommand):
     def finalize_options(self):
         TestCommand.finalize_options(self)
@@ -55,7 +37,7 @@ class PyTest(TestCommand):
 
 
 setup(name='quick2wire-api',
-      version=version(),
+      version="0.0.0.2",
       description='Quick2Wire API for Physical Computing',
       long_description=contents_of('README.txt'),
       author='Quick2Wire Ltd.',
