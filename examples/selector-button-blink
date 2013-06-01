@@ -1,15 +1,41 @@
 #!/usr/bin/env python3
 
+#|| Event-Driven Input/Output
+#|| ========================= 
+#||
+#|| The [button-blink](button-blink) example shows how to read from a
+#|| GPIO pin, but not how to react promptly to a signal on the pin.
+#|| It reads the pin's value at regular intervals, but if a signal
+#|| occurs on the pin between reads the program won't react until the
+#|| next time it reads from the pin.
+#|| 
+#|| To react promptly to GPIO input we must change the way our program
+#|| works. Instead of being in control, polling the GPIO pins and
+#|| sleeping for fixed amounts of time, our program needs to be _event
+#|| driven_: reacting as soon as the signal at the input pin changes
+#|| and using timer events to decide when to blink the LED.
+#|| 
+#|| An event loop is driven by a `Selector` object, which holds a
+#|| number of _event sources_ and waits for an event to occur on one
+#|| of them. An event-driven program creates a Selector, creates
+#|| _event source_ objects that can signal events, adds those event
+#|| sources to the Selector, and repeatedly waits on the Selector for
+#|| events to occur.
+#|| 
+#|| As we are converting the button-blink example to be event-driven,
+#|| we have two event sources: the GPIO pin connected to the button
+#|| and a repeating timer that, when started, tells the program when
+#|| to blink the LED.
+
 from quick2wire.gpio import pins, In, Out, Both
 from quick2wire.selector import Selector, Timer
 
+selector = Selector()
 button = pins.pin(0, direction=In, interrupt=Both)
 led = pins.pin(1, direction=Out)
+timer = Timer(interval=0.5)
 
-with button, led, \
-     Timer(interval=0.5) as timer, \
-     Selector() as selector:
-    
+with selector, button, led, timer:
     selector.add(button)
     selector.add(timer)
     

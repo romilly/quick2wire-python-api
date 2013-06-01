@@ -119,18 +119,23 @@ class Timer(syscall.SelfClosing):
                     CLOCK_REALTIME  -- system-wide realtime clock.
                     CLOCK_MONOTONIC -- monotonic system-wide clock.
         """
-        self._fd = timerfd_create(clock, (not blocking)*TFD_NONBLOCK)
+        self._clock = clock
+        self._flags = (not blocking)*TFD_NONBLOCK
+        self._fd = None
         self._offset = offset
         self._interval = interval
         self._started = False
     
     def close(self):
         """Closes the Timer and releases its file descriptor."""
-        os.close(self._fd)
-        self._fd = None
+        if self._fd is not None:
+            os.close(self._fd)
+            self._fd = None
         
     def fileno(self):
         """Returns the Timer's file descriptor."""
+        if self._fd is None:
+            self._fd = timerfd_create(self._clock, self._flags)
         return self._fd
 
     @property
@@ -191,7 +196,7 @@ class Timer(syscall.SelfClosing):
         OSError -- an OS error occurred reading the state of the timer.
         """
         try:
-            buf = os.read(self._fd, 8)
+            buf = os.read(self.fileno(), 8)
             return struct.unpack("Q", buf)[0]
         except OSError as e:
             if e.errno == errno.EAGAIN:
@@ -204,5 +209,5 @@ class Timer(syscall.SelfClosing):
     
     def _schedule(self, offset, interval):
         spec = itimerspec.from_seconds(offset, interval)
-        timerfd_settime(self._fd, 0, byref(spec), None)
+        timerfd_settime(self.fileno(), 0, byref(spec), None)
     

@@ -28,14 +28,20 @@ class Semaphore(syscall.SelfClosing):
         blocking -- if False calls to wait() do not block if the Semaphore
                     has a count of zero. (default = True)
         """
-        self._fd = eventfd(count, EFD_SEMAPHORE|((not blocking)*EFD_NONBLOCK))
-        
+        self._initial_count = count
+        self._flags = EFD_SEMAPHORE|((not blocking)*EFD_NONBLOCK)
+        self._fd = None
+    
     def close(self):
         """Closes the Semaphore and releases its file descriptor."""
-        os.close(self._fd)
+        if self._fd is not None:
+            os.close(self._fd)
+            self._fd = None
     
     def fileno(self):
         """Returns the Semaphore's file descriptor."""
+        if self._fd is None:
+            self._fd = eventfd(self._initial_count, self._flags)
         return self._fd
     
     def signal(self):
@@ -44,7 +50,7 @@ class Semaphore(syscall.SelfClosing):
         Signalling a semaphore increments its count by one and wakes a
         blocked task that is waiting on the semaphore.
         """
-        return os.write(self._fd, eventfd_t(1))
+        return os.write(self.fileno(), eventfd_t(1))
     
     def wait(self):
         """Receive a signal from the Semaphore, decrementing its count by one.
@@ -59,7 +65,7 @@ class Semaphore(syscall.SelfClosing):
                  non-blocking mode.
         """
         try:
-            os.read(self._fd, 8)
+            os.read(self.fileno(), 8)
             return True
         except OSError as e:
             if e.errno == errno.EAGAIN:

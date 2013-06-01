@@ -8,14 +8,13 @@ from quick2wire.parts.pcf8591 import PCF8591, FOUR_SINGLE_ENDED
 max_blink_rate=5.0
 min_blink_rate=1.0
 
+selector = Selector()
 button = pins.pin(0, direction=In, interrupt=Both)
 led = pins.pin(1, direction=Out)
+timer = Timer(interval=0.5)
+i2c = I2CMaster()
 
-with button, led, \
-     I2CMaster() as i2c, \
-     Timer() as timer, \
-     Selector() as selector:
-    
+with selector, button, led, timer, i2c:
     adc = PCF8591(i2c, FOUR_SINGLE_ENDED)
     rate_input = adc.single_ended_input(0)
     

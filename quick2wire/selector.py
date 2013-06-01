@@ -30,14 +30,20 @@ class Selector(SelfClosing):
                      doesn't limit the maximum number of monitored
                      event sources.
         """
-        self._epoll = select.epoll(size_hint)
+        self._size_hint = size_hint
+        self._epoll = None
         self._sources = {}
         self.ready = None
         self.events = 0
-        
+    
+    def _get_epoll(self):
+        if self._epoll is None:
+            self._epoll = select.epoll(self._size_hint)
+        return self._epoll
+
     def fileno(self):
         """Returns the Selector's file descriptor."""
-        return self._epoll.fileno()
+        return self._get_epoll().fileno()
     
     def add(self, source, eventmask=INPUT|ERROR, trigger=None, identifier=None):
         """Adds an event source to the Selector.
@@ -68,7 +74,7 @@ class Selector(SelfClosing):
         trigger = trigger if trigger is not None else getattr(source, "__trigger__", LEVEL)
         
         self._sources[fileno] = identifier if identifier is not None else source
-        self._epoll.register(fileno, eventmask|(select.EPOLLET*trigger))
+        self._get_epoll().register(fileno, eventmask|(select.EPOLLET*trigger))
     
     def remove(self, source):
         """Removes an event source from the Selector.
@@ -77,7 +83,7 @@ class Selector(SelfClosing):
         source -- the event source to remove.
         """
         fileno = source.fileno()
-        self._epoll.unregister(source)
+        self._get_epoll().unregister(source)
         del self._sources[fileno]
 
     def wait(self, timeout=-1):
@@ -102,7 +108,7 @@ class Selector(SelfClosing):
         self.ready = None
         self.events = 0
         
-        readies = self._epoll.poll(timeout, maxevents=1)
+        readies = self._get_epoll().poll(timeout, maxevents=1)
         if readies:
             fileno, self.events = readies[0]
             self.ready = self._sources[fileno]
@@ -134,6 +140,7 @@ class Selector(SelfClosing):
     
     def close(self):
         """Closes the Selector and releases its file descriptor."""
-        self._epoll.close()
+        if self._epoll is not None:
+            self._epoll.close()
 
 __all__ = ['Selector', 'Timer', 'Semaphore', 'INPUT', 'OUTPUT', 'ERROR', 'HANGUP', 'PRIORITY_INPUT', 'LEVEL', 'EDGE']
