@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+#||
 #|| Button Blink
 #|| ============
 #|| 
@@ -37,8 +38,7 @@ with button, led:
 
 #|| However, there's a flaw in this program. If you repeatedly press
 #|| and release the button you can see that the program can take up to
-#|| half a second to react. The program should react to the button
-#|| immediately. To do so it must handle GPIO interrupts in an _event
-#|| loop_. That's what we'll look at in the 
-#|| [selector-button-blink](selector-button-blink) example.
-
+#|| half a second to react. Ideally the program would react to the
+#|| button immediately. To do so it must handle GPIO interrupts in an
+#|| _event loop_, which we'll look at in the [next
+#|| example](selector-button-blink).
