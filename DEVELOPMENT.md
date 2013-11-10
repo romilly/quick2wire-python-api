@@ -28,6 +28,7 @@ The devices are:
  * gpio (used to test the GPIO API and the Quick2Wire breakout board via the Pi's SoC GPIO)
  * mcp23017 (used to test the MCP23017 expander board)
  * pcf8591 (used to test the PCF8591 AD/DA board)
+ * mcp3221 (used to test the MCP3221 A/D board)
 
 
 
