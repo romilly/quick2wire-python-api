@@ -18,8 +18,7 @@ For example:
 The A/D signal is obtained by querying the channel's 'value' property,
 which varies in the range 0.0 <= value < 1.0.
 
-[This module originally by Octameter computing (8ameter.com),
-funded by Anacail (anacail.com); November 2013.]
+[This module originally by Octameter Computing (8ameter.com), November 2013.]
 """
 
 from quick2wire.i2c import reading
