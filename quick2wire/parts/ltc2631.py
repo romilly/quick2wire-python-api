@@ -21,16 +21,20 @@ through which it communicates.
 For example:
 
     with I2CMaster() as i2c:
-        adc = LTC2631(i2c)
+        adc = LTC2631(i2c, 'LZ12', address=0x10)
         with adc.output as output:
             # assert 2V as the output voltage
             output.set(2.0)
             ....more
 
+The second argument to the constructor is the chip variant, which
+matches the regular expression [HL][MZ](8|10|12) (for example 'HZ10'
+or 'LM8').
+
 The chip is returned to its power-off mode when the program exits the
 'output' block (so the above program isn't useful as it stands).
 
-[This module originally by Octameter computing (8ameter.com), December 2013]
+[This module originally by Octameter Computing (8ameter.com), December 2013]
 """
 
 from quick2wire.i2c import writing_bytes
@@ -114,37 +118,34 @@ lookup_all_zero_reset = ('LZ12', 'LZ10', 'LZ8', 'HZ12', 'HZ10', 'HZ8')
 
 
 class LTC2631(object):
-    """PI to query and control an LTC2631 D/A converter via I2C.
-
-    XXX
-    For the MCP3221, "If [...] the voltage level of AIN is equal to or
-    less than VSS + 1/2 LSB, the resultant code will be
-    000h. Additionally, if the voltage at AIN is equal to or greater
-    than VDD - 1.5 LSB, the output code will be FFFh."  Therefore,
-    the full scale, corresponding to VSS+1.0*(VDD-VSS), is 1000h,
-    but the maximum floating-point value that can be returned is FFFh/1000h.
+    """API to query and control an LTC2631 D/A converter via I2C.
     """
 
-    def __init__(self, master, variant_ident, address=0x10):
+    def __init__(self, master, variant, address=0x10):
         """Initialises an LTC2631.
 
         Parameters:
         master  -- the I2CMaster with which to commmunicate with the
                    LTC2631 chip.
-        address -- the I2C address of the LCT2631 chip, as a number in [0..7]
-                   (optional, default = 5)
+        variant -- the LTC2631 variant, such as 'LM12' or HZ8'
+        address -- the I2C address of the LTC2631 chip, which can be
+                   in (0x10, 0x11, 0x12) for 'M' variants, or
+                   in (0x10, 0x11, 0x12, 0x13, 0x20, 0x21, 0x22, 0x23, 0x30) 
+                   for 'Z' variants,
+                   or the global address, 0x73
+                   (optional, default = 0x10)
         """
         self.master = master
 
-        if variant_ident not in lookup_bits:
-            raise ValueError("Invalid variant {}".format(variant_ident))
+        if variant not in lookup_bits:
+            raise ValueError("Invalid variant {}".format(variant))
 
-        self._variant = Variant(variant_ident in lookup_all_4v,
-                                variant_ident in lookup_all_zero_reset,
-                                lookup_bits[variant_ident])
+        self._variant = Variant(variant in lookup_all_4v,
+                                variant in lookup_all_zero_reset,
+                                lookup_bits[variant])
 
         if address not in self._variant.addresses():
-            raise ValueError("Invalid address {} for variant {}".format(address, variant_ident))
+            raise ValueError("Invalid address {} for variant {}".format(address, variant))
 
         self.address = address
 

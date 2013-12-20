@@ -48,11 +48,11 @@ class FakeI2CMaster:
         return self._requests[n]
 
 
-def correct_message_for(adc):
+def correct_message_for(dac):
     def check(m):
-        assert m.addr == adc.address
+        assert m.addr == dac.address
         assert m.flags not in (0, I2C_M_RD)
-        assert m.len == 3 # correct?
+        assert m.len == 3
     
     return check
 
@@ -70,9 +70,9 @@ def setup_function(f):
     i2c.clear()
 
 def create_ltc2631(*args, **kwargs):
-    adc = LTC2631(*args, **kwargs)
-    i2c.message_precondition = correct_message_for(adc)
-    return adc
+    dac = LTC2631(*args, **kwargs)
+    i2c.message_precondition = correct_message_for(dac)
+    return dac
 
 def test_cannot_create_invalid_variant():
     with pytest.raises(ValueError):
@@ -83,21 +83,21 @@ def test_cannot_create_with_bad_address():
         LTC2631(i2c, 'LM12', address=0x20) # M variants support 0x10, 11, 12
 
 def test_can_create():
-    adc = LTC2631(i2c, 'LM12')
-    assert adc.direction == Out
+    dac = LTC2631(i2c, 'LM12')
+    assert dac.direction == Out
 
 def test_can_create_different_address():
-    adc = LTC2631(i2c, 'LM12', address=0x12)
-    assert adc.direction == Out
+    dac = LTC2631(i2c, 'LM12', address=0x12)
+    assert dac.direction == Out
 
 def test_can_create_global_address():
-    adc = LTC2631(i2c, 'LM12', address=0x73)
-    assert adc.direction == Out
+    dac = LTC2631(i2c, 'LM12', address=0x73)
+    assert dac.direction == Out
 
 def test_can_powerdown():
-    adc = LTC2631(i2c, 'LM12')
+    dac = LTC2631(i2c, 'LM12')
 
-    adc.powerdown()
+    dac.powerdown()
 
     assert i2c.request_count == 1
     m1, = i2c.request(0)
@@ -108,14 +108,14 @@ def test_can_powerdown():
     assert m1.buf[2][0] == 0
 
 def test_can_write_lm10():
-    adc = LTC2631(i2c, 'LM10')
-    assert not adc.reset_to_zero_p() # This variant resets to mid-range
-    assert adc.full_scale() == 2.5
+    dac = LTC2631(i2c, 'LM10')
+    assert not dac.reset_to_zero_p() # This variant resets to mid-range
+    assert dac.full_scale() == 2.5
 
-    pin = adc.output
+    pin = dac.output
     assert pin.direction == Out
 
-    pin.set(1.25)               # -> 1.25/2.5*2^10 = 0x200x
+    pin.value = 1.25            # -> 1.25/2.5*2^10 = 0x200x
 
     assert i2c.request_count == 1
     m1, = i2c.request(0)
@@ -126,14 +126,14 @@ def test_can_write_lm10():
     assert m1.buf[2][0] == 0x00
 
 def test_can_write_lz12():
-    adc = LTC2631(i2c, 'LZ12')
-    assert adc.reset_to_zero_p()  # This variant resets to zero-range
-    assert adc.full_scale() == 2.5
+    dac = LTC2631(i2c, 'LZ12')
+    assert dac.reset_to_zero_p()  # This variant resets to zero-range
+    assert dac.full_scale() == 2.5
 
-    pin = adc.output
+    pin = dac.output
     assert pin.direction == Out
 
-    pin.set(0.1777)             # -> 0.1777/2.5*2^12 = 0x123x
+    pin.value = 0.1777          # -> 0.1777/2.5*2^12 = 0x123x
 
     assert i2c.request_count == 1
     m1, = i2c.request(0)
@@ -144,14 +144,14 @@ def test_can_write_lz12():
     assert m1.buf[2][0] == 0x30
 
 def test_can_write_hz8():
-    adc = LTC2631(i2c, 'HZ8')
-    assert adc.reset_to_zero_p() # This variant resets to zero-range
-    assert adc.full_scale() == 4.096
+    dac = LTC2631(i2c, 'HZ8')
+    assert dac.reset_to_zero_p() # This variant resets to zero-range
+    assert dac.full_scale() == 4.096
 
-    pin = adc.output
+    pin = dac.output
     assert pin.direction == Out
 
-    pin.set(2.635)              # -> 2.635/4.096*2^8 = 164.69, rounded to 0xa5x
+    pin.value = 2.635           # -> 2.635/4.096*2^8 = 164.69, rounded to 0xa5x
 
     assert i2c.request_count == 1
     m1, = i2c.request(0)
