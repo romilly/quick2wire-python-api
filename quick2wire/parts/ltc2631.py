@@ -1,25 +1,34 @@
 """
 API for the LTC2631 D/A converter.
 
+The LTC2631 is a family of 12-, 10-, and 8-bit voltage-output DACs
+with an integrated, high accuracy, low-drift reference.
+
+The LTC2631-L has a full-scale output of 2.5V, and operates from a
+single 2.7V to 5.5V supply. The LTC2631-H has a full-scale output of
+4.096V, and operates from a 4.5V to 5.5V supply.
+
+Each DAC can also operate in External Reference mode, in which a
+voltage supplied to the REF pin sets the full-scale output
+(this mode is not currently supported in this API).
+
 See data sheet at http://www.linear.com/product/LTC2631
 
-XXX
-The MCP3221 chip provides a single 12-bit measurement of an input
-analogue value, available through one single-ended channel.
-
-Applications talk to the chip via objects of the MCP3221 class.
-When an MCP3221 object is created, it is passed a single I2CMaster,
+Applications talk to the chip via objects of the LTC2631 class.
+When an LTC2631 object is created, it is passed a single I2CMaster,
 through which it communicates.
 
 For example:
 
     with I2CMaster() as i2c:
-        adc = MCP3221(i2c)
-        input = adc.single_ended_input
-        print("{}".format(input.value))
+        adc = LTC2631(i2c)
+        with adc.output as output:
+            # assert 2V as the output voltage
+            output.set(2.0)
+            ....more
 
-The A/D signal is obtained by querying the channel's 'value' property,
-which varies in the range 0.0 <= value < 1.0.
+The chip is returned to its power-off mode when the program exits the
+'output' block (so the above program isn't useful as it stands).
 
 [This module originally by Octameter computing (8ameter.com), December 2013]
 """

@@ -1,7 +1,8 @@
 """Loopback attempts for the LTC2631
 
-We do nothing in this test beyond checking that we can connect to the
-chip and read a sane value from it.
+Topology:
+
+  * XXX
 """
 
 from quick2wire.i2c import I2CMaster
