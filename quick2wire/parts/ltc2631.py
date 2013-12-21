@@ -12,7 +12,7 @@ Each DAC can also operate in External Reference mode, in which a
 voltage supplied to the REF pin sets the full-scale output
 (this mode is not currently supported in this API).
 
-See data sheet at http://www.linear.com/product/LTC2631
+See data sheet at <http://www.linear.com/product/LTC2631>
 
 Applications talk to the chip via objects of the LTC2631 class.
 When an LTC2631 object is created, it is passed a single I2CMaster,
