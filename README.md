@@ -1,5 +1,11 @@
 Quick2Wire Python API
 =====================
+Note
+-----------
+The device-agnostic fork of Quick2Wire Python API.
+GPIOs are accessed through kernel sysfs interface.
+
+
 
 A Python library for controlling the hardware attached to the
 Raspberry Pi's header pins, [without running as the root user](http://quick2wire.com/articles/working-safely-with-your-pi/).
