@@ -1,4 +1,5 @@
 
+from itertools import repeat
 from quick2wire.i2c_ctypes import I2C_M_RD
 from quick2wire.gpio import In
 from quick2wire.parts.pcf8591 import PCF8591, FOUR_SINGLE_ENDED, THREE_DIFFERENTIAL, SINGLE_ENDED_AND_DIFFERENTIAL, TWO_DIFFERENTIAL
@@ -24,15 +25,21 @@ class FakeI2CMaster:
         
         self._requests.append(messages)
         
-        read_count = sum(bool(m.flags & I2C_M_RD) for m in messages)
-        if read_count == 0:
-            return []
-        elif self._next_response < len(self._responses):
-            response = self._responses[self._next_response]
-            self._next_response += 1
-            return response
-        else:
-            return [(0x00,)]*read_count
+        read_requests = [m for m in messages if bool(m.flags & I2C_M_RD)]
+        
+        if len(read_requests) > 0:
+            if self._next_response < len(self._responses):
+                responses = self._responses[self._next_response]
+                self._next_response += 1
+                assert len(responses) == len(read_requests), \
+                    "expected " + str(len(responses)) + " read requests, got " + str(len(read_requests))
+            else:
+                responses = repeat(repeat(0))
+                
+            for request, response in zip(read_requests, responses):
+                for i, b in zip(range(request.len), response):
+                    request.buf[i] = b
+
     
     def add_response(self, *messages):
         self._responses.append(messages)

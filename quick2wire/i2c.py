@@ -4,13 +4,13 @@ from contextlib import closing
 import posix
 from fcntl import ioctl
 from quick2wire.i2c_ctypes import *
-from ctypes import create_string_buffer, sizeof, c_int, byref, pointer, addressof, string_at
+from ctypes import create_string_buffer, sizeof, c_int, byref, string_at
 from quick2wire.board_revision import revision
 
 assert sys.version_info.major >= 3, __name__ + " is only supported on Python 3"
 
-
 default_bus = 1 if revision() > 1 else 0
+
 
 class I2CMaster(object):
     """Performs I2C I/O transactions on an I2C bus.
@@ -76,18 +76,13 @@ class I2CMaster(object):
         ioctl_arg = i2c_rdwr_ioctl_data(msgs=msg_array, nmsgs=msg_count)
         
         ioctl(self.fd, I2C_RDWR, ioctl_arg)
-        
-        return [i2c_msg_to_bytes(m) for m in msgs if (m.flags & I2C_M_RD)]
 
 
-
-def reading(addr, n_bytes):
-    """An I2C I/O message that reads n_bytes bytes of data"""
-    return reading_into(addr, create_string_buffer(n_bytes))
 
 def reading_into(addr, buf):
-    """An I2C I/O message that reads into an existing ctypes string buffer."""
-    return _new_i2c_msg(addr, I2C_M_RD, buf)
+    """An I2C I/O message that reads into a mutable byte buffer, such as a bytearray or a ctypes struct."""
+    ptr = (c_char*len(buf)).from_buffer(buf)
+    return _new_i2c_msg(addr, I2C_M_RD, ptr)
 
 def writing_bytes(addr, *bytes):
     """An I2C I/O message that writes one or more bytes of data. 
@@ -101,8 +96,11 @@ def writing(addr, byte_seq):
     
     The bytes are passed to this function as a sequence.
     """
-    buf = bytes(byte_seq)
-    return _new_i2c_msg(addr, 0, create_string_buffer(buf, len(buf)))
+    buf = bytearray(byte_seq)
+    ptr = (c_char*len(buf)).from_buffer(buf)
+    return _new_i2c_msg(addr, 0, ptr)
+
+writing_from = writing
 
 
 def _new_i2c_msg(addr, flags, buf):
