@@ -2,17 +2,20 @@
 API for the LTC2631 D/A converter.
 
 The LTC2631 is a family of 12-, 10-, and 8-bit voltage-output DACs
-with an integrated, high accuracy, low-drift reference.
+with an integrated, high accuracy, low-drift reference.  The chip
+comes in a number of variants.
 
 The LTC2631-L has a full-scale output of 2.5V, and operates from a
 single 2.7V to 5.5V supply. The LTC2631-H has a full-scale output of
-4.096V, and operates from a 4.5V to 5.5V supply.
+4.096V, and operates from a 4.5V to 5.5V supply.  The -M and -Z variants
+reset to mid- and zero-scale respectively.
 
 Each DAC can also operate in External Reference mode, in which a
 voltage supplied to the REF pin sets the full-scale output
 (this mode is not currently supported in this API).
 
-See data sheet at <http://www.linear.com/product/LTC2631>
+See the data sheet at <http://www.linear.com/product/LTC2631>,
+which discusses the assorted variants in more detail.
 
 Applications talk to the chip via objects of the LTC2631 class.
 When an LTC2631 object is created, it is passed a single I2CMaster,
@@ -34,7 +37,9 @@ or 'LM8').
 The chip is returned to its power-off mode when the program exits the
 'output' block (so the above program isn't useful as it stands).
 
-[This module originally by Octameter Computing (8ameter.com), December 2013]
+[This module is copyright 2013, 2014 Octameter Computing (8ameter.com),
+and is distributed under the same terms as the rest of the quick2wire
+distribution.]
 """
 
 from quick2wire.i2c import writing_bytes

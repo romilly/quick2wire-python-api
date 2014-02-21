@@ -19,7 +19,7 @@ global address which is used to instruct a suite of LTC2309 chips to
 make a conversion at the same time.  This function is available
 through the method `global_sync`.
 
-See data sheet at <http://www.linear.com/product/LTC2309>
+See the data sheet at <http://www.linear.com/product/LTC2309>
 
 Note that the input voltage is converted only _after_ any read or
 write message to the chip (after an I2C STOP command, in fact).
@@ -46,7 +46,9 @@ If the channel's `sleep_after_conversion` method is called, the chip
 is put into low-power sleep between conversions (as opposed to a
 lowish-power 'napping' mode).
 
-[This module originally by Octameter Computing (8ameter.com), December 2013]
+[This module is copyright 2013, 2014 Octameter Computing (8ameter.com),
+and is distributed under the same terms as the rest of the quick2wire
+distribution.] 
 """
 
 from quick2wire.i2c import reading, writing_bytes
