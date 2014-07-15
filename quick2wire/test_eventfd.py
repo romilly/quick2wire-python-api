@@ -6,7 +6,7 @@ from quick2wire.eventfd import Semaphore
 
 
 def test_can_signal_poll_and_receive_a_semaphore():
-    with closing(Semaphore()) as s, closing(epoll()) as poller:
+    with Semaphore() as s, closing(epoll()) as poller:
         poller.register(s, EPOLLIN)
         
         assert poller.poll(timeout=0) == []
