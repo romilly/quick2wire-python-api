@@ -1,0 +1,33 @@
+#!/usr/bin/env python3
+import sys
+from contextlib import closing
+from itertools import cycle
+from time import sleep
+import quick2wire.i2c as i2c
+from quick2wire.parts.mcp23017 import MCP23017
+from quick2wire.parts.mcp23x17 import Out
+
+# usage: i2c-blink [led_pin]
+# led_pin defaults to 1
+def the_pin_number():
+    if len(sys.argv) < 2:
+        return 1
+    return int(sys.argv[1])
+
+i2c_address = 0x20
+pin_bank = 1
+pin_number = the_pin_number()
+
+with closing(i2c.I2CMaster()) as bus:
+    chip = MCP23017(bus, 0x20)
+    chip.reset()
+    led = chip[pin_bank][pin_number]
+    led.direction = Out
+
+    try:
+        while True:
+            led.value = not led.value
+            sleep(0.5)
+    finally:
+        chip.reset()
+

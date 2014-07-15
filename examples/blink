@@ -1,17 +1,69 @@
-#!/usr/bin/python3
+#!/usr/bin/env python3
+#||
+#|| Blink
+#|| =====
+#||
+#|| Let's start by blinking the LED on the Quick2Wire interface board.
+#||
+#|| The Raspberry Pi's header has 8 pins reserved for GPIO, numbered 0
+#|| to 7. The Quick2Wire interface board breaks these pins out to
+#|| their own header and clearly labels them on the board.  Pin 1 can
+#|| be jumpered to the on-board LED, so you can flash an LED without
+#|| having to do any additional wiring.
+#||
+#|| In the Quick2Wire API, software controls a physical GPIO pin via a
+#|| _Pin_ object. A Pin has a _direction_ (In or Out) and a _value_ (1
+#|| or 0) that can be read (if the Pin has direction In) or written
+#|| (if the Pin has direction Out).
+#||
+#|| A program gets hold of a Pin object from a _PinBank_, which
+#|| represents a collection of related pins indexed by pin number.
+#|| The Quick2Wire API defines a PinBank for the Pi's 8 GPIO pins,
+#|| called simply "pins".  It also defines PinBanks for the Pi's
+#|| header, indexed by header pin number 0 to 26 and by the pin
+#|| numbers defined by the Broadcom SoC.  The latter two are not used
+#|| in this demo, so we'll talk of them no more.
+#||
+#|| Here's how to use a Pin to blink an LED.
 
-import sys
+#| [6] To make Python happy we need to import `pins` and `Out` from
+#| the Quick2Wire GPIO module and the other functions we've used from
+#| Python's standard library modules.
+from quick2wire.gpio import pins, Out
+from itertools import cycle
 from time import sleep
-from quick2wire.gpio import GPIOPin, Out
+#|.
 
-pin = GPIOPin(int(sys.argv[1]) if len(sys.argv) > 1 else 1, direction=Out)
+#| [1] To get a Pin object to control the on-board LED we ask the
+#| _pins_ PinBank for pin 1, specifying that we want to use it for
+#| output by passing `Out ` as the _direction_ parameter.
+led = pins.pin(1, direction=Out)
+#|.
 
+#| [5] A program must open the pin before it can set its value and
+#| close the pin when you no longer need it.  While we have an open
+#| pin, other processes running on the Pi cannot use the same pin and
+#| interfere with our I/O.  The most convenient way to do this is to
+#| use Python's `with` statement, which will open the pins at the
+#| start of the statement and close them when the body of the
+#| statement has finished running, even if the user kills the program
+#| or a failure makes the code throw an exception.
+with led:
+#|.
+    #| [2] The program loops forever.  Each time round the loop the
+    #| variable _v_ cycles between 1 and 0.
+    for v in cycle([1,0]):
+    #|.
+        #| [3] Each time round the loop sets the value of the led Pin
+        #| to _v_, which either turns the LED on (when _v_ is 1) or
+        #| off (when _v_ is 0).
+        led.value = v
+        #|.
+        #| [4] After setting the value of the LED, the program sleeps
+        #| for half a second, making the LED blink with a frequency of
+        #| 1Hz.
+        sleep(0.5)
+        #|.
 
-try:
-    pin.value = 1
-    while True:
-        sleep(1)
-        pin.value = 1 - pin.value
-except KeyboardInterrupt:
-    pin.value = 0
-    pin.unexport()
+#|| The next example, [button-blink](button-blink), shows how to also
+#|| read the state of a GPIO input pin connected to a push-button.

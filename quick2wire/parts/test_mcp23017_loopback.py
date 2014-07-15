@@ -1,6 +1,6 @@
 import quick2wire.i2c as i2c
 from quick2wire.parts.mcp23017 import Registers as MCP23017Registers, MCP23017
-from quick2wire.parts.mcp23017 import deferred_read, deferred_write, immediate_read, immediate_write, In, Out
+from quick2wire.parts.mcp23017 import deferred_read, deferred_write, In, Out
 from quick2wire.parts.mcp23x17 import IODIRA, IODIRB, GPIO
 import pytest
 
@@ -29,19 +29,19 @@ def check_mcp23017_loopback(chip_class, checker):
 
 @pytest.mark.loopback
 @pytest.mark.mcp23017
-def test_mcp23017_loopback_via_registers():
+def test_loopback_via_registers():
     check_mcp23017_loopback(MCP23017Registers, check_connectivity_via_registers)
 
 
 @pytest.mark.loopback
 @pytest.mark.mcp23017
-def test_mcp23017_loopback_via_pins():
+def test_loopback_via_pins():
     check_mcp23017_loopback(MCP23017, check_connectivity_via_pins)
 
 
 @pytest.mark.loopback
 @pytest.mark.mcp23017
-def disabled_test_mcp23017_loopback_via_pins_deferred():
+def test_loopback_via_pins_deferred():
     check_mcp23017_loopback(MCP23017, check_connectivity_via_pins_deferred)
 
 
@@ -78,10 +78,7 @@ def check_connectivity_via_pins(chip, topology):
 
 def check_connectivity_via_pins_deferred(chip, topology):
     for (outb, outp), (inb, inp) in topology:
-        chip[0].write_mode = immediate_write
-        chip[0].read_mode = immediate_read
-        chip[1].write_mode = immediate_write
-        chip[1].read_mode = immediate_read
+        chip.reset()
         
         with chip[outb][outp] as outpin, chip[inb][inp] as inpin:
             inpin.direction = In

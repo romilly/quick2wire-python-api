@@ -23,6 +23,7 @@ output/
 dist/
 build/
 README.rst
+out/
 
 # Virtual environment
 python?.?-*/

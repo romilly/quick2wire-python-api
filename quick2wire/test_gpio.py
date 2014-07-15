@@ -1,84 +1,102 @@
 
-from quick2wire.gpio import Pin, exported
+import os
+from quick2wire.gpio import pins, In, Out, PullDown, gpio_admin
 import pytest
 
 
 @pytest.mark.gpio
 @pytest.mark.loopback
-class TestPin:
-    def setup_method(self, method):
-        self.pin = Pin(25)
-    
-    def teardown_method(self, method):
-        if self.pin.is_exported:
-            self.pin.unexport()
-    
-    def test_pin_must_be_exported_before_use(self):
+class TestGPIO:
+    def test_pin_must_be_opened_before_use_and_is_unusable_after_being_closed(self):
+        pin = pins.pin(0)
+        
         with pytest.raises(IOError):
-            self.pin.value
-        self.pin.export()
-        self.pin.value
+            pin.value
         
-    def test_pin_can_be_unexported_and_made_unusable(self):
-        self.pin.export()
-        self.pin.unexport()
+        pin.open()
+        try:
+            pin.value
+        finally:
+            pin.close()
+        
         with pytest.raises(IOError):
-            self.pin.value
+            pin.value
     
-    def test_can_set_and_query_direction_of_pin(self):
-        self.pin.export()
-        
-        self.pin.direction = Pin.Out
-        assert self.pin.direction == Pin.Out
-        
-        self.pin.direction = Pin.In
-        assert self.pin.direction == Pin.In
-
-        
-    def test_can_set_value_of_output_pin(self):
-        self.pin.export()
-        
-        self.pin.direction = Pin.Out
-        
-        self.pin.value = 1
-        assert self.pin.value == 1
-        
-        self.pin.value = 0
-        assert self.pin.value == 0
-        
-    def test_can_export_pin_and_set_direction_on_construction(self):
-        p = Pin(25, Pin.Out)
-        
-        assert p.is_exported
-        assert p.direction == Pin.Out
-
-    def test_can_read_after_write(self):
-        p = Pin(25, Pin.Out)
-        p2 = Pin(25, Pin.Out)
-
-        p.value = 1
-        assert p2.value == 1
-        with open('/sys/class/gpio/gpio7/value', 'r+') as f:
-            assert f.read() == '1\n'
-
-@pytest.mark.gpio
-@pytest.mark.loopback
-class TestExportedContextManager:
-    def test_can_automatically_unexport_pin_with_context_manager(self):
-        with exported(Pin(25)) as p:
-            assert p.is_exported
-        
-        p = Pin(25)
-        assert not p.is_exported
     
-    def test_can_use_context_manager_with_pin_exported_by_constructor(self):
-        with exported(Pin(25, Pin.Out)) as p:
-            assert p.is_exported
+    def test_opens_and_closes_itself_when_used_as_a_context_manager(self):
+        pin = pins.pin(0)
         
-        p = Pin(25)
-        assert not p.is_exported
+        with pin:
+            pin.value
+        
+        with pytest.raises(IOError):
+            pin.value
     
-    def test_can_use_context_manager_with_pin_already_exported(self):
-        Pin(25).export()
-        self.test_can_automatically_unexport_pin_with_context_manager()
+    
+    def test_exports_gpio_device_to_userspace_when_opened_and_unexports_when_closed(self):
+        with pins.pin(0) as pin:
+            assert os.path.exists('/sys/class/gpio/gpio17/value')
         
+        assert not os.path.exists('/sys/class/gpio/gpio17/value')
+    
+    
+    def test_can_set_and_query_direction_of_pin_when_open(self):
+        with pins.pin(0) as pin:
+            pin.direction = Out
+            assert pin.direction == Out
+            
+            assert content_of("/sys/class/gpio/gpio17/direction") == "out\n"
+            
+            pin.direction = In
+            assert pin.direction == In
+            
+            assert content_of("/sys/class/gpio/gpio17/direction") == "in\n"
+    
+    
+    def test_can_set_direction_on_construction(self):
+        pin = pins.pin(0, Out)
+        
+        assert pin.direction == Out
+        assert not os.path.exists("/sys/class/gpio/gpio17/direction")
+        
+        with pin:
+            assert content_of("/sys/class/gpio/gpio17/direction") == "out\n"
+            assert pin.direction == Out
+    
+    
+    def test_setting_value_of_output_pin_writes_to_device_file(self):
+        with pins.pin(0) as pin:
+            pin.direction = Out
+            
+            pin.value = 1
+            assert pin.value == 1
+            assert content_of('/sys/class/gpio/gpio17/value') == '1\n'
+            
+            pin.value = 0
+            assert pin.value == 0
+            assert content_of('/sys/class/gpio/gpio17/value') == '0\n'
+    
+    
+    def test_direction_and_value_of_pin_is_reset_when_closed(self):
+        with pins.pin(0, Out) as pin:
+            pin.value = 1
+        
+        gpio_admin("export", 17, PullDown)
+        try:
+            assert content_of('/sys/class/gpio/gpio17/value') == '0\n'
+            assert content_of('/sys/class/gpio/gpio17/direction') == 'in\n'
+        finally:
+            gpio_admin("unexport", 17)
+
+    def test_cannot_get_a_pin_with_an_invalid_index(self):
+        with pytest.raises(IndexError):
+            pins.pin(-1)
+        
+        with pytest.raises(IndexError):
+            pins.pin(len(pins))
+
+        
+def content_of(filename):
+    with open(filename, 'r') as f:
+        return f.read()
+

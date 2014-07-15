@@ -1,0 +1,108 @@
+#!/usr/bin/env python3
+#||
+#|| Event-Driven Input/Output
+#|| ========================= 
+#||
+#|| The [button-blink](button-blink) example shows how to read from a
+#|| GPIO pin, but not how to react promptly to a signal on the pin.
+#|| It reads the pin's value at regular intervals, but if a signal
+#|| occurs on the pin between reads the program won't react until the
+#|| next time it reads from the pin.
+#|| 
+#|| To react promptly to GPIO input we must change the way our program
+#|| works. Instead of being in control, polling the GPIO pins and
+#|| sleeping for fixed amounts of time, our program needs to be _event
+#|| driven_: reacting as soon as the signal at the input pin changes
+#|| and using timer events to decide when to blink the LED.
+#|| 
+#|| An event-driven program uses a `Selector` object to wait for
+#|| events to occur on a number of _event sources_ -- for example GPIO
+#|| input pins, timers or network connections. The program creates a
+#|| Selector, creates _event source_ objects that can signal events,
+#|| adds the event sources to the Selector, and runs an _event loop_
+#|| in which it waits on the Selector for an events to occur and then
+#|| handles the latest event reported by the Selector.
+#|| 
+#|| As we are converting the button-blink example to be event-driven,
+#|| we need two event sources: the GPIO pin connected to the button
+#|| and, because we can't put the process to sleep for half a second
+#|| to blink the LED, a repeating timer that tells the program when to
+#|| turn the LED off it is currently on and vice versa.
+
+from quick2wire.gpio import pins, In, Out, Both
+from quick2wire.selector import Selector, Timer
+
+#| [1] We create the selector that will drive our event loop
+selector = Selector()
+#|.
+button = pins.pin(0, direction=In, interrupt=Both)
+led = pins.pin(1, direction=Out)
+
+#| [2] We also create a repeating Timer to trigger the blinking of the
+#| LED.  The _interval_ parameter specifies the time, in seconds,
+#| between Timer events.
+timer = Timer(interval=0.5)
+#|.
+
+#| [3] Like the button and led Pins, the selector and timer consume
+#| operating-system resources, so we add them to the with statement to
+#| ensure that they are closed.
+with selector, button, led, timer:
+#|.
+    #| [4] We have to add the button and timer to the selector before the
+    #| selector will report their events.
+    selector.add(button)
+    selector.add(timer)
+    #|.
+    
+    while True:
+        #| [5] Now the program's main loop must wait for selector
+        #| events.  When the button or timer signals an event, the
+        #| selector stores a reference to the object that is ready to
+        #| be processed in its _ready_ property and returns from its
+        #| `wait()` method.
+        selector.wait()
+        #|.
+        
+        #| [6] If the timer is ready, we invert the value of the
+        #| led pin, so that it blinks on and off.
+        if selector.ready == timer:
+            #| [7] The program must "consume" the latest timer event
+            #| by waiting for it, otherwise the timer will continually
+            #| signal that it is ready, making our program run in a
+            #| busy-loop.
+            timer.wait()
+            #|.
+            
+            led.value = not led.value
+        #|.
+        
+        #| [8] If the button is ready, the program reads the
+        #| button state. If the value at the GPIO pin is one
+        #| (voltage high), the button has been pressed; if zero
+        #| (voltage low), it has been released.
+        elif selector.ready == button:
+            is_pressed = button.value
+            
+            #| [9] We can use the value read from the button in an if
+            #| statement (in Python, 0 is treated as false and 1 as
+            #| true)
+            if is_pressed:
+            #|.
+                #| [10] If the button has been pressed, the program
+                #| turns on the LED and starts the timer, so that it
+                #| generates the events that makes the program blinks
+                #| the LED on and off.
+                led.value = 1
+                timer.start()
+                #|.
+            else:
+                #| [11] If the button has been released, the program
+                #| turns of the LED and stops the timer so that timer
+                #| events won't turn LED on again.
+                led.value = 0
+                timer.stop()
+                #|.
+        #|.
+#|| When you run this program you will see that it reacts promptly to
+#|| button presses.

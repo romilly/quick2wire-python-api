@@ -1,19 +1,20 @@
-#!/usr/bin/python3
+#!/usr/bin/env python3
 
 from itertools import cycle
 from time import sleep
-from quick2wire.gpio import Pin
+from quick2wire.gpio import pins, Out
 
-pins = [Pin(n, Pin.Out) for n in [7, 22, 18, 16, 15, 13, 12, 11]]
+pins = [pins.pin(i, Out) for i in range(8)]
 
 try:
+    for p in pins:
+        p.open()
+    
     for count in cycle(range(256)):
         bitset = [int(count & (1<<n) > 0) for n in range(8)]
         for (pin, value) in zip(pins, bitset):
             pin.value = value
         sleep(0.5)
-
-except KeyboardInterrupt:
-    for pin in pins:
-        pin.value = 0
-        pin.unexport()
+finally:
+    for p in pins:
+        p.close()

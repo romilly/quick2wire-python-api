@@ -9,76 +9,74 @@ Ensure you have installed gpio-admin and are in the gpio group.  Run
 the `groups` command to list your group membership. For example:
 
     $ groups
-    nat fuse i2c gpio
+    pi adm dialout cdrom sudo audio video plugdev games users netdev input indiecity 
 
-You can add yourself to the gpio group with the command:
+If you don't see `gpio` in the list, you can add yourself to the gpio group with the command:
 
     sudo adduser $USER gpio
 
 You must then log out and in again for Linux to apply the change in
 group membership.
 
+    $ groups
+    pi adm dialout cdrom sudo audio video plugdev games users netdev input indiecity gpio 
+
 
 Now Let's Write Some Code!
 --------------------------
 
-The GPIO pins are controlled by GPIOPin objects. Python program must
-import the GPIOPin class from the quick2wire.gpio module, along with
-constants to configure the pin:
+The GPIO pins are controlled by Pin objects, and those Pin objects are
+managed by a "pin bank".  The simplest pin bank to use is called
+`pins` and gives access to the pins labelled P0 to P7 on the
+Quick2Wire interface board (or named GPIO0 to GPIO7 on the Raspberry
+Pi's header number 1).  There's also a bank called pi_header_1 that
+gives access to all the header pins, but we don't need that for this
+example.
 
-    from quick2wire.gpio import GPIOPin, In, Out
+Python programs must import the `pins` pin bank from the
+`quick2wire.gpio` module, along with constants to configure the pin:
 
-Then you can create a Pin. The Pin's constructor takes two arguments:
-the header pin number and whether the pin is to be used for input or
-output.
+    from quick2wire.gpio import pins, In, Out
 
-    in_pin = Pin(0, direction=In)
-    out_pin = Pin(1, direction=Out)
+Then you can get a Pin by calling the pin bank's `pin` method. This
+takes two arguments: the pin number and whether the pin is to be used
+for input or output.
 
-When you have a Pin instance you can read or write its value.  A value
-of 1 is high, a value of 0 is low.
-   
-    out_pin.value = 1
-    print(in_pin.value)
+    in_pin = pins.pin(0, direction=In)
+    out_pin = pins.pin(1, direction=Out)
 
-When you have finished using the pin, you must unexport it:
+You must open a pin before you can read or write its value and close
+the pin when you no longer need it.  The most convenient way to do
+this is to use Python's `with` statement, which will open the pins at
+the start of the statement and close them when the body of the
+statement has finished running, even if the user kills the program or
+failure makes the code throw an exception.
+    
+    with in_pin, out_pin:
+        out_pin.value = 1
+        print(in_pin.value)
 
-    out_pin.unexport()
-    in_pin.unexport()
+A pin has a value of 1 when high, a value of 0 when low.
 
 Putting it all together into a single program:
 
-    from quick2wire.gpio import Pin
+    from quick2wire.gpio import pins, In, Out
     
-    in_pin = Pin(0, direction=In)
-    out_pin = Pin(1, direction=Out)
+    in_pin = pins.pin(0, direction=In)
+    out_pin = pins.pin(1, direction=Out)
     
-    out_pin.value = 1
-    print(in_pin.value)
-    
-    out_pin.unexport()
-    in_pin.unexport()
-
-To make sure you always unexport any pins you've exported, you can wrap the Pin objects
-with `exported()`, a Python [context manager](http://docs.python.org/reference/datamodel.html#context-managers),
-as part of a [with](http://docs.python.org/reference/compound_stmts.html#with) statement:
-
-    from quick2wire.gpio import Pin, exported
-
-    with exported(GPIOPin(0, direction=In)) as in_pin, exported(GPIOPin(1, direction=Out)) as out_pin:
+    with in_pin, out_pin:
         out_pin.value = 1
-    	print(in_pin.value)
+        print(in_pin.value)
 
-This will unexport the pins when the program leaves the `with` statement, even 
-if the user kills the program or a bad piece of code throws an exception.
 
 Here's a slightly more complicated example that blinks an LED attached to pin 1. This will
 loop forever until the user stops it with a Control-C.
 
     from time import sleep
-    from quick2wire.gpio import GPIOPin, Out, exported
+    from quick2wire.gpio import pins, Out
     
-    with exported(GPIOPin(1, direction=Out)) as pin:
+    with pins.pin(1, direction=Out) as pin:
         while True:
             pin.value = 1 - pin.value
             sleep(1)
