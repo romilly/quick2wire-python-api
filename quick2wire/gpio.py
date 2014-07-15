@@ -4,7 +4,6 @@
 
 import os
 import subprocess
-from contextlib import contextmanager
 from quick2wire.board_revision import revision
 from quick2wire.selector import EDGE
 
