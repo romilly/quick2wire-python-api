@@ -1,6 +1,5 @@
 
 import sys
-from contextlib import closing
 import posix
 from fcntl import ioctl
 from quick2wire.i2c_ctypes import *
