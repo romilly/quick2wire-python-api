@@ -7,7 +7,6 @@ MCP23S17. Only the methods for reading and writing to registers
 differ, and they must be defined by subclassing the Registers class.
 """
 
-import contextlib
 from warnings import warn
 from quick2wire.gpio import PinAPI, PinBankAPI
 
