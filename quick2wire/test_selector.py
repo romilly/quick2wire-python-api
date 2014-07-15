@@ -1,5 +1,4 @@
 
-from contextlib import closing
 from itertools import islice
 from quick2wire.selector import Selector, INPUT, OUTPUT, ERROR, Semaphore, Timer
 
