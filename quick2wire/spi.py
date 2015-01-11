@@ -1,5 +1,5 @@
 import sys
-from ctypes import addressof, create_string_buffer, sizeof, string_at
+from ctypes import addressof, create_string_buffer, sizeof, string_at, c_int32, c_uint32
 import struct
 import posix
 from fcntl import ioctl
@@ -61,7 +61,7 @@ class SPIDevice:
         for i, transfer in enumerate(transfers):
             ioctl_arg[i] = transfers[i].to_spi_ioc_transfer()
 
-        ioctl(self.fd, SPI_IOC_MESSAGE(transfer_count), addressof(ioctl_arg))
+        ioctl(self.fd, SPI_IOC_MESSAGE(transfer_count), c_int32(c_uint32(addressof(ioctl_arg)).value).value)
 
         return [transfer.to_read_bytes() for t in transfers if t.has_read_buf]
 
