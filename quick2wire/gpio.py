@@ -275,7 +275,7 @@ else:
             26: 7
             }
 
-            _pi_gpio_pins = [_pi_header_1_pins[i] for i in [11, 12, 13, 15, 16, 18, 22, 7]]
+        _pi_gpio_pins = [_pi_header_1_pins[i] for i in [11, 12, 13, 15, 16, 18, 22, 7]]
 
     elif _pi_revision is 3:
         _pi_header_1_pins = {
@@ -307,7 +307,7 @@ else:
             40: 21,
             }
 
-            _pi_gpio_pins = [_pi_header_1_pins[i] for i in [11, 12, 13, 15, 16, 18, 22, 7, 29, 31, 32, 33, 35, 36, 37, 38, 40]]
+        _pi_gpio_pins = [_pi_header_1_pins[i] for i in [11, 12, 13, 15, 16, 18, 22, 7, 29, 31, 32, 33, 35, 36, 37, 38, 40]]
 
     def lookup(pin_mapping, i):
         try:
