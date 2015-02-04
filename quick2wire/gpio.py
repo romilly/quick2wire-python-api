@@ -192,7 +192,7 @@ class Pin(PinAPI):
             f.write(value)
     
     def _pin_path(self, filename=""):
-        return "/sys/devices/virtual/gpio/gpio%i/%s" % (self.soc_pin_number, filename)
+        return "/sys/devices/soc/20200000.gpio/gpio/gpio%i/%s" % (self.soc_pin_number, filename)
     
     def __repr__(self):
         return self.__module__ + "." + str(self)
