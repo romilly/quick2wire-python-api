@@ -4,7 +4,6 @@ import math
 import os
 from ctypes import *
 import struct
-from contextlib import closing
 import quick2wire.syscall as syscall
 
 

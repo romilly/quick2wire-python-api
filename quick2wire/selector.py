@@ -20,17 +20,9 @@ EDGE = 1
 class Selector(SelfClosing):
     """Lets a thread wait for multiple events and handle them one at a time."""
     
-    def __init__(self, size_hint=-1):
+    def __init__(self):
         """Initialises a Selector.
-        
-        Arguments:
-        size_hint -- A hint of the number of event sources that will
-                     be added to the Selector, or -1 for the default.
-                     Used to optimize internal data structures, it
-                     doesn't limit the maximum number of monitored
-                     event sources.
         """
-        self._size_hint = size_hint
         self._epoll = None
         self._sources = {}
         self.ready = None
@@ -38,7 +30,7 @@ class Selector(SelfClosing):
     
     def _get_epoll(self):
         if self._epoll is None:
-            self._epoll = select.epoll(self._size_hint)
+            self._epoll = select.epoll()
         return self._epoll
 
     def fileno(self):
@@ -83,7 +75,7 @@ class Selector(SelfClosing):
         source -- the event source to remove.
         """
         fileno = source.fileno()
-        self._get_epoll().unregister(source)
+        self._get_epoll().unregister(fileno)
         del self._sources[fileno]
 
     def wait(self, timeout=-1):
