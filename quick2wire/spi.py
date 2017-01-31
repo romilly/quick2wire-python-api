@@ -6,8 +6,6 @@ from fcntl import ioctl
 from quick2wire.spi_ctypes import *
 from quick2wire.spi_ctypes import spi_ioc_transfer, SPI_IOC_MESSAGE
 
-assert sys.version_info.major >= 3, __name__ + " is only supported on Python 3"
-
 
 class SPIDevice:
     """Communicates with a hardware device over an SPI bus.
@@ -113,7 +111,10 @@ class SPIDevice:
 class _SPITransfer:
     def __init__(self, write_byte_seq = None, read_byte_count = None):
         if write_byte_seq is not None:
-            self.write_bytes = bytes(write_byte_seq)
+            if sys.version_info.major < 3:
+                self.write_bytes = bytes(bytearray(write_byte_seq))
+            else:
+                self.write_bytes = bytes(write_byte_seq)
             self.write_buf = create_string_buffer(self.write_bytes, len(self.write_bytes))
         else:
             self.write_bytes = None

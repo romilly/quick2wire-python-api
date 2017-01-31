@@ -7,8 +7,6 @@ from quick2wire.i2c_ctypes import *
 from ctypes import create_string_buffer, sizeof, c_int, byref, pointer, addressof, string_at
 from quick2wire.board_revision import revision
 
-assert sys.version_info.major >= 3, __name__ + " is only supported on Python 3"
-
 
 default_bus = 1 if revision() > 1 else 0
 
@@ -101,7 +99,10 @@ def writing(addr, byte_seq):
     
     The bytes are passed to this function as a sequence.
     """
-    buf = bytes(byte_seq)
+    if sys.version_info.major < 3:
+        buf = bytes(bytearray(byte_seq))
+    else:
+        buf = bytes(byte_seq)
     return _new_i2c_msg(addr, 0, create_string_buffer(buf, len(buf)))
 
 
