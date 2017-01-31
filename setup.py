@@ -36,8 +36,8 @@ class PyTest(TestCommand):
         sys.exit(errno)
 
 
-setup(name='quick2wire-api',
-      version="0.0.0.2",
+setup(name='quick2wirepeque',
+      version="0.0.1",
       description='Quick2Wire API for Physical Computing',
       long_description=contents_of('README.txt'),
       author='Quick2Wire Ltd.',
