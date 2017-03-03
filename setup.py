@@ -36,8 +36,8 @@ class PyTest(TestCommand):
         sys.exit(errno)
 
 
-setup(name='quick2wire-api',
-      version="0.0.0.2",
+setup(name='quick2wirepeque',
+      version="0.0.1",
       description='Quick2Wire API for Physical Computing',
       long_description=contents_of('README.txt'),
       author='Quick2Wire Ltd.',
@@ -50,8 +50,8 @@ setup(name='quick2wire-api',
         'Development Status :: 4 - Beta',
         'Environment :: Console',
         'Intended Audience :: Developers',
-        'License :: OSI Approved :: GNU Lesser General Public License (LGPL)',
-        'License :: OSI Approved :: MIT',
+        'License :: OSI Approved :: GNU Lesser General Public License v3 (LGPLv3)',
+        'License :: OSI Approved :: MIT License',
         'Programming Language :: Python',
         'Programming Language :: Python :: 3',
         'Natural Language :: English',
