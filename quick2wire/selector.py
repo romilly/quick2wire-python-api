@@ -58,7 +58,7 @@ class Selector(SelfClosing):
                                         the source
                       OUTPUT         -- output can be written to the source
                       ERROR          -- an error has occurred on the source
-                      HANGUP         -- a remote hangup has occured on the 
+                      HANGUP         -- a remote hangup has occurred on the 
                                         source
                       PRIORITY_INPUT -- urgent out-of-band data is waiting 
                                         to be read from the source
@@ -130,7 +130,7 @@ class Selector(SelfClosing):
     
     @property
     def has_hangup(self):
-        """Returns whether a remote hangup has occured on the ready event source."""
+        """Returns whether a remote hangup has occurred on the ready event source."""
         return bool(self.events & HANGUP)
     
     @property

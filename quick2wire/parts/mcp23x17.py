@@ -15,7 +15,7 @@ from quick2wire.gpio import PinAPI, PinBankAPI
 In = "in"
 Out = "out"
 
-# Bits within the IOCON regiseter
+# Bits within the IOCON register
 IOCON_INTPOL=1
 IOCON_ODR=2
 IOCON_MIRROR=6

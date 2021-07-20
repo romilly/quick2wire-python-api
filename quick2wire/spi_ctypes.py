@@ -46,7 +46,7 @@ SPI_IOC_MAGIC = 107 # ord('k')
 # are in a different address space (and may be of different sizes in some
 # cases, such as 32-bit i386 userspace over a 64-bit x86_64 kernel).
 # Zero-initialize the structure, including currently unused fields, to
-# accomodate potential future updates.
+# accommodate potential future updates.
 #
 # SPI_IOC_MESSAGE gives userspace the equivalent of kernel spi_sync().
 # Pass it an array of related transfers, they'll execute together.
