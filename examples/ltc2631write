@@ -1,0 +1,21 @@
+#! /usr/bin/env python3
+
+from time import sleep
+from quick2wire.i2c import I2CMaster
+from quick2wire.parts.ltc2631 import LTC2631
+
+# Configure DAC address and variant
+DAC_ADDRESS = 0x10 # LTC2631
+DAC_VARIANT = 'HZ12'
+
+# Send voltages 0, 0.3, 0.6, ... to the DAC,
+# sleeping for a second between each.
+with I2CMaster() as i2c:
+    dac = LTC2631(i2c, DAC_VARIANT, address=DAC_ADDRESS)
+    
+    with dac.output as out:
+        nvals=10
+        for v in (i*3.0/nvals for i in range(nvals)):
+            print('v={}'.format(v))
+            out.value = v
+            sleep(1)
