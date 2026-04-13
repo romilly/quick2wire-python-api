@@ -64,7 +64,7 @@ setup(name='quick2wire-api',
       packages=[package, package+'.parts'],
       scripts=[],
       
-      tests_require=['pytest==2.3.4', 'factcheck==1.1.0.0'],
+      tests_require=['pytest==9.0.3', 'factcheck==1.1.0.0'],
       cmdclass = {'test': PyTest}
 )
 
